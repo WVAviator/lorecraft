@@ -36,9 +36,9 @@
       {
         "fullscreen": false,
         "resizable": true,
-        "title": "lorecraft",
-        "width": 800,
-        "height": 600
+        "title": "Lorecraft",
+        "width": 1024,
+        "height": 768
       }
     ]
   }
