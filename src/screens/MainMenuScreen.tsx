@@ -4,6 +4,7 @@ import AbsoluteContainer from '../components/AbsoluteContainer/AbsoluteContainer
 import BackgroundDiv from '../components/BackgroundDiv/BackgroundDiv';
 import MenuList from '../components/MenuList/MenuList';
 import MenuListItem from '../components/MenuListItem/MenuListItem';
+import { useNavigate } from 'react-router-dom';
 
 interface MenuOption {
   label: string;
@@ -15,11 +16,14 @@ const BG_ALT_DESC =
 
 const MainMenuScreen = () => {
   const [selected, setSelected] = React.useState(0);
-  const menuOptions = React.useMemo(
+  const navigate = useNavigate();
+  const menuOptions: MenuOption[] = React.useMemo(
     () => [
       {
         label: 'New Game',
-        onSelect: () => console.log('new game'),
+        onSelect: () => {
+          navigate('/gamesetup');
+        },
       },
       {
         label: 'Load Game',
