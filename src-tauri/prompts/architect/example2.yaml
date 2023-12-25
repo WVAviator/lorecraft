@@ -10,19 +10,19 @@ summary: "In Derelict: The Orion's Fate, players find themselves as the sole sur
 win_condition: The player wins by repairing the engines on the escape shuttle and launching it to safety, or by sending a distress signal to call for rescue.
 
 narrative:
-  - narrative: 'The mining ship Orion was a pinnacle of human spacefaring, designed to excavate and process resources from the far reaches of the galaxy.'
+  - narrative: The mining ship Orion was a pinnacle of human spacefaring, designed to excavate and process resources from the far reaches of the galaxy.
     image: A massive mining ship orbiting a barren planet, its drills and machinery extended for operation.
 
-  - narrative: 'A distress signal awakes you from cryosleep, only to find the corridors silent, systems failing, and evidence of a catastrophe that took the crew.'
+  - narrative: A distress signal awakes you from cryosleep, only to find the corridors silent, systems failing, and evidence of a catastrophe that took the crew.
     image: An emergency alarm blaring in a cold, desolate sleep chamber with eerie silence suggesting the absence of crewmates.
 
-  - narrative: 'In the void of space, your survival depends on restoring the ship's functions and uncovering what horror befell the Orion and her crew.'
+  - narrative: In the void of space, your survival depends on restoring the ship's functions and uncovering what horror befell the Orion and her crew.
     image: A tangled web of sparking cables, broken consoles, and dim emergency lights casting shadows on blood-stained walls.
 
-  - narrative: 'An insidious presence has made the ship its own, lurking in the dark recesses, a threat born from the very depths of the cosmos.'
+  - narrative: An insidious presence has made the ship its own, lurking in the dark recesses, a threat born from the very depths of the cosmos.
     image: Alien tendrils creeping along the ship's interior, pulsating with bioluminescent light.
 
-  - narrative: 'You must gather your courage, for the fate of the Orion and its secrets rests upon your shoulders.'
+  - narrative: You must gather your courage, for the fate of the Orion and its secrets rests upon your shoulders.
     image: A stranded silhouette, facing an open hatch leading to the mysterious parts of the ship, reflecting determination in the face of uncertainty.
 
 player_attributes:
@@ -75,7 +75,7 @@ key_characters:
     description: An advanced AI system designed to assist the crew with operations, knowledge database access, and critical decision-making.
     significance: VIKA will guide the player by providing navigational help, access to databases, and instructional support. The AI serves both as a narrative device and as a game mechanic, helping players make sense of their surroundings and the tasks at hand. The player can interact with VIKA by approaching any terminal or console.
     image: A holographic interface displaying a serene, abstract face, exuding a calm and informative presence in the ship's chaotic environment.
-  
+
   - name: Alien Entity
     description: An aggressive alien life form that has infiltrated the ship, whose origins and motivations are unknown.
     significance: The alien entity is the primary antagonist of the game, and the player must contend with it throughout the game. The player can learn more about the alien entity by studying its behavior and biology, and will eventually discover that the Alien Artifact is actually an egg belonging to the alien entity. The player can return or threaten to damage the egg to force the alien entity to retreat.

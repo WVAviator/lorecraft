@@ -47,7 +47,10 @@ impl Game {
             .chat_completion_request(&system_prompt, &user_prompt, OpenAIModel::Gpt3_5)
             .expect("Failed to get response from OpenAI API.");
 
-        println!("Parsing response from OpenAI API.");
+        println!(
+            "Received response from OpenAI API:\n\n{}\n\nAttempting to parse YAML string...",
+            response_text
+        );
 
         let game_summary =
             GameSummary::from_yaml(&response_text).expect("Failed to parse YAML into GameSummary.");

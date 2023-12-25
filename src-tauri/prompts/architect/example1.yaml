@@ -10,19 +10,19 @@ summary: Echoes of the Ancients is a game that takes place in a forgotten world,
 win_condition: The player wins be restoring the Echo Crystal to the Altar of Ancients.
 
 narrative:
-  - narrative: 'The ancients once lived in harmony with nature, building great cities and mastering magic. They left a legacy of wisdom and knowledge.'
+  - narrative: The ancients once lived in harmony with nature, building great cities and mastering magic. They left a legacy of wisdom and knowledge.
     image: A lively ancient city with magical runes on the walls, surrounded by lush forests and mountains.
 
-  - narrative: '600 years ago, the ancients disappeared mysteriously, leaving their cities in ruins. Their knowledge was lost, and nature took over their once-great structures.'
+  - narrative: 600 years ago, the ancients disappeared mysteriously, leaving their cities in ruins. Their knowledge was lost, and nature took over their once-great structures.
     image: An overgrown, ruined city with nature reclaiming its buildings, set against a backdrop of thick forest and distant mountains.
 
-  - narrative: "After the ancients vanished, life became simpler but harder. People now live in small villages, struggling to survive in a world without the ancients' magic."
+  - narrative: After the ancients vanished, life became simpler but harder. People now live in small villages, struggling to survive in a world without the ancients' magic.
     image: A small, rustic village with simple huts and villagers working the land, encircled by a forest and mountains.
 
-  - narrative: 'Dark rumors tell of a growing power in the north, casting shadows over the land. An ancient temple may hold the key to understanding and stopping this threat.'
+  - narrative: Dark rumors tell of a growing power in the north, casting shadows over the land. An ancient temple may hold the key to understanding and stopping this threat.
     image: A dark, imposing temple on a snowy mountain, with a storm brewing above.
 
-  - narrative: 'You awaken in a forgotten world, surrounded by the remnants of an ancient civilization. Your journey starts in the heart of an old forest, where secrets of the past are hidden.'
+  - narrative: You awaken in a forgotten world, surrounded by the remnants of an ancient civilization. Your journey starts in the heart of an old forest, where secrets of the past are hidden.
     image: A thick, mystical forest with sunlight streaming through tall trees, and a light fog covering the ground.
 
   - narrative: "Your goal is clear: discover the ancients' secrets and use their wisdom to save your world from a looming disaster."
