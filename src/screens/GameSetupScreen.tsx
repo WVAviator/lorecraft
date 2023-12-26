@@ -14,7 +14,7 @@ const GameSetupScreen: React.FC<GameSetupScreenProps> = () => {
       console.log('Sending request to backend to form new game.');
       const id = await invoke('create_new_game', { prompt: '' });
       console.log(
-        `Received response from backend with game id ${id}. Subscribing to game creation event.`
+        `Received response from backend with game id ${id}. Subscribing to game creation event at 'create:${id}'.`
       );
       unlisten = await appWindow.listen(`create:${id}`, (event) => {
         console.log(
@@ -30,7 +30,8 @@ const GameSetupScreen: React.FC<GameSetupScreenProps> = () => {
     return () => {
       unlisten && unlisten();
     };
-  });
+  }, []);
+
   return (
     <div>
       {game ? <div>{JSON.stringify(game)}</div> : <div>Loading...</div>}
