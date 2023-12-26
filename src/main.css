@@ -28,11 +28,10 @@ body {
 
 @font-face {
   font-family: 'Apple Chancery';
-  src: url('../public/fonts/Apple\ Chancery\ Regular.ttf') format('truetype');
+  src: url('/fonts/Apple\ Chancery\ Regular.ttf') format('truetype');
 }
 
 @font-face {
   font-family: 'Dancing Script';
-  src: url('../public/fonts/DancingScript-VariableFont_wght.ttf')
-    format('truetype');
+  src: url('/fonts/DancingScript-VariableFont_wght.ttf') format('truetype');
 }
