@@ -205,4 +205,13 @@ mod test {
         assert_eq!(game_summary.key_areas.len(), 0);
         assert_eq!(game_summary.key_items.len(), 0);
     }
+
+    #[test]
+    fn game_summary_prompt_examples_valid() {
+        let example1_yaml = get_test_yaml("./prompts/architect/example1.yaml");
+        let example2_yaml = get_test_yaml("./prompts/architect/example2.yaml");
+
+        let example1_game_summary = GameSummary::from_yaml(&example1_yaml).unwrap();
+        let example2_game_summary = GameSummary::from_yaml(&example2_yaml).unwrap();
+    }
 }

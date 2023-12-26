@@ -1,7 +1,10 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
 
-use crate::openai::{openai_model::OpenAIModel, OpenAI};
+use crate::{
+    file_manager::FileManager,
+    openai::{openai_model::OpenAIModel, OpenAI},
+};
 
 use self::game_summary::GameSummary;
 
@@ -26,13 +29,12 @@ impl Game {
         let mut system_prompt = String::new();
         system_prompt += &fs::read_to_string(main_prompt_path)
             .expect("Something went wrong reading the architect system prompt file.");
-        system_prompt += "```";
+        system_prompt += "\n\nExample 1:\n\n";
         system_prompt += &fs::read_to_string(example1_prompt_path)
             .expect("Something went wrong reading the architect system prompt example1 file.");
-        system_prompt += "```\n```";
+        system_prompt += "\n\nExample 2:\n\n";
         system_prompt += &fs::read_to_string(example2_prompt_path)
             .expect("Something went wrong reading the architect system prompt example2 file.");
-        system_prompt += "```";
 
         println!("Building user prompt.");
 
@@ -51,6 +53,10 @@ impl Game {
             "Received response from OpenAI API:\n\n{}\n\nAttempting to parse YAML string...",
             response_text
         );
+
+        FileManager::new()
+            .write_to_file("game_summary.yaml", &response_text)
+            .expect("Failed to write game summary to file.");
 
         let game_summary =
             GameSummary::from_yaml(&response_text).expect("Failed to parse YAML into GameSummary.");
