@@ -3,11 +3,13 @@ description: Explore ancient ruins to uncover lost secrets and save your world
   from a forgotten evil.
 art_style: Digital art with a touch of watercolor effects
 art_theme: Ancient ruins, mystical forests, and forgotten civilizations.
-cover_art: A lone adventurer standing at the entrance of a large, overgrown
+cover_art: >
+  A lone adventurer standing at the entrance of a large, overgrown
   ancient temple, with mysterious runes glowing on the walls. The temple is
   surrounded by large trees casting shadows across the temple. The adventurer is
   holding a glowing crystal.
-summary: Echoes of the Ancients is a game that takes place in a forgotten world,
+summary: >
+  Echoes of the Ancients is a game that takes place in a forgotten world,
   where the player must explore ancient ruins and uncover lost secrets to save
   their world from a looming disaster. The player will explore the Whispering
   Woods, a mystical forest filled with ancient ruins and artifacts, and will
@@ -23,23 +25,23 @@ summary: Echoes of the Ancients is a game that takes place in a forgotten world,
   return it to the Altar of Ancients to restore balance to the world.
 win_condition: The player wins be restoring the Echo Crystal to the Altar of Ancients.
 narrative:
-  - narrative:
+  - narrative: >
       The ancients once lived in harmony with nature, building great cities
       and mastering magic. They left a legacy of wisdom and knowledge.
-    image:
+    image: >
       A lively ancient city with magical runes on the walls, surrounded by lush
       forests and mountains.
-  - narrative:
+  - narrative: >
       600 years ago, the ancients disappeared mysteriously, leaving their
       cities in ruins. Their knowledge was lost, and nature took over their
       once-great structures.
     image: An overgrown, ruined city with nature reclaiming its buildings, set
       against a backdrop of thick forest and distant mountains.
-  - narrative:
+  - narrative: >
       After the ancients vanished, life became simpler but harder. People
       now live in small villages, struggling to survive in a world without the
       ancients' magic.
-    image:
+    image: >
       A small, rustic village with simple huts and villagers working the land,
       encircled by a forest and mountains.
   - narrative: Dark rumors tell of a growing power in the north, casting shadows
@@ -49,16 +51,17 @@ narrative:
   - narrative: You awaken in a forgotten world, surrounded by the remnants of an
       ancient civilization. Your journey starts in the heart of an old forest,
       where secrets of the past are hidden.
-    image:
+    image: >
       A thick, mystical forest with sunlight streaming through tall trees, and
       a light fog covering the ground.
-  - narrative: "Your goal is clear: discover the ancients' secrets and use their
-      wisdom to save your world from a looming disaster."
+  - narrative: >
+      Your goal is clear: discover the ancients' secrets and use their
+      wisdom to save your world from a looming disaster.
     image: A detailed map showing important locations and paths in the game world.
 player_attributes:
   - name: Ancient Wisdom
     description: Your understanding of ancient history and forgotten languages.
-    advancement:
+    advancement: >
       This attribute is advanced by studying ancient knowledge through
       tomes, writings, murals, etc.
     significance: This skill is used to decipher ancient texts, understand the
@@ -67,10 +70,10 @@ player_attributes:
     starting_value: 1
   - name: Survival Skills
     description: Your ability to navigate and survive in harsh environments.
-    advancement:
+    advancement: >
       This attribute is advanced by practicing survival skills such as
       hunting, gathering, first-aid, and building fires.
-    significance:
+    significance: >
       This skill is used to navigate the wilderness, hunt for food, and
       build fires. A higher level of Survival Skills will allow the player to
       survive in harsher environments, and will increase the player's chance of
@@ -78,10 +81,10 @@ player_attributes:
     starting_value: 3
   - name: Mystical Affinity
     description: Your connection with the magical energies of the ancient world.
-    advancement:
+    advancement: >
       This attribute is advanced by studying ancient artifacts and runes,
       and by practicing meditation.
-    significance:
+    significance: >
       This skill is used to activate ancient artifacts and runes, and to
       cast spells. A higher level of Mystical Affinity will allow the player to
       activate more powerful artifacts and runes, and will increase the player's
@@ -90,10 +93,10 @@ player_attributes:
 key_items:
   - name: Temple Map
     description: A map of the Temple of Shadows.
-    location:
+    location: >
       The map is given to the player by Arin, the Keeper of Lore, after they
       demonstrate sufficient survival skills.
-    significance:
+    significance: >
       Without this map, any attempt to navigate the Temple of Shadows
       will result in the player getting lost and ending up back in the
       Whispering Woods.
@@ -112,7 +115,7 @@ key_areas:
     description: A mystical forest said to be the home of ancient spirits. The
       Whispering Woods is filled with ancient ruins and artifacts, and is the
       starting point of the player's journey.
-    significance:
+    significance: >
       The Whispering Woods is where the player first encounters Arin,
       the Keeper of Lore, who provides crucial information about their quest.
       It's also a place for early exploration and survival skill-building. The
@@ -120,7 +123,7 @@ key_areas:
       gathering food, and exploring before venturing into the Temple of Shadows.
   - name: Temple of Shadows
     description: An ancient temple where the dark power is said to reside.
-    significance:
+    significance: >
       The temple is filled with traps and puzzles, and the player must
       use their wits and wisdom to navigate the temple and uncover its secrets.
       The player must have a map of the temple to successfully navigate the
@@ -139,10 +142,10 @@ key_areas:
       world.
 key_characters:
   - name: Arin, the Keeper of Lore
-    description:
+    description: >
       An old sage who claims to have knowledge of the ancients and their
       lost civilization.
-    significance:
+    significance: >
       Arin is convinced that an evil entity is responsible for the dark
       power threatening the world, and knows that the Temple of Shadows holds
       the key to stopping it. However, knowing the dangers that lie within, he
