@@ -2,6 +2,9 @@ use serde_json::{json, Value};
 
 use self::openai_model::OpenAIModel;
 
+pub mod chat_completion_model;
+pub mod chat_completion_request;
+pub mod chat_completion_response;
 pub mod openai_model;
 
 pub struct OpenAI {
