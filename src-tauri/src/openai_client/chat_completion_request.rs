@@ -13,19 +13,19 @@ impl ChatCompletionRequest {
         }
     }
 
-    pub fn request_body(&self) -> String {
+    pub fn to_request_body(self) -> String {
         json!({
-            "model": model.to_string(),
+            "model": self.model,
             "messages": [
                 {
                     "role": "system",
-                    "content": system_prompt
+                    "content": self.system_prompt
                 },
                 {
                     "role": "user",
-                    "content": user_prompt
+                    "content": self.user_prompt
                 }
             ]
-        })
+        }).to_string()
     }
 }
