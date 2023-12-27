@@ -1,8 +1,6 @@
-// Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use crate::file_manager::FileManager;
-use rand::Rng;
 use tokio::sync::mpsc;
 
 use tauri::Window;
@@ -13,16 +11,8 @@ mod game;
 mod openai;
 
 #[tauri::command]
-async fn create_new_game(prompt: &str, window: Window) -> Result<Game, String> {
+async fn create_new_game(prompt: &str) -> Result<Game, String> {
     println!("Creating new game.");
-
-    let game_id = rand::thread_rng()
-        .sample_iter(&rand::distributions::Alphanumeric)
-        .take(7)
-        .map(char::from)
-        .collect::<String>();
-    let game_id_clone = game_id.clone();
-    println!("Game ID: {}", game_id);
 
     let prompt = prompt.to_string();
 
@@ -38,7 +28,7 @@ async fn create_new_game(prompt: &str, window: Window) -> Result<Game, String> {
     println!("Game serialized. Saving to file...");
     FileManager::new()
         .write_to_file(
-            format!("{}/game.json", game_id_clone).as_str(),
+            format!("{}/game.json", game.id).as_str(),
             &game_serialized,
         )
         .expect("Failed to write game to file.");
@@ -46,14 +36,9 @@ async fn create_new_game(prompt: &str, window: Window) -> Result<Game, String> {
 
     println!(
         "Emitting created event for UI at 'create:{}'.",
-        game_id_clone
+        game.id
     );
-    window
-        .emit(format!("create:{}", game_id_clone).as_str(), game)
-        .expect("Error occurred while emitting read event.");
 
-
-    println!("Returning game ID to UI.");
     return Ok(game);
 }
 

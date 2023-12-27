@@ -1,9 +1,10 @@
 use serde::{Deserialize, Serialize};
+use rand::Rng;
 use std::fs;
 
 use crate::{
     file_manager::FileManager,
-    openai::{openai_model::OpenAIModel, OpenAI},
+    openai::{OpenAIClient},
 };
 
 use self::game_summary::GameSummary;
@@ -12,12 +13,20 @@ pub mod game_summary;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Game {
+    pub id: String,
     pub name: String,
     game_summary: GameSummary,
 }
 
 impl Game {
-    pub fn create_new(user_prompt: Option<&str>) -> Self {
+    pub async fn create_new(user_prompt: Option<&str>) -> Self {
+
+        let id = rand::thread_rng()
+            .sample_iter(&rand::distributions::Alphanumeric)
+            .take(7)
+            .map(char::from)
+            .collect::<String>();
+
         let openai = OpenAI::new();
 
         println!("Building system prompt.");
@@ -46,8 +55,10 @@ impl Game {
         println!("Sending request to OpenAI API.");
 
         let response_text = openai
-            .chat_completion_request(&system_prompt, &user_prompt, OpenAIModel::Gpt3_5)
-            .expect("Failed to get response from OpenAI API.");
+            .chat_completion_request(&system_prompt, &user_prompt, ChatCompletionModel::Gpt_35_Turbo)
+            .await
+            .expect("Failed to get response from OpenAI API.")
+            .get_content();
 
         println!(
             "Received response from OpenAI API:\n\n{}\n\nAttempting to parse YAML string...",
@@ -64,6 +75,7 @@ impl Game {
         println!("Parsed game summary:\n{:?}", game_summary);
 
         Self {
+            id,
             name: game_summary.name.clone(),
             game_summary,
         }
