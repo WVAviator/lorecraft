@@ -16,14 +16,14 @@ summary: >
   learn about the ancients and their lost civilization. The player will then
   venture into the Temple of Shadows, an ancient temple where a dark power is
   said to reside. The player will first build their survival skills in the
-  Whispering WOod in order to obtain a map of the Temple of Shadows from Arin,
+  Whispering Wood in order to obtain a map of the Temple of Shadows from Arin,
   the Keeper of Lore. The player will then use the map to navigate the Temple of
   Shadows, avoiding traps and solving puzzles to uncover the temple's secrets.
   The player will also find books, runes, and artifacts that will improve their
   Mystical Affinity and Ancient Wisdom abilities. The player must then use their
   Mystical Affinity to find the Echo Crystal in a cave beneath the temple and
   return it to the Altar of Ancients to restore balance to the world.
-win_condition: The player wins be restoring the Echo Crystal to the Altar of Ancients.
+win_condition: The player wins by restoring the Echo Crystal to the Altar of Ancients.
 narrative:
   - narrative: >
       The ancients once lived in harmony with nature, building great cities

@@ -1,0 +1,39 @@
+summary: >
+  In Derelict: The Orion's Fate, players find themselves as the sole
+  survivor aboard the Orion, a mining ship stranded in an uncharted region of
+  space. The game begins as the player awakens from cryosleep after an unknown
+  disaster. They must navigate through claustrophobic corridors, solve the
+  mystery of the crew's disappearance, repair critical systems, and contend with
+  hostile alien entities that have infiltrated the ship. The player will improve
+  their Engineering Expertise, Combat Training, and Alien Research as they
+  uncover logs of what transpired, fend off alien threats, and decipher alien
+  technology. Eventually, the player must restore the ship's mainframe, reignite
+  the auxillary shuttle engines for a daring escape, or send a distress signal
+  to call for rescue. Their attempts to survive and escape will be complicated
+  by the presence of an insidious alien entity that has taken over the ship, and
+  the player must learn how to use the Alien Artifact, which turns out be the
+  alien's egg, to threaten the alien entity and force it to retreat.
+key_areas:
+  - name: Central Engineering Hub
+    description: >
+      The heart of the ship's operational systems, filled with machinery,
+      control panels, and the central mainframe.
+    significance: The player must restore power and access the mainframe here to
+      gain control over the ship's functions. It's also a hub for repairing
+      essential systems and crafting makeshift defenses against the alien
+      presence. There are terminals here that the player can use to access the ship's VIKA AI system.
+  - name: Crew Quarters
+    description: Living spaces for the crew of the Orion, now eerily silent and
+      abandoned, with personal belongings and clues scattered around.
+    significance: The crew quarters are not only vital for story progression,
+      providing context through logs and mementos, but also serve as respite
+      areas where the player can gather personal effects that may boost morale
+      or offer crucial insight into the situation. There is also a terminal here that the player can use to access VIKA, the ship's AI knowledge assistant.
+  - name: Mining Storage Bay
+    description: >
+      A massive storage area for the ores and minerals extracted by the
+      Orion, now filled with abandoned mining equipment and bins of ore.
+    significance:
+      The storage bay is where ores extracted from the last expedition
+      are stored, and where the player will find the alien artifact hiden in one of the refined ore storage bins. It's also a
+      place where the player can find useful supplies and equipment.
