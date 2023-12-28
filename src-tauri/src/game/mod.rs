@@ -31,10 +31,7 @@ pub struct Game {
 }
 
 impl Game {
-    pub async fn create_new(
-        user_prompt: Option<&str>,
-        state: &State<'_, ApplicationState>,
-    ) -> Self {
+    pub async fn create_new(user_prompt: String, state: &State<'_, ApplicationState>) -> Self {
         let id = rand::thread_rng()
             .sample_iter(&rand::distributions::Alphanumeric)
             .take(7)
@@ -42,11 +39,6 @@ impl Game {
             .collect::<String>();
 
         let openai = OpenAIClient::new();
-
-        let user_prompt = match user_prompt {
-            Some(user_prompt) => user_prompt.to_string(),
-            None => String::from("choose any random unique game idea"),
-        };
 
         let summary = async {
             state
