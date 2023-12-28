@@ -6,6 +6,8 @@ interface BackgroundDivProps {
   image: string;
   alt: string;
   fade?: boolean;
+  fadeTime?: number;
+  onlyFadeImage?: boolean;
 }
 
 const BackgroundDiv: React.FC<BackgroundDivProps> = ({
@@ -13,12 +15,17 @@ const BackgroundDiv: React.FC<BackgroundDivProps> = ({
   image,
   alt,
   fade = false,
+  onlyFadeImage = false,
 }) => {
+  const fadeClass = fade ? styles.fadeOut : styles.fadeIn;
+
   return (
-    <div
-      className={`${styles.container} ${fade ? styles.fadeOut : styles.fadeIn}`}
-    >
-      <img src={image} alt={alt} className={styles.image} />
+    <div className={`${styles.container} ${onlyFadeImage ? '' : fadeClass}`}>
+      <img
+        src={image}
+        alt={alt}
+        className={`${styles.image} ${onlyFadeImage ? fadeClass : ''}`}
+      />
       {children}
     </div>
   );
