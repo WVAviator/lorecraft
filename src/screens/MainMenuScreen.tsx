@@ -22,7 +22,7 @@ const MainMenuScreen = () => {
       {
         label: 'New Game',
         onSelect: () => {
-          navigate('/gamesetup');
+          navigate('/generate-game');
         },
       },
       {
