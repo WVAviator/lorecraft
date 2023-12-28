@@ -1,8 +1,11 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use std::io;
+
 use crate::file_manager::FileManager;
 use crate::game::Game;
 use application_state::ApplicationState;
+use log::info;
 use tokio::sync::{mpsc, Mutex};
 
 use tauri::{Manager, State};
@@ -46,12 +49,48 @@ async fn create_new_game(
 fn main() {
     let (updates_tx, mut updates_rx) = mpsc::channel(1);
     let updates_tx = Mutex::new(updates_tx);
+
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![create_new_game])
         .setup(|app| {
             let file_manager = FileManager::new(&app.path_resolver());
             let state = ApplicationState::new(updates_tx, file_manager);
             app.manage(state);
+
+            let log_file = app
+                .path_resolver()
+                .app_log_dir()
+                .expect("Failed to identify log directory.")
+                .join("debug.log");
+
+            std::fs::create_dir_all(log_file.parent().unwrap()).expect("Failed to create log dir.");
+
+            fern::Dispatch::new()
+                .chain(
+                    fern::Dispatch::new()
+                        .format(|out, message, record| {
+                            out.finish(format_args!("[{}] {}", record.level(), message,))
+                        })
+                        .level(log::LevelFilter::Info)
+                        .chain(io::stdout()),
+                )
+                .chain(
+                    fern::Dispatch::new()
+                        .format(|out, message, record| {
+                            out.finish(format_args!(
+                                "[{} | {}] {}",
+                                record.level(),
+                                record.target(),
+                                message,
+                            ))
+                        })
+                        .level(log::LevelFilter::Trace)
+                        .chain(fern::log_file(&log_file)?),
+                )
+                .apply()
+                .expect("Failed to initialize logger.");
+
+            info!("Log file initialized at '{}'.", log_file.display());
 
             let app_handle = app.handle();
             tauri::async_runtime::spawn(async move {
