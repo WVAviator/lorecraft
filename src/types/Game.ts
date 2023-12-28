@@ -2,6 +2,10 @@ export interface Game {
   id: string;
   name: string;
   summary: Summary;
+  cover_art: {
+    src: string;
+    alt: string;
+  };
   narrative: Narrative[];
 }
 

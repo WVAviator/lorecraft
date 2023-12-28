@@ -1,6 +1,11 @@
 use self::{
     chat_completion_request::ChatCompletionRequest,
-    chat_completion_response::ChatCompletionResponse, openai_client_error::OpenAIClientError,
+    chat_completion_response::ChatCompletionResponse,
+    image_generation::{
+        image_generation_request::ImageGenerationRequest,
+        image_generation_response::ImageGenerationResponse,
+    },
+    openai_client_error::OpenAIClientError,
 };
 use reqwest::{
     header::{HeaderMap, HeaderValue},
@@ -10,6 +15,7 @@ use reqwest::{
 pub mod chat_completion_model;
 pub mod chat_completion_request;
 pub mod chat_completion_response;
+pub mod image_generation;
 pub mod openai_client_error;
 
 pub struct OpenAIClient {
@@ -73,6 +79,44 @@ impl OpenAIClient {
                     response.choices[0].finish_reason
                 )));
             }
+
+            return Ok(response);
+        } else {
+            return Err(OpenAIClientError::ResponseBadStatus(format!(
+                "Client response status unsuccessful: {}",
+                response.status()
+            )));
+        }
+    }
+
+    pub async fn image_generation_request(
+        &self,
+        request: ImageGenerationRequest,
+    ) -> Result<ImageGenerationResponse, OpenAIClientError> {
+        let body = request.to_request_body();
+        let response = self
+            .client
+            .post("https://api.openai.com/v1/images/generations")
+            .body(body)
+            .send()
+            .await
+            .map_err(|e| {
+                OpenAIClientError::RequestFailed(format!(
+                    "Error occurred making request to OpenAI:\n{}\n",
+                    e.to_string()
+                ))
+            })?;
+
+        if response.status().is_success() {
+            let response = response
+                .json::<ImageGenerationResponse>()
+                .await
+                .map_err(|e| {
+                    OpenAIClientError::InvalidResponse(format!(
+                        "Failed to convert response into JSON:\n{}\n",
+                        e.to_string()
+                    ))
+                })?;
 
             return Ok(response);
         } else {

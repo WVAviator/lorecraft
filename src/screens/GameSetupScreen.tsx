@@ -3,6 +3,8 @@ import { UnlistenFn } from '@tauri-apps/api/event';
 import { appWindow } from '@tauri-apps/api/window';
 import React from 'react';
 import { Game } from '../types/Game';
+import BackgroundDiv from '../components/BackgroundDiv/BackgroundDiv';
+import AbsoluteContainer from '../components/AbsoluteContainer/AbsoluteContainer';
 
 interface GameSetupScreenProps {}
 
@@ -12,15 +14,23 @@ const GameSetupScreen: React.FC<GameSetupScreenProps> = () => {
     const createGame = async () => {
       console.log('Sending request to backend to form new game.');
       const game = (await invoke('create_new_game', { prompt: '' })) as Game;
+      console.log(`Received game from backend.\n${game}`);
       setGame(game);
     };
     createGame();
+    return () => {};
   }, []);
+  console.log(game);
 
   return (
-    <div>
-      {game ? <div>{JSON.stringify(game)}</div> : <div>Loading...</div>}
-    </div>
+    <BackgroundDiv
+      image={game?.cover_art.src || ''}
+      alt={game?.cover_art.alt || ''}
+    >
+      <AbsoluteContainer top="75%" height="10rem" backgroundColor="black">
+        <h1 style={{ color: 'white' }}>{game?.name || 'Loading...'}</h1>
+      </AbsoluteContainer>
+    </BackgroundDiv>
   );
 };
 
