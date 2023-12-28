@@ -1,83 +1,54 @@
-use serde::{Deserialize, Serialize};
 use rand::Rng;
-use std::fs;
+use serde::{Deserialize, Serialize};
 
 use crate::{
-    file_manager::FileManager,
-    openai::{OpenAIClient},
+    game::{narrative::Narrative, summary::Summary},
+    openai_client::OpenAIClient,
 };
 
-use self::game_summary::GameSummary;
-
-pub mod game_summary;
+mod narrative;
+mod summary;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Game {
     pub id: String,
     pub name: String,
-    game_summary: GameSummary,
+    pub summary: Summary,
+    pub narrative: Narrative,
 }
 
 impl Game {
     pub async fn create_new(user_prompt: Option<&str>) -> Self {
-
         let id = rand::thread_rng()
             .sample_iter(&rand::distributions::Alphanumeric)
             .take(7)
             .map(char::from)
             .collect::<String>();
 
-        let openai = OpenAI::new();
-
-        println!("Building system prompt.");
-
-        let main_prompt_path = "./prompts/architect/main.txt";
-        let example1_prompt_path = "./prompts/architect/example1.yaml";
-        let example2_prompt_path = "./prompts/architect/example2.yaml";
-
-        let mut system_prompt = String::new();
-        system_prompt += &fs::read_to_string(main_prompt_path)
-            .expect("Something went wrong reading the architect system prompt file.");
-        system_prompt += "\n\nExample 1:\n\n";
-        system_prompt += &fs::read_to_string(example1_prompt_path)
-            .expect("Something went wrong reading the architect system prompt example1 file.");
-        system_prompt += "\n\nExample 2:\n\n";
-        system_prompt += &fs::read_to_string(example2_prompt_path)
-            .expect("Something went wrong reading the architect system prompt example2 file.");
-
-        println!("Building user prompt.");
+        let openai = OpenAIClient::new();
 
         let user_prompt = match user_prompt {
             Some(user_prompt) => user_prompt.to_string(),
             None => String::from("choose any random unique game idea"),
         };
 
-        println!("Sending request to OpenAI API.");
-
-        let response_text = openai
-            .chat_completion_request(&system_prompt, &user_prompt, ChatCompletionModel::Gpt_35_Turbo)
+        let summary = Summary::generate(&openai, &user_prompt)
             .await
-            .expect("Failed to get response from OpenAI API.")
-            .get_content();
+            .expect("Failed to generate summary.");
 
-        println!(
-            "Received response from OpenAI API:\n\n{}\n\nAttempting to parse YAML string...",
-            response_text
-        );
+        let name = summary.name.clone();
 
-        FileManager::new()
-            .write_to_file("game_summary.yaml", &response_text)
-            .expect("Failed to write game summary to file.");
+        println!("Generated summary:\n{:?}", summary);
 
-        let game_summary =
-            GameSummary::from_yaml(&response_text).expect("Failed to parse YAML into GameSummary.");
-
-        println!("Parsed game summary:\n{:?}", game_summary);
+        let narrative = Narrative::generate(&openai, &summary.summary)
+            .await
+            .expect("Failed to generate narrative.");
 
         Self {
             id,
-            name: game_summary.name.clone(),
-            game_summary,
+            name,
+            summary,
+            narrative,
         }
     }
 }

@@ -1,11 +1,15 @@
 name: >
   Derelict: The Orion's Fate
-description: Survive and escape a derelict mining ship drifting in the cold void of space.
-art_style: Digital art with a gritty, realistic texture to emphasize a dark and
+description: >
+  Survive and escape a derelict mining ship drifting in the cold void of space.
+art_style: >
+  Digital art with a gritty, realistic texture to emphasize a dark and
   claustrophobic setting.
-art_theme: Isolated space environments, high-tech mining equipment, and eerie
+art_theme: >
+  Isolated space environments, high-tech mining equipment, and eerie
   lighting evoke a sense of desolation and danger.
-cover_art: A lone astronaut standing in a dimly lit, abandoned mining ship
+cover_art: >
+  A lone astronaut standing in a dimly lit, abandoned mining ship
   corridor with flickering lights, looking at a cryptic alien artifact glowing
   ominously in the shadows.
 summary: >
@@ -23,7 +27,8 @@ summary: >
   by the presence of an insidious alien entity that has taken over the ship, and
   the player must learn how to use the Alien Artifact, which turns out be the
   alien's egg, to threaten the alien entity and force it to retreat.
-win_condition: The player wins by repairing the engines on the escape shuttle
+win_condition: >
+  The player wins by repairing the engines on the escape shuttle
   and launching it to safety, or by sending a distress signal to call for
   rescue.
 narrative:
@@ -47,20 +52,25 @@ narrative:
   - narrative: >
       An insidious presence has made the ship its own, lurking in the dark
       recesses, a threat born from the very depths of the cosmos.
-    image: Alien tendrils creeping along the ship's interior, pulsating with
+    image: >
+      Alien tendrils creeping along the ship's interior, pulsating with
       bioluminescent light.
-  - narrative: You must gather your courage, for the fate of the Orion and its
+  - narrative: >
+      You must gather your courage, for the fate of the Orion and its
       secrets rests upon your shoulders.
-    image: A stranded silhouette, facing an open hatch leading to the mysterious
+    image: >
+      A stranded silhouette, facing an open hatch leading to the mysterious
       parts of the ship, reflecting determination in the face of uncertainty.
 player_attributes:
   - name: Engineering Expertise
     description: >
       Your technical knowledge and problem-solving skills in operating
       and repairing advanced spacefaring machinery.
-    advancement: This attribute is advanced by practicing repairs on the ship's
+    advancement: >
+      This attribute is advanced by practicing repairs on the ship's
       systems and studying ship's schematics and manuals.
-    significance: This skill will be essential in restoring power, patching up
+    significance: >
+      This skill will be essential in restoring power, patching up
       life-support systems, and reactivating the ship's mainframe. Higher levels
       may unlock shortcuts or improvised solutions to technical obstacles.
     starting_value: 4
@@ -68,7 +78,8 @@ player_attributes:
     description: >
       Your proficiency in defending yourself against aggressive entities
       using the ship's available weaponry and security systems.
-    advancement: This attribute is advanced through combat practice at shooting
+    advancement: >
+      This attribute is advanced through combat practice at shooting
       ranges aboard the ship, or in actual combat scenarios against alien
       threats.
     significance: >
@@ -78,7 +89,8 @@ player_attributes:
       chance of being overwhelmed.
     starting_value: 2
   - name: Alien Research
-    description: Your capacity to study and understand the alien biology and
+    description: >
+      Your capacity to study and understand the alien biology and
       technology encountered on the ship.
     advancement: >
       This attribute is advanced by examining alien samples, artifacts,
@@ -91,20 +103,23 @@ player_attributes:
     starting_value: 1
 key_items:
   - name: Engineering Access Keycard
-    description: A magnetic keycard for unlocking restricted engineering areas
+    description: >
+      A magnetic keycard for unlocking restricted engineering areas
       within the ship.
     location: >
       The keycard is located within the crew quarters, abandoned on a table
       inside the chief engineer's private room.
-    significance:
+    significance: >
       The keycard grants access to critical areas where the player must
       go to restore systems and gather supplies for the escape attempt.
-    image: A sleek, high-tech keycard with the Orion's emblem emblazoned across it.
+    image: >
+      A sleek, high-tech keycard with the Orion's emblem emblazoned across it.
   - name: Alien Artifact
     description: >
       A cryptic relic of alien origin, whose purpose is unknown but emits
       a soft, otherworldly glow.
-    location: Hidden in the mining storage bay, among the ores and minerals
+    location: >
+      Hidden in the mining storage bay, among the ores and minerals
       extracted during the last expedition.
     significance: >
       The artifact is actually an egg belonging to the dangerous alien
@@ -118,14 +133,17 @@ key_areas:
     description: >
       The heart of the ship's operational systems, filled with machinery,
       control panels, and the central mainframe.
-    significance: The player must restore power and access the mainframe here to
+    significance: >
+      The player must restore power and access the mainframe here to
       gain control over the ship's functions. It's also a hub for repairing
       essential systems and crafting makeshift defenses against the alien
       presence. There are terminals here that the player can use to access the ship's VIKA AI system.
   - name: Crew Quarters
-    description: Living spaces for the crew of the Orion, now eerily silent and
+    description: >
+      Living spaces for the crew of the Orion, now eerily silent and
       abandoned, with personal belongings and clues scattered around.
-    significance: The crew quarters are not only vital for story progression,
+    significance: >
+      The crew quarters are not only vital for story progression,
       providing context through logs and mementos, but also serve as respite
       areas where the player can gather personal effects that may boost morale
       or offer crucial insight into the situation. There is also a terminal here that the player can use to access VIKA, the ship's AI knowledge assistant.
@@ -133,7 +151,7 @@ key_areas:
     description: >
       A massive storage area for the ores and minerals extracted by the
       Orion, now filled with abandoned mining equipment and bins of ore.
-    significance:
+    significance: >
       The storage bay is where ores extracted from the last expedition
       are stored, and where the player will find the alien artifact hiden in one of the refined ore storage bins. It's also a
       place where the player can find useful supplies and equipment.
@@ -148,7 +166,8 @@ key_characters:
       device and as a game mechanic, helping players make sense of their
       surroundings and the tasks at hand. The player can interact with VIKA by
       approaching any terminal or console.
-    image: A holographic interface displaying a serene, abstract face, exuding a
+    image: >
+      A holographic interface displaying a serene, abstract face, exuding a
       calm and informative presence in the ship's chaotic environment.
   - name: Alien Entity
     description: >

@@ -1,3 +1,7 @@
+use serde_json::json;
+
+use super::chat_completion_model::ChatCompletionModel;
+
 pub struct ChatCompletionRequest {
     system_prompt: String,
     user_prompt: String,
@@ -5,7 +9,7 @@ pub struct ChatCompletionRequest {
 }
 
 impl ChatCompletionRequest {
-    pub fn new(system_prompt: String, user_prompt: String, mode: OpenAIModel) -> Self {
+    pub fn new(system_prompt: String, user_prompt: String, model: ChatCompletionModel) -> Self {
         ChatCompletionRequest {
             system_prompt,
             user_prompt,
@@ -15,7 +19,8 @@ impl ChatCompletionRequest {
 
     pub fn to_request_body(self) -> String {
         json!({
-            "model": self.model,
+            "model": self.model.to_string(),
+            "response_format": { "type": "json_object" },
             "messages": [
                 {
                     "role": "system",
@@ -26,6 +31,7 @@ impl ChatCompletionRequest {
                     "content": self.user_prompt
                 }
             ]
-        }).to_string()
+        })
+        .to_string()
     }
 }

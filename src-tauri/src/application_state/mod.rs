@@ -1,7 +1,8 @@
-use tokio::sync::{mpsc, Mutex}
+use tokio::sync::mpsc;
+use tokio::sync::Mutex;
 
 pub mod application_settings;
 
 pub struct ApplicationState {
-    updates_tx: Mutex<mpsc::Sender<String>>
+    pub updates_tx: Mutex<mpsc::Sender<String>>,
 }

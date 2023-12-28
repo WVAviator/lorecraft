@@ -1,5 +1,5 @@
-use serde::{Serialize, Deserialize};
 use self::{choice::Choice, usage::Usage};
+use serde::{Deserialize, Serialize};
 
 mod choice;
 mod message;
@@ -13,7 +13,7 @@ pub struct ChatCompletionResponse {
 
 impl ChatCompletionResponse {
     pub fn valid(&self) -> bool {
-        match self.choices[0].finish_reason {
+        match self.choices[0].finish_reason.as_str() {
             "stop" => true,
             _ => false,
         }
@@ -23,5 +23,3 @@ impl ChatCompletionResponse {
         self.choices[0].message.content.clone()
     }
 }
-
-

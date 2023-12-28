@@ -23,7 +23,8 @@ summary: >
   Mystical Affinity and Ancient Wisdom abilities. The player must then use their
   Mystical Affinity to find the Echo Crystal in a cave beneath the temple and
   return it to the Altar of Ancients to restore balance to the world.
-win_condition: The player wins by restoring the Echo Crystal to the Altar of Ancients.
+win_condition: >
+  The player wins by restoring the Echo Crystal to the Altar of Ancients.
 narrative:
   - narrative: >
       The ancients once lived in harmony with nature, building great cities
@@ -35,7 +36,8 @@ narrative:
       600 years ago, the ancients disappeared mysteriously, leaving their
       cities in ruins. Their knowledge was lost, and nature took over their
       once-great structures.
-    image: An overgrown, ruined city with nature reclaiming its buildings, set
+    image: >
+      An overgrown, ruined city with nature reclaiming its buildings, set
       against a backdrop of thick forest and distant mountains.
   - narrative: >
       After the ancients vanished, life became simpler but harder. People
@@ -44,11 +46,14 @@ narrative:
     image: >
       A small, rustic village with simple huts and villagers working the land,
       encircled by a forest and mountains.
-  - narrative: Dark rumors tell of a growing power in the north, casting shadows
+  - narrative: >
+      Dark rumors tell of a growing power in the north, casting shadows
       over the land. An ancient temple may hold the key to understanding and
       stopping this threat.
-    image: A dark, imposing temple on a snowy mountain, with a storm brewing above.
-  - narrative: You awaken in a forgotten world, surrounded by the remnants of an
+    image: >
+      A dark, imposing temple on a snowy mountain, with a storm brewing above.
+  - narrative: >
+      You awaken in a forgotten world, surrounded by the remnants of an
       ancient civilization. Your journey starts in the heart of an old forest,
       where secrets of the past are hidden.
     image: >
@@ -57,19 +62,23 @@ narrative:
   - narrative: >
       Your goal is clear: discover the ancients' secrets and use their
       wisdom to save your world from a looming disaster.
-    image: A detailed map showing important locations and paths in the game world.
+    image: >
+      A detailed map showing important locations and paths in the game world.
 player_attributes:
   - name: Ancient Wisdom
-    description: Your understanding of ancient history and forgotten languages.
+    description: >
+      Your understanding of ancient history and forgotten languages.
     advancement: >
       This attribute is advanced by studying ancient knowledge through
       tomes, writings, murals, etc.
-    significance: This skill is used to decipher ancient texts, understand the
+    significance: >
+      This skill is used to decipher ancient texts, understand the
       meaning of ancient murals, and translate ancient languages. A higher level
       will reveal more information from ancient texts and murals.
     starting_value: 1
   - name: Survival Skills
-    description: Your ability to navigate and survive in harsh environments.
+    description: >
+      Your ability to navigate and survive in harsh environments.
     advancement: >
       This attribute is advanced by practicing survival skills such as
       hunting, gathering, first-aid, and building fires.
@@ -80,7 +89,8 @@ player_attributes:
       surviving an injury.
     starting_value: 3
   - name: Mystical Affinity
-    description: Your connection with the magical energies of the ancient world.
+    description: >
+      Your connection with the magical energies of the ancient world.
     advancement: >
       This attribute is advanced by studying ancient artifacts and runes,
       and by practicing meditation.
@@ -92,7 +102,8 @@ player_attributes:
     starting_value: 1
 key_items:
   - name: Temple Map
-    description: A map of the Temple of Shadows.
+    description: >
+      A map of the Temple of Shadows.
     location: >
       The map is given to the player by Arin, the Keeper of Lore, after they
       demonstrate sufficient survival skills.
@@ -102,17 +113,22 @@ key_items:
       Whispering Woods.
     image: A glowing rune, inscribed on a stone tablet.
   - name: Echo Crystal
-    description: A crystal that resonates with the energies of the ancients.
-    location: The Echo Crystal is found deep in a cave beneath the Temple of
+    description: >
+      A crystal that resonates with the energies of the ancients.
+    location: >
+      The Echo Crystal is found deep in a cave beneath the Temple of
       Shadows, in a pool of water. Originally, it was placed on the Altar of
       Ancients, but it had somehow fallen through ventilation shafts into the
       pool deep beneath the temple.
-    significance: The Echo Crystal must be placed on the Altar of Ancients to
+    significance: >
+      The Echo Crystal must be placed on the Altar of Ancients to
       restore balance to the world.
-    image: A shimmering, multi-faceted crystal emitting a soft light.
+    image: >
+      A shimmering, multi-faceted crystal emitting a soft light.
 key_areas:
   - name: Whispering Woods
-    description: A mystical forest said to be the home of ancient spirits. The
+    description: >
+      A mystical forest said to be the home of ancient spirits. The
       Whispering Woods is filled with ancient ruins and artifacts, and is the
       starting point of the player's journey.
     significance: >
@@ -122,7 +138,8 @@ key_areas:
       player will practice their survival skills by building fires, hunting or
       gathering food, and exploring before venturing into the Temple of Shadows.
   - name: Temple of Shadows
-    description: An ancient temple where the dark power is said to reside.
+    description: >
+      An ancient temple where the dark power is said to reside.
     significance: >
       The temple is filled with traps and puzzles, and the player must
       use their wits and wisdom to navigate the temple and uncover its secrets.
@@ -152,5 +169,6 @@ key_characters:
       refuses to enter the temple himself, and is heistant to let you enter
       without proper preparation. He carries a map of the temple, which he will
       give to the player if they demonstrate sufficient survival skills.
-    image: An elderly man with a long beard, wearing robes adorned with runes,
+    image: >
+      An elderly man with a long beard, wearing robes adorned with runes,
       standing in a mystical forest with some fog whisping through the trees.

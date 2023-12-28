@@ -1587,6 +1587,7 @@ dependencies = [
  "serde_yaml",
  "tauri",
  "tauri-build",
+ "tokio",
 ]
 
 [[package]]

@@ -1,8 +1,11 @@
-use serde_json::{json, Value};
-
-use self::openai_model::OpenAIModel;
-use self::chat_completion_request::ChatCompletionRequest;
-use reqwest::{Client, ClientBuilder, header::HeaderMap};
+use self::{
+    chat_completion_request::ChatCompletionRequest,
+    chat_completion_response::ChatCompletionResponse, openai_client_error::OpenAIClientError,
+};
+use reqwest::{
+    header::{HeaderMap, HeaderValue},
+    Client, ClientBuilder,
+};
 
 pub mod chat_completion_model;
 pub mod chat_completion_request;
@@ -19,8 +22,11 @@ impl OpenAIClient {
         let api_key = std::env::var("OPENAI_API_KEY").expect("OPENAI_API_KEY must be set");
 
         let mut headers = HeaderMap::new();
-        headers.insert("Content-Type", "application/json");
-        headers.insert("Authorization", format!("Bearer {}", api_key));
+        headers.insert("Content-Type", HeaderValue::from_static("application/json"));
+        headers.insert(
+            "Authorization",
+            HeaderValue::from_str(&format!("Bearer {}", api_key)).unwrap(),
+        );
 
         let client = ClientBuilder::new()
             .default_headers(headers)
@@ -31,29 +37,49 @@ impl OpenAIClient {
     }
 }
 
-impl AIClient for OpenAIClient {
+impl OpenAIClient {
     pub async fn chat_completion_request(
         &self,
-        request: ChatCompletionRequest
+        request: ChatCompletionRequest,
     ) -> Result<ChatCompletionResponse, OpenAIClientError> {
         let body = request.to_request_body();
-        let response = self.client
+        let response = self
+            .client
             .post("https://api.openai.com/v1/chat/completions")
             .body(body)
             .send()
-            .await.map_err(|e| OpenAIClientError::RequestFailed(format!("Error occurred making request to OpenAI:\n{}\n", e.to_string())))?;
+            .await
+            .map_err(|e| {
+                OpenAIClientError::RequestFailed(format!(
+                    "Error occurred making request to OpenAI:\n{}\n",
+                    e.to_string()
+                ))
+            })?;
 
         if response.status().is_success() {
-            let response = response.json<ChatCompletionResponse>().map_err(|e| OpenAIClientError::InvalidResponse(format!("Failed to convert response into JSON:\n{}\n", e.to_string())))?;
-            
+            let response = response
+                .json::<ChatCompletionResponse>()
+                .await
+                .map_err(|e| {
+                    OpenAIClientError::InvalidResponse(format!(
+                        "Failed to convert response into JSON:\n{}\n",
+                        e.to_string()
+                    ))
+                })?;
+
             if !response.valid() {
-                return Err(OpenAIClientError::InvalidResponse(format!("Received invalid finish reason '{}'.", response.choices[0].finish_reason)));
+                return Err(OpenAIClientError::InvalidResponse(format!(
+                    "Received invalid finish reason '{}'.",
+                    response.choices[0].finish_reason
+                )));
             }
 
-            return Ok(response)
+            return Ok(response);
         } else {
-            return Err(OpenAIClientError::BadStatus(format!("Client response status unsuccessful: {}",
-            response.status())));
+            return Err(OpenAIClientError::ResponseBadStatus(format!(
+                "Client response status unsuccessful: {}",
+                response.status()
+            )));
         }
     }
 }
