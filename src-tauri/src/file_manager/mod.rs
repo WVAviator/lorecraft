@@ -10,13 +10,13 @@ pub struct FileManager {
 
 impl FileManager {
     pub fn new(path_resolver: &PathResolver) -> FileManager {
-        let mut data_dir = path_resolver.app_local_data_dir().unwrap(); //TODO: Handle this error.
+        let data_dir = path_resolver.app_local_data_dir().unwrap(); //TODO: Handle this error.
 
         if !data_dir.exists() {
             std::fs::create_dir_all(&data_dir).unwrap(); //TODO: Handle this error.
         }
 
-        println!("Verified data directory: {:?}", data_dir);
+        info!("Verified data directory: {:?}", data_dir);
 
         FileManager { data_dir }
     }

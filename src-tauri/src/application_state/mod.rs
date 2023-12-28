@@ -1,3 +1,4 @@
+use log::error;
 use tokio::sync::mpsc;
 use tokio::sync::Mutex;
 
@@ -21,7 +22,7 @@ impl ApplicationState {
     pub async fn send_update(&self, update: String) {
         let updates_tx = self.updates_tx.lock().await;
         if let Err(_) = updates_tx.send(update).await {
-            println!("Failed to send update to UI.");
+            error!("Failed to send update to UI.");
         }
     }
 }

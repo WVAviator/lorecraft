@@ -7,6 +7,7 @@ use self::{
     },
     openai_client_error::OpenAIClientError,
 };
+use log::{info, trace};
 use reqwest::{
     header::{HeaderMap, HeaderValue},
     Client, ClientBuilder,
@@ -19,12 +20,13 @@ pub mod image_generation;
 pub mod openai_client_error;
 
 pub struct OpenAIClient {
-    api_key: String,
     client: Client,
 }
 
 impl OpenAIClient {
     pub fn new() -> Self {
+        info!("Initializing OpenAI Client.");
+
         let api_key = std::env::var("OPENAI_API_KEY").expect("OPENAI_API_KEY must be set");
 
         let mut headers = HeaderMap::new();
@@ -39,7 +41,7 @@ impl OpenAIClient {
             .build()
             .expect("Failed to initialize OpenAI Client.");
 
-        Self { api_key, client }
+        Self { client }
     }
 }
 
@@ -49,6 +51,12 @@ impl OpenAIClient {
         request: ChatCompletionRequest,
     ) -> Result<ChatCompletionResponse, OpenAIClientError> {
         let body = request.to_request_body();
+
+        trace!(
+            "Sending OpenAI chat completion request with body:\n\n{}\n\n",
+            body
+        );
+
         let response = self
             .client
             .post("https://api.openai.com/v1/chat/completions")
@@ -61,6 +69,11 @@ impl OpenAIClient {
                     e.to_string()
                 ))
             })?;
+
+        trace!(
+            "Received OpenAI chat completion response:\n\n{:?}\n\n",
+            response
+        );
 
         if response.status().is_success() {
             let response = response
@@ -94,6 +107,12 @@ impl OpenAIClient {
         request: ImageGenerationRequest,
     ) -> Result<ImageGenerationResponse, OpenAIClientError> {
         let body = request.to_request_body();
+
+        trace!(
+            "Sending OpenAI image generation request with body:\n\n{}\n\n",
+            body
+        );
+
         let response = self
             .client
             .post("https://api.openai.com/v1/images/generations")
@@ -106,6 +125,11 @@ impl OpenAIClient {
                     e.to_string()
                 ))
             })?;
+
+        trace!(
+            "Received OpenAI image generation response:\n\n{:?}\n\n",
+            response
+        );
 
         if response.status().is_success() {
             let response = response

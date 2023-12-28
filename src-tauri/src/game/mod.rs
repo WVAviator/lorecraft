@@ -1,4 +1,4 @@
-use rand::Rng;
+use log::{info, trace};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -11,6 +11,7 @@ use crate::{
         },
         OpenAIClient,
     },
+    utils::random::Random,
 };
 
 use tauri::State;
@@ -31,24 +32,14 @@ pub struct Game {
 }
 
 impl Game {
-    pub async fn create_new(
-        user_prompt: Option<&str>,
-        state: &State<'_, ApplicationState>,
-    ) -> Self {
-        let id = rand::thread_rng()
-            .sample_iter(&rand::distributions::Alphanumeric)
-            .take(7)
-            .map(char::from)
-            .collect::<String>();
+    pub async fn create_new(user_prompt: String, state: &State<'_, ApplicationState>) -> Self {
+        let id = Random::generate_id();
+        info!("Generated new game id: {}.", id);
 
         let openai = OpenAIClient::new();
 
-        let user_prompt = match user_prompt {
-            Some(user_prompt) => user_prompt.to_string(),
-            None => String::from("choose any random unique game idea"),
-        };
-
         let summary = async {
+            info!("Generating game summary information.");
             state
                 .send_update(String::from("Generating game summary information."))
                 .await;
@@ -58,11 +49,12 @@ impl Game {
         let summary = summary.await.expect("Failed to generate summary.");
 
         let name = summary.name.clone();
-
-        println!("Generated summary:\n{:?}", summary);
+        info!("Generated game: {}.", name);
+        trace!("Game summary: {:#?}", summary);
 
         let cover_art_path = format!("{}/cover_art.png", id);
         let cover_art = async {
+            info!("Generating game cover art.");
             state
                 .send_update(String::from("Generating game cover art."))
                 .await;
@@ -78,22 +70,31 @@ impl Game {
         };
 
         let narrative = async {
+            info!("Generating story narrative pages.");
             state
                 .send_update(String::from("Generating story narrative pages."))
                 .await;
-            Narrative::generate(&openai, &summary.summary).await
+            let narrative = Narrative::generate(&openai, &summary.summary).await;
+
+            trace!("Generated narrative: {:#?}", narrative);
+            narrative
         };
 
         let (cover_art, narrative) = tokio::join!(cover_art, narrative);
         let cover_art = cover_art.expect("Failed to generate cover art.");
         let narrative = narrative.expect("Failed to generate narrative.");
 
-        Self {
+        info!("Game generation completed for game with id: {}.", id);
+
+        let game = Self {
             id,
             name,
             summary,
             cover_art,
             narrative,
-        }
+        };
+
+        trace!("Generated full game: {:#?}", game);
+        game
     }
 }
