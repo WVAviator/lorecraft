@@ -5,7 +5,7 @@ use crate::game::Game;
 use application_state::ApplicationState;
 use tokio::sync::{mpsc, Mutex};
 
-use tauri::Manager;
+use tauri::{AppHandle, Manager, State};
 
 mod application_state;
 mod file_manager;
@@ -14,7 +14,10 @@ mod openai_client;
 mod prompt_builder;
 
 #[tauri::command]
-async fn create_new_game(prompt: String) -> Result<Game, String> {
+async fn create_new_game(
+    prompt: String,
+    state: State<'_, ApplicationState>,
+) -> Result<Game, String> {
     println!("Creating new game.");
 
     let prompt = prompt.to_string();
@@ -25,11 +28,12 @@ async fn create_new_game(prompt: String) -> Result<Game, String> {
         "" => None,
         _ => Some(prompt.as_str()),
     };
-    let game = game::Game::create_new(prompt).await;
+    let game = game::Game::create_new(prompt, &state).await;
     println!("Game created: {:?}", &game.name);
     let game_serialized = serde_json::to_string(&game).expect("Failed to serialize game.");
     println!("Game serialized. Saving to file...");
-    FileManager::new()
+    state
+        .file_manager
         .write_to_file(format!("{}/game.json", game.id).as_str(), &game_serialized)
         .expect("Failed to write game to file.");
     println!("Game saved to file.");
@@ -43,9 +47,12 @@ fn main() {
     let (updates_tx, mut updates_rx) = mpsc::channel(1);
     let updates_tx = Mutex::new(updates_tx);
     tauri::Builder::default()
-        .manage(ApplicationState { updates_tx })
         .invoke_handler(tauri::generate_handler![create_new_game])
         .setup(|app| {
+            let file_manager = FileManager::new(&app.path_resolver());
+            let state = ApplicationState::new(updates_tx, file_manager);
+            app.manage(state);
+
             let app_handle = app.handle();
             tauri::async_runtime::spawn(async move {
                 loop {

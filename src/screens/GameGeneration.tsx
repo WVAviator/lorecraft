@@ -1,6 +1,4 @@
 import { invoke } from '@tauri-apps/api';
-import { UnlistenFn } from '@tauri-apps/api/event';
-import { appWindow } from '@tauri-apps/api/window';
 import React from 'react';
 import { Game } from '../types/Game';
 import BackgroundDiv from '../components/BackgroundDiv/BackgroundDiv';
@@ -12,9 +10,9 @@ import FlexContainer from '../components/FlexContainer/FlexContainer';
 import LoadingSpinner from '../components/LoadingSpinner/LoadingSpinner';
 import { convertFileSrc } from '@tauri-apps/api/tauri';
 
-interface GameSetupScreenProps {}
+interface GameGenerationScreenProps {}
 
-const GameSetupScreen: React.FC<GameSetupScreenProps> = () => {
+const GameGenerationScreen: React.FC<GameGenerationScreenProps> = () => {
   const [game, setGame] = React.useState<Game | null>(null);
   const { updates } = useUpdates();
 
@@ -41,7 +39,9 @@ const GameSetupScreen: React.FC<GameSetupScreenProps> = () => {
         >
           <FlexContainer height="5rem" gap="1rem">
             <LoadingSpinner />
-            <p>{updates.length > 0 ? updates[updates.length - 1] : ''}</p>
+            <p style={{ backgroundColor: 'black', color: 'white' }}>
+              {updates.length > 0 ? updates[updates.length - 1] : ''}
+            </p>
           </FlexContainer>
         </FlexContainer>
       </CycledBackground>
@@ -60,4 +60,4 @@ const GameSetupScreen: React.FC<GameSetupScreenProps> = () => {
   );
 };
 
-export default GameSetupScreen;
+export default GameGenerationScreen;

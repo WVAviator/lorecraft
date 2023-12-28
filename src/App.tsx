@@ -3,8 +3,8 @@ import SplashLoadingScreen from './screens/SplashLoadingScreen';
 import SetupScreen from './screens/SetupScreen';
 import MainMenuScreen from './screens/MainMenuScreen';
 import SettingsScreen from './screens/SettingsScreen';
-import GameSetupScreen from './screens/GameSetupScreen';
 import GameScreen from './screens/GameScreen';
+import GameGenerationScreen from './screens/GameGeneration';
 
 const router = createHashRouter([
   {
@@ -24,8 +24,8 @@ const router = createHashRouter([
     element: <SettingsScreen />,
   },
   {
-    path: '/gamesetup',
-    element: <GameSetupScreen />,
+    path: '/generate-game',
+    element: <GameGenerationScreen />,
   },
   {
     path: '/game',

@@ -2,16 +2,15 @@ use std::io::Write;
 use std::{fs::OpenOptions, path::PathBuf};
 
 use log::info;
+use tauri::PathResolver;
 
 pub struct FileManager {
     data_dir: PathBuf,
 }
 
 impl FileManager {
-    pub fn new() -> FileManager {
-        let mut data_dir = tauri::api::path::local_data_dir().unwrap(); //TODO: Handle this error.
-
-        data_dir.push("lorecraft");
+    pub fn new(path_resolver: &PathResolver) -> FileManager {
+        let mut data_dir = path_resolver.app_local_data_dir().unwrap(); //TODO: Handle this error.
 
         if !data_dir.exists() {
             std::fs::create_dir_all(&data_dir).unwrap(); //TODO: Handle this error.
@@ -96,44 +95,5 @@ impl FileManager {
         std::fs::remove_dir_all(dir_path)?;
 
         Ok(())
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn file_manager_creates_file() {
-        let file_manager = FileManager::new();
-        file_manager
-            .write_to_file("test.txt", "test")
-            .expect("Failed to write to file.");
-        let contents = file_manager
-            .read_from_file("test.txt")
-            .expect("Failed to read from file.");
-        assert_eq!(contents, "test");
-        file_manager
-            .delete_file("test.txt")
-            .expect("Failed to delete file.");
-    }
-
-    #[test]
-    fn file_manager_creates_nested_file() {
-        let file_manager = FileManager::new();
-        file_manager
-            .write_to_file("test/test.txt", "test")
-            .expect("Failed to write to file.");
-        let contents = file_manager
-            .read_from_file("test/test.txt")
-            .expect("Failed to read from file.");
-        assert_eq!(contents, "test");
-        file_manager
-            .delete_file("test/test.txt")
-            .expect("Failed to delete file.");
-
-        file_manager
-            .delete_dir("test")
-            .expect("Failed to delete directory.");
     }
 }

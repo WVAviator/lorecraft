@@ -26,6 +26,7 @@ impl Image {
         filepath: &str,
         model: ImageGenerationModel,
         size: ImageGenerationSize,
+        file_manager: &FileManager,
     ) -> Result<Self, OpenAIClientError> {
         let request = ImageGenerationRequest::new(prompt.to_string(), model, size);
         let response = openai_client
@@ -37,7 +38,7 @@ impl Image {
         let base64_encoded = response.data[0].b64_json.split(",").last().unwrap();
         let image_data = base64::decode(base64_encoded).expect("Failed to decode base64 image.");
 
-        let src = FileManager::new()
+        let src = file_manager
             .write_bytes_to_file(filepath, image_data)
             .expect("Failed to write image to file.");
 

@@ -2,6 +2,7 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    application_state::ApplicationState,
     game::{narrative::Narrative, summary::Summary},
     openai_client::{
         image_generation::{
@@ -11,6 +12,8 @@ use crate::{
         OpenAIClient,
     },
 };
+
+use tauri::State;
 
 use self::image::Image;
 
@@ -28,7 +31,10 @@ pub struct Game {
 }
 
 impl Game {
-    pub async fn create_new(user_prompt: Option<&str>) -> Self {
+    pub async fn create_new(
+        user_prompt: Option<&str>,
+        state: &State<'_, ApplicationState>,
+    ) -> Self {
         let id = rand::thread_rng()
             .sample_iter(&rand::distributions::Alphanumeric)
             .take(7)
@@ -42,24 +48,41 @@ impl Game {
             None => String::from("choose any random unique game idea"),
         };
 
-        let summary = Summary::generate(&openai, &user_prompt)
-            .await
-            .expect("Failed to generate summary.");
+        let summary = async {
+            state
+                .send_update(String::from("Generating game summary information."))
+                .await;
+            Summary::generate(&openai, &user_prompt).await
+        };
+
+        let summary = summary.await.expect("Failed to generate summary.");
 
         let name = summary.name.clone();
 
         println!("Generated summary:\n{:?}", summary);
 
         let cover_art_path = format!("{}/cover_art.png", id);
-        let cover_art = Image::from_image_prompt(
-            &summary.cover_art,
-            &openai,
-            &cover_art_path,
-            ImageGenerationModel::Dall_E_3,
-            ImageGenerationSize::Size1792x1024,
-        );
+        let cover_art = async {
+            state
+                .send_update(String::from("Generating game cover art."))
+                .await;
+            Image::from_image_prompt(
+                &summary.cover_art,
+                &openai,
+                &cover_art_path,
+                ImageGenerationModel::Dall_E_3,
+                ImageGenerationSize::Size1792x1024,
+                &state.file_manager,
+            )
+            .await
+        };
 
-        let narrative = Narrative::generate(&openai, &summary.summary);
+        let narrative = async {
+            state
+                .send_update(String::from("Generating story narrative pages."))
+                .await;
+            Narrative::generate(&openai, &summary.summary).await
+        };
 
         let (cover_art, narrative) = tokio::join!(cover_art, narrative);
         let cover_art = cover_art.expect("Failed to generate cover art.");
