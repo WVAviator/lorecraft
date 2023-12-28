@@ -1,5 +1,5 @@
 import React from 'react';
-import background from '../assets/images/menu/background.png';
+import background from '/images/menu/background.png';
 import AbsoluteContainer from '../components/AbsoluteContainer/AbsoluteContainer';
 import BackgroundDiv from '../components/BackgroundDiv/BackgroundDiv';
 import MenuList from '../components/MenuList/MenuList';

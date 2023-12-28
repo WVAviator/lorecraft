@@ -1,5 +1,4 @@
 import React from 'react';
-import styles from './BackgroundDiv.module.css';
 import BackgroundDiv from '../BackgroundDiv/BackgroundDiv';
 
 interface CycledBackgroundProps {

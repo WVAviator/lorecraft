@@ -1,4 +1,4 @@
-import pattern01 from '../../assets/images/common/pattern.png';
+import pattern01 from '/images/common/pattern.png';
 import styles from './LoadingSpinner.module.css';
 
 const LoadingSpinner = () => {

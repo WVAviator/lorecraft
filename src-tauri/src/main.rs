@@ -5,7 +5,7 @@ use crate::game::Game;
 use application_state::ApplicationState;
 use tokio::sync::{mpsc, Mutex};
 
-use tauri::{AppHandle, Manager, State};
+use tauri::{Manager, State};
 
 mod application_state;
 mod file_manager;

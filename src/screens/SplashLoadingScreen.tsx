@@ -1,5 +1,5 @@
 import BackgroundDiv from '../components/BackgroundDiv/BackgroundDiv';
-import background from '../assets/images/splash/background.png';
+import background from '/images/splash/background.png';
 import FlexContainer from '../components/FlexContainer/FlexContainer';
 import LoadingSpinner from '../components/LoadingSpinner/LoadingSpinner';
 import React from 'react';
