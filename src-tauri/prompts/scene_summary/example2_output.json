@@ -48,7 +48,7 @@
     {
       "name": "Communications Room",
       "description": "A room dedicated to external communications. The equipment is damaged but repairable.",
-      "actions": "The player can attempt to repair the communications equipment to send a distress signal or return to the Corridor Junction."
+      "actions": "The player can attempt to repair the communications equipment to send a distress signal or return to the Corridor Junction. The player can also interface with VIKA, the ship's AI assistant, to learn more about the ship's systems."
     },
     {
       "name": "Alien's Nest",
