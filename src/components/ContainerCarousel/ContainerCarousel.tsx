@@ -22,7 +22,6 @@ const ContainerCarousel = <T,>({
     () => React.Children.count(children),
     [children]
   );
-  console.log(length);
   const [selected, setSelected] = React.useState(0);
 
   React.useEffect(() => {

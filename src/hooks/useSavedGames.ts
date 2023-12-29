@@ -1,6 +1,5 @@
-import { convertFileSrc } from '@tauri-apps/api/tauri';
 import { readDir, readTextFile } from '@tauri-apps/api/fs';
-import { appLocalDataDir, join } from '@tauri-apps/api/path';
+import { appLocalDataDir } from '@tauri-apps/api/path';
 import React from 'react';
 import { Game } from '../types/Game';
 
@@ -14,18 +13,10 @@ const useSavedGames = () => {
           recursive: true,
         });
 
-        console.log('directories', directories);
-
         for (const directory of directories) {
-          if (!directory.name) {
-            continue;
-          }
-
           if (directory.children) {
             for (const file of directory.children) {
-              console.log('file', file);
               if (file.name?.endsWith('game.json')) {
-                console.log('reading game filePath', file.path);
                 const fileContent = await readTextFile(file.path);
                 const game = JSON.parse(fileContent) as Game;
                 setGames((prevGames) => {

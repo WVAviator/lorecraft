@@ -19,21 +19,30 @@ const GameSummaryCard: React.FC<GameSummaryCardProps> = ({
   const [xPivot, setXPivot] = React.useState(0);
   const [yPivot, setYPivot] = React.useState(0);
 
+  let animationFrame: number | null = null;
+
   const handlePointerMove = (event: React.MouseEvent<HTMLDivElement>) => {
     if (pivotDisabled) return;
 
-    const { clientX, clientY } = event;
-    const { left, top, width, height } =
-      event.currentTarget.getBoundingClientRect();
+    if (animationFrame) {
+      cancelAnimationFrame(animationFrame);
+    }
 
-    const offsetX = clientX - left;
-    const offsetY = clientY - top;
+    const { clientX, clientY, currentTarget } = event;
 
-    const rY = 50 * (offsetX / width - 0.5);
-    const rX = 50 * (offsetY / height - 0.5);
+    animationFrame = requestAnimationFrame(() => {
+      const { left, top, width, height } =
+        currentTarget.getBoundingClientRect();
 
-    setXPivot(rX);
-    setYPivot(rY);
+      const offsetX = clientX - left;
+      const offsetY = clientY - top;
+
+      const rY = 10 * (offsetX / width - 0.5);
+      const rX = 10 * (offsetY / height - 0.5);
+
+      setXPivot(rX);
+      setYPivot(rY);
+    });
   };
 
   const handlePointerLeave = () => {
@@ -52,7 +61,11 @@ const GameSummaryCard: React.FC<GameSummaryCardProps> = ({
           style={{
             transform: `rotateY(${yRotation}deg) rotateX(${xRotation}deg)`,
           }}
-          onClick={onClick}
+          onClick={() => {
+            if (!faceDown) {
+              onClick();
+            }
+          }}
           onPointerMove={handlePointerMove}
           onPointerLeave={handlePointerLeave}
         >
@@ -61,6 +74,12 @@ const GameSummaryCard: React.FC<GameSummaryCardProps> = ({
               src={convertFileSrc(game.cover_art.src)}
               alt={game.cover_art.alt}
             />
+            <div className={styles.desc}>
+              <div className={styles.desc_inner}>
+                <h2>{game.name}</h2>
+                <p>{game.summary.description}</p>
+              </div>
+            </div>
           </div>
           <div className={styles.back}>
             <img

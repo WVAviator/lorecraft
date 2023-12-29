@@ -35,3 +35,8 @@ body {
   font-family: 'Dancing Script';
   src: url('/fonts/DancingScript-VariableFont_wght.ttf') format('truetype');
 }
+
+@font-face {
+  font-family: 'Almendra';
+  src: url('/fonts/Almendra-Regular.ttf') format('truetype');
+}
