@@ -1,0 +1,89 @@
+{
+  "scenes": [
+    {
+      "name": "Cryosleep Chamber",
+      "description": "A dimly lit room filled with cryosleep pods, some of which are malfunctioning. This is where the player awakens and begins their journey.",
+      "connections": ["Central Corridor"]
+    },
+    {
+      "name": "Central Corridor",
+      "description": "A long, narrow corridor running through the Orion, lined with doors leading to various compartments. It's eerily quiet with flickering lights.",
+      "connections": [
+        "Cryosleep Chamber",
+        "Crew Quarters",
+        "Engineering Bay",
+        "Command Center"
+      ]
+    },
+    {
+      "name": "Crew Quarters",
+      "description": "Personal rooms of the crew, now abandoned. The player can find personal belongings and logs here that provide clues about the crew and the alien.",
+      "connections": ["Central Corridor"]
+    },
+    {
+      "name": "Engineering Bay",
+      "description": "The heart of the ship's mechanical systems. The player must repair various systems here to progress in the game.",
+      "connections": ["Central Corridor", "Storage Room"]
+    },
+    {
+      "name": "Command Center",
+      "description": "The control room of the Orion. The player can access ship's logs, navigation, and communication systems here.",
+      "connections": ["Central Corridor", "Observation Deck"]
+    },
+    {
+      "name": "Storage Room",
+      "description": "A large room filled with crates, tools, and the Alien Artifact. The player must decide the fate of the artifact here.",
+      "connections": ["Engineering Bay"]
+    },
+    {
+      "name": "Observation Deck",
+      "description": "A room with large windows offering a view of space. The player can find navigation charts and star maps here.",
+      "connections": ["Command Center"]
+    },
+    {
+      "name": "Auxiliary Shuttle Bay",
+      "description": "A small bay housing the auxiliary shuttle. The player must repair the shuttle here to escape.",
+      "connections": ["Engineering Bay"]
+    },
+    {
+      "name": "Alien Nest",
+      "description": "A hidden section of the ship taken over by the alien. It's dangerous, but crucial for confronting the alien or using the egg.",
+      "connections": ["Storage Room", "Engineering Bay"]
+    },
+    {
+      "name": "Communication Room",
+      "description": "A room dedicated to ship-to-ship and long-distance communication. The player can send a distress signal from here.",
+      "connections": ["Command Center"]
+    },
+    {
+      "name": "Medical Bay",
+      "description": "A facility for medical treatment. The player can find first aid here and clues about the crew's health before the disaster.",
+      "connections": ["Central Corridor"]
+    },
+    {
+      "name": "Research Lab",
+      "description": "A lab for scientific experiments. Contains information about the alien and potential ways to combat it.",
+      "connections": ["Central Corridor"]
+    },
+    {
+      "name": "Maintenance Tunnels",
+      "description": "Narrow, claustrophobic tunnels running through the ship. The player can use these to avoid the alien or access blocked areas.",
+      "connections": ["Engineering Bay", "Storage Room", "Alien Nest"]
+    },
+    {
+      "name": "Rec Room",
+      "description": "A communal area for the crew to relax. The player can find personal items and clues about the crew's relationships here.",
+      "connections": ["Central Corridor"]
+    },
+    {
+      "name": "Airlock",
+      "description": "An exit point from the ship into space. The player may need to venture outside for repairs or to avoid the alien.",
+      "connections": ["Central Corridor"]
+    },
+    {
+      "name": "Ship's Archive",
+      "description": "A room containing the ship's historical records, manuals, and schematics. Essential for understanding and repairing the Orion.",
+      "connections": ["Central Corridor"]
+    }
+  ]
+}
