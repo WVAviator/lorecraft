@@ -1,0 +1,29 @@
+{
+  "items": [
+    {
+      "name": "Alien Artifact",
+      "description": "A mysterious, otherworldly egg-like object, pulsating with an eerie light.",
+      "image": "An egg-shaped artifact with a luminescent, translucent surface displaying a network of intricate, alien patterns on a dark background. The artifact emits a soft, unsettling glow, hinting at the lifeform within."
+    },
+    {
+      "name": "Torx Screwdriver",
+      "description": "A durable tool essential for repairs and maintenance aboard the ship.",
+      "image": "A sleek, metallic Torx screwdriver with a sturdy, ergonomic handle and a star-shaped tip, shown on a dark background. The tool appears well-used yet reliable, with a few scratches indicating its frequent use in ship repairs."
+    },
+    {
+      "name": "Wiring Harness",
+      "description": "A complex bundle of wires and connectors used in the ship's electrical systems.",
+      "image": "A tangle of multicolored wires and connectors of varying thickness, presented on a dark background. The harness includes several plug-in connectors and is essential for the ship's electrical repairs and maintenance."
+    },
+    {
+      "name": "Ship Schematics",
+      "description": "Detailed blueprints of the Orion, crucial for navigating and repairing the ship.",
+      "image": "A set of detailed ship schematics spread out, displaying the Orion's layout and systems on a dark background. The blueprints show intricate diagrams and annotations, essential for understanding the ship's structure and systems."
+    },
+    {
+      "name": "Access Key Card",
+      "description": "A secure card granting access to restricted areas of the ship.",
+      "image": "A sleek, plastic key card with a magnetic strip and a holographic ship emblem, set against a dark background. The card appears official, with a barcode and security clearance level indicated on it."
+    }
+  ]
+}
