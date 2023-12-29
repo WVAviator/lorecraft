@@ -1,0 +1,11 @@
+{
+  "name": "Murmur's Edge",
+  "narrative": "Murmur's Edge is a quaint, primitive viliage nestled at the edge of a mysterious ancient forest called the Whispering Wood. The settlement is comprised of a dozen or so thatched roof huts, constructed mainly from local timber and mud, with smoke lazily rising from stone chimneys. The villagers, skilled in foraging and traditional crafts, share a deep connection with the forest, respecting its mysterious forces.\nA narrow, winding path leads into the heart of the village, flanked by small, carefully-tended gardens bursting with hardy vegetables and herbs. At the village center stands a venerable old tree, believed by the locals to be the guardian of the village. Intricate, primitive carvings on the tree depict legends of the Whispering Wood.",
+  "metadata": "The player can interact with a few of the villagers to learn more about the village's history, lore, and their fear regarding the growing cataclysmic storm. The villagers may be willing to help the player learn survival skills, and give or trade useful tools with the player. The player should not be allowed to enter villager houses. If the player chooses to break any obvious laws in the village, including attacking villagers, vandalism, or stealing items, they should be arrested, ending the game.",
+  "image": "A rustic, primitive village at twilight, nestled at the edge of a dense, mist-enshrouded forest. The village is comprised of around a dozen small huts with thatched roofs and simple stone chimneys from which a faint trail of smoke rises. There is a narrow dirt path running though the village, lined with vegetable and herb gardens, leading up to an ancient tree at the village center.",
+  "characters": [
+    "Liora: A middle-aged female villager",
+    "Eldan: A young male villager",
+    "Theron: An older male villager"
+  ]
+}

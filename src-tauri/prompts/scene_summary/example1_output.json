@@ -3,61 +3,52 @@
     {
       "name": "Murmur's Edge",
       "description": "A small rustic, primitive village at the edge of the Whispering Wood. Villagers here will provide information about history and lore, trade tools with the player, and teach the player survival skills.",
-      "connections": ["Whispering Wood Entrance"]
+      "actions": "The player can explore the village, speak to or trade with the villagers, or travel to the Whispering Wood Entrance."
     },
     {
       "name": "Whispering Wood Entrance",
       "description": "A mystical entrance to the Whispering Wood near the village of Murmur's Edge.",
-      "connections": ["Murmur's Edge", "Whispering Wood Path"]
+      "actions": "The player can travel back to the village of Murmur's Edge or travel deeper into the forest along the Whispering Wood Path."
     },
     {
       "name": "Whispering Wood Path",
       "description": "A path that winds endlessly through the Whispering Wood passing remnants of an ancient civilization. The player will have opportunities to learn and use survival skills here.",
-      "connections": ["Whispering Wood Entrance", "Shadow Valley"]
+      "actions": "The player can travel back to the Whispering Wood Entrance or travel deeper into the forest along the Whispering Wood Path. The player may need to employ survival skills to navigate the forest safely. The player may eventually emerge in the Shadow Valley, a clearing in the forest where an ancient city once stood near the base of the Shadow Temple."
     },
     {
       "name": "Shadow Valley",
       "description": "A clearing in the forest where an ancient city once stood nestled in a valley, near the base of the Shadow Temple.",
-      "connections": ["Whispering Wood Path", "Shadow Temple Entrance"]
+      "actions": "The player can explore the ruins of the ancient city, or travel to the Shadow Temple Entrance. The player may be able to learn more about the ancient civilization here and find tools that can be used for survival."
     },
     {
       "name": "Shadow Temple Entrance",
-      "description": "The entrance to the ancient Shadow Temple, guarded by an old sage that warns of the dangers ahead and carries the Temple Map. The player can receive the map from the sage once they have obtained enough survival skills.",
-      "connections": [
-        "Shadow Valley",
-        "Whispering Wood Path",
-        "Forgotten Corridors"
-      ]
+      "description": "The entrance to the ancient Shadow Temple, guarded by Arin, the Keeper of Lore, that warns of the dangers ahead and carries the Temple Map. The player can receive the map from the sage once they have obtained enough survival skills.",
+      "actions": "The player can travel back to the Shadow Valley or enter the Shadow Temple. The player can speak with Arin to learn more about the temple and the ancient civilization that built it. Arin will also provide the player with the Temple Map if they have enough survival skills."
     },
     {
       "name": "Forgotten Corridors",
-      "description": "A series of never-ending passages through the temple, lined with ancient hieroglyphics, filled with traps and surprises, that must be navigated using a map. The player must solve puzzles and riddles or use their Mystical Affinity and Ancient Wisdom attributes to successfully navigate the temple.",
-      "connections": [
-        "Hall of Echoes",
-        "Sanctum of Wisdom",
-        "The Veiled Depths",
-        "Shadow Temple Entrance"
-      ]
+      "description": "A series of never-ending passages through the temple, lined with ancient hieroglyphics, filled with traps and surprises, that must be navigated using a map. The player must solve puzzles and riddles or use magical abilities or knowledge of lore to successfully navigate the temple.",
+      "actions": "If the player does not have a map, they will get lost and return to the Shadow Temple Entrance. If the player has a map, they can navigate the corridors to the Hall of Echoes, the Sanctum of Wisdom, the Veiled Depths, or the Altar of Ancients. THe player may encounter traps, puzzles, and riddles along the way."
     },
     {
       "name": "Hall of Echoes",
       "description": "An ancient hall filled with traps and hidden magic. The player may find mystical artifacts here that can improve Mystical Affinity.",
-      "connections": ["Forgotten Corridors"]
+      "actions": "The player can explore the hall, or travel back to the Forgotten Corridors. THe player may find magical artifacts here that can improve their magical abilities."
     },
     {
       "name": "Sanctum of Wisdom",
       "description": "A library filled with books of ancient knowledge and sacred texts. The player may find tomes and knowledge here that can improve Ancient Wisdom",
-      "connections": ["Forgotten Corridors"]
+      "actions": "The player can explore the library, or travel back to the Forgotten Corridors. The player may find tomes and knowledge here that can improve their knowledge of ancient lore."
     },
     {
       "name": "The Veiled Depths",
-      "description": "An underground cave beneath the temple with mystical pools of water concealing the Echo Crystal. The player must use Mystical Affinity to find the Echo Crystal. The only exit is back outside to the Shadow Valley.",
-      "connections": ["Shadow Valley"]
+      "description": "An underground cave beneath the temple with mystical pools of water concealing the Echo Crystal. The player must use their magical abilities to find the Echo Crystal. The only exit is back outside to the Shadow Valley.",
+      "actions": "The player must use magical abilities they have learned to find the Echo Crystal. The only exit is back outside to the Shadow Valley."
     },
     {
       "name": "Altar of Ancients",
-      "description": "A grand room with an empty ancient altar at its center. The player must have enough Ancient Wisdom to understand how to restore the Echo Crystal to the altar.",
-      "connections": ["Forgotten Corridors"]
+      "description": "A grand room with an empty ancient altar at its center. The player must have enough knowledge of ancient lore to understand how to restore the Echo Crystal to the altar.",
+      "actions": "If the player has earned enough knowledge of ancient lore, they can restore the Echo Crystal to the Altar. If not, they will be unable to do anything and must return to the Forgotten Corridors. Once the Echo Crystal is restored, the player has won the game."
     }
   ]
 }
