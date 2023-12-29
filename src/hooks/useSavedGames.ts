@@ -28,7 +28,11 @@ const useSavedGames = () => {
                 console.log('reading game filePath', file.path);
                 const fileContent = await readTextFile(file.path);
                 const game = JSON.parse(fileContent) as Game;
-                setGames((prevGames) => [...prevGames, game]);
+                setGames((prevGames) => {
+                  return prevGames.includes(game)
+                    ? prevGames
+                    : [...prevGames, game];
+                });
               }
             }
           }

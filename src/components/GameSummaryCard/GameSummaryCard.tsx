@@ -1,7 +1,7 @@
 import { convertFileSrc } from '@tauri-apps/api/tauri';
 import { Game } from '../../types/Game';
 import styles from './GameSummaryCard.module.css';
-import cardBack from '/images/common/card_back.png';
+import cardBack from '/images/common/square_card_back.png';
 import React from 'react';
 
 interface GameSummaryCardProps {
@@ -58,8 +58,7 @@ const GameSummaryCard: React.FC<GameSummaryCardProps> = ({
         >
           <div className={styles.front}>
             <img
-              // src={convertFileSrc(game.cover_art.src)}
-              src="/images/splash/background.png"
+              src={convertFileSrc(game.cover_art.src)}
               alt={game.cover_art.alt}
             />
           </div>
