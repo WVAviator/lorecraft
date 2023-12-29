@@ -3,7 +3,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     application_state::ApplicationState,
-    game::{narrative::Narrative, summary::Summary},
+    game::{
+        narrative::Narrative,
+        scene_summary::{scene_summary_input::SceneSummaryInput, SceneSummary},
+        summary::Summary,
+    },
     openai_client::{
         image_generation::{
             image_generation_model::ImageGenerationModel,
@@ -20,6 +24,7 @@ use self::image::Image;
 
 mod image;
 mod narrative;
+mod scene_summary;
 mod summary;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -29,6 +34,7 @@ pub struct Game {
     pub summary: Summary,
     pub cover_art: Image,
     pub narrative: Narrative,
+    pub scene_summary: SceneSummary,
 }
 
 impl Game {
@@ -80,9 +86,23 @@ impl Game {
             narrative
         };
 
-        let (cover_art, narrative) = tokio::join!(cover_art, narrative);
+        let scene_summary = async {
+            info!("Generating scene summary information.");
+            state
+                .send_update(String::from("Generating scene summary information."))
+                .await;
+            let scene_summary =
+                SceneSummary::generate(&summary.summary, &summary.win_condition, &openai).await;
+
+            trace!("Generated scene summary: {:#?}", scene_summary);
+            scene_summary
+        };
+
+        let (cover_art, narrative, scene_summary) =
+            tokio::join!(cover_art, narrative, scene_summary);
         let cover_art = cover_art.expect("Failed to generate cover art.");
         let narrative = narrative.expect("Failed to generate narrative.");
+        let scene_summary = scene_summary.expect("Failed to generate scene summary.");
 
         info!("Game generation completed for game with id: {}.", id);
 
@@ -92,6 +112,7 @@ impl Game {
             summary,
             cover_art,
             narrative,
+            scene_summary,
         };
 
         trace!("Generated full game: {:#?}", game);
