@@ -5,6 +5,7 @@ import MainMenuScreen from './screens/MainMenuScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import GameScreen from './screens/GameScreen';
 import GameGenerationScreen from './screens/GameGeneration';
+import GameSelectionScreen from './screens/GameSelectionScreen';
 
 const router = createHashRouter([
   {
@@ -18,6 +19,10 @@ const router = createHashRouter([
   {
     path: '/mainmenu',
     element: <MainMenuScreen />,
+  },
+  {
+    path: '/select-game',
+    element: <GameSelectionScreen />,
   },
   {
     path: '/settings',

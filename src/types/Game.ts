@@ -1,7 +1,7 @@
 export interface Game {
   id: string;
   name: string;
-  summary: Summary;
+  summary: GameSummary;
   cover_art: {
     src: string;
     alt: string;
@@ -9,7 +9,7 @@ export interface Game {
   narrative: Narrative[];
 }
 
-export interface Summary {
+export interface GameSummary {
   name: string;
   description: string;
   artStyle: string;

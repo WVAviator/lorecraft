@@ -1,5 +1,5 @@
 import React from 'react';
-import background from '/images/menu/background.png';
+import background from '/images/menu/scroll.png';
 import AbsoluteContainer from '../components/AbsoluteContainer/AbsoluteContainer';
 import BackgroundDiv from '../components/BackgroundDiv/BackgroundDiv';
 import MenuList from '../components/MenuList/MenuList';
@@ -27,7 +27,9 @@ const MainMenuScreen = () => {
       },
       {
         label: 'Load Game',
-        onSelect: () => console.log('load game'),
+        onSelect: () => {
+          navigate('/select-game');
+        },
       },
       {
         label: 'Options',
