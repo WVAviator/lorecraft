@@ -1,6 +1,11 @@
-use std::{collections::HashMap, sync::RwLock};
+use core::time;
+use std::{
+    collections::{BinaryHeap, HashMap, VecDeque},
+    sync::RwLock,
+    time::SystemTime,
+};
 
-use log::info;
+use log::{debug, info};
 
 use crate::{
     file_manager::FileManager,
@@ -20,7 +25,8 @@ pub struct ImageFactory<'a> {
     openai_client: &'a OpenAIClient,
     file_manager: &'a FileManager,
     game_id: &'a str,
-    call_counts: RwLock<HashMap<ImageGenerationModel, u32>>,
+    calls: RwLock<HashMap<ImageGenerationModel, VecDeque<i64>>>,
+    style: String,
 }
 
 impl<'a> ImageFactory<'a> {
@@ -28,32 +34,57 @@ impl<'a> ImageFactory<'a> {
         openai_client: &'a OpenAIClient,
         file_manager: &'a FileManager,
         game_id: &'a str,
+        style: String,
     ) -> Self {
         Self {
             openai_client,
             file_manager,
             game_id,
-            call_counts: RwLock::new(HashMap::new()),
+            calls: RwLock::new(HashMap::new()),
+            style,
         }
     }
 
     async fn rate_limit(&self, model: &ImageGenerationModel) {
-        let call_count = {
-            let mut call_counts = self.call_counts.write().unwrap();
-            let call_count = call_counts.entry(model.clone()).or_insert(0);
-            *call_count += 1;
-            *call_count
-        };
+        loop {
+            let is_limited = {
+                let mut calls = self.calls.write().unwrap();
 
-        if call_count > 5 {
-            info!("Reached call limit for model: {:?}.", &model);
-            info!("Sleeping for 60 seconds.");
-            tokio::time::sleep(tokio::time::Duration::from_secs(60)).await;
+                let now = SystemTime::now()
+                    .duration_since(SystemTime::UNIX_EPOCH)
+                    .unwrap()
+                    .as_millis() as i64;
 
-            {
-                let mut call_counts = self.call_counts.write().unwrap();
-                *call_counts.entry(model.clone()).or_insert(0) = 0;
+                let ts_deque = calls.entry(model.clone()).or_insert(VecDeque::new());
+
+                while let Some(front) = ts_deque.front() {
+                    if now - front > 60000 {
+                        ts_deque.pop_front();
+                    } else {
+                        break;
+                    }
+                }
+
+                ts_deque.len() >= 5
+            };
+
+            if !is_limited {
+                break;
             }
+
+            info!("Throttling API requests for model: {:?}.", model.clone());
+            debug!("Sleeping for 10 seconds.");
+            tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
+        }
+
+        {
+            let mut calls = self.calls.write().unwrap();
+            let ts_deque = calls.entry(model.clone()).or_insert(VecDeque::new());
+            let now = SystemTime::now()
+                .duration_since(SystemTime::UNIX_EPOCH)
+                .unwrap()
+                .as_millis() as i64;
+            ts_deque.push_back(now);
         }
     }
 
