@@ -37,6 +37,7 @@ mod scene;
 mod scene_detail;
 mod scene_summary;
 mod summary;
+mod item;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Game {
