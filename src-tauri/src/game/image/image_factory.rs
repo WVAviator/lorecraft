@@ -5,7 +5,7 @@ use std::{
     time::SystemTime,
 };
 
-use log::{debug, info};
+use log::{debug, error, info, trace};
 
 use crate::{
     file_manager::FileManager,
@@ -25,7 +25,7 @@ pub struct ImageFactory<'a> {
     openai_client: &'a OpenAIClient,
     file_manager: &'a FileManager,
     game_id: &'a str,
-    calls: RwLock<HashMap<ImageGenerationModel, VecDeque<i64>>>,
+    ts_deque: RwLock<VecDeque<i64>>,
     style: String,
 }
 
@@ -40,22 +40,20 @@ impl<'a> ImageFactory<'a> {
             openai_client,
             file_manager,
             game_id,
-            calls: RwLock::new(HashMap::new()),
+            ts_deque: RwLock::new(VecDeque::new()),
             style,
         }
     }
 
-    async fn rate_limit(&self, model: &ImageGenerationModel) {
+    async fn rate_limit(&self) {
         loop {
             let is_limited = {
-                let mut calls = self.calls.write().unwrap();
+                let mut ts_deque = self.ts_deque.write().unwrap();
 
                 let now = SystemTime::now()
                     .duration_since(SystemTime::UNIX_EPOCH)
                     .unwrap()
                     .as_millis() as i64;
-
-                let ts_deque = calls.entry(model.clone()).or_insert(VecDeque::new());
 
                 while let Some(front) = ts_deque.front() {
                     if now - front > 60000 {
@@ -72,14 +70,13 @@ impl<'a> ImageFactory<'a> {
                 break;
             }
 
-            info!("Throttling API requests for model: {:?}.", model.clone());
-            debug!("Sleeping for 10 seconds.");
-            tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
+            info!("Throttling API requests for image generation.");
+            debug!("Sleeping for 15 seconds.");
+            tokio::time::sleep(tokio::time::Duration::from_secs(15)).await;
         }
 
         {
-            let mut calls = self.calls.write().unwrap();
-            let ts_deque = calls.entry(model.clone()).or_insert(VecDeque::new());
+            let mut ts_deque = self.ts_deque.write().unwrap();
             let now = SystemTime::now()
                 .duration_since(SystemTime::UNIX_EPOCH)
                 .unwrap()
@@ -88,12 +85,40 @@ impl<'a> ImageFactory<'a> {
         }
     }
 
-    pub async fn generate_image(
+    pub async fn try_generate_image(
+        &self,
+        image_generation_request: ImageGenerationRequest,
+        filepath: &str,
+        max_attempts: u32,
+    ) -> Result<Image, OpenAIClientError> {
+        let mut attempts = 0;
+        while attempts < max_attempts {
+            match self
+                .generate_image(image_generation_request.clone(), filepath)
+                .await
+            {
+                Ok(image) => return Ok(image),
+                Err(e) => {
+                    error!("Image API request failed with reason: {:?}", e);
+                    trace!("Request:\n{:?}", &image_generation_request);
+                    info!("Retrying...")
+                }
+            }
+            attempts += 1;
+        }
+
+        Err(OpenAIClientError::MaxAttemptsExceeded(format!(
+            "Max attempts exceeded to generate image for request:\n{:?}",
+            &image_generation_request
+        )))
+    }
+
+    async fn generate_image(
         &self,
         image_generation_request: ImageGenerationRequest,
         filepath: &str,
     ) -> Result<Image, OpenAIClientError> {
-        self.rate_limit(&image_generation_request.model).await;
+        self.rate_limit().await;
 
         let prompt = format!("{}\n{}", &image_generation_request.user_prompt, &self.style);
         let response = self

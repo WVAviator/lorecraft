@@ -5,6 +5,7 @@ use super::{
     image_generation_model::ImageGenerationModel, image_generation_size::ImageGenerationSize,
 };
 
+#[derive(Debug, Clone)]
 pub struct ImageGenerationRequest {
     pub user_prompt: String,
     pub model: ImageGenerationModel,

@@ -10,7 +10,7 @@ use crate::{
         character::{character_factory::CharacterFactory, Character},
         image::image_factory::ImageFactory,
         item::item_factory::ItemFactory,
-        narrative::Narrative,
+        narrative::{narrative_factory::NarrativeFactory, Narrative},
         scene::Scene,
         scene_detail::SceneDetail,
         scene_summary::{scene_summary_input::SceneSummaryInput, SceneSummary},
@@ -74,7 +74,8 @@ impl Game {
             &summary.art_style, &summary.art_theme
         );
         let image_factory = ImageFactory::new(&openai, &state.file_manager, &id, style_string);
-        let character_factory = CharacterFactory::new(&summary.summary, &openai, &image_factory);
+        let narrative_factory = NarrativeFactory::new(&openai, &summary.summary, &image_factory);
+        let character_factory = CharacterFactory::new(&openai, &summary.summary, &image_factory);
         let item_factory = ItemFactory::new(&openai, &summary.summary, &image_factory);
 
         let name = summary.name.clone();
@@ -92,8 +93,9 @@ impl Game {
                 ImageGenerationSize::Size1792x1024,
             );
             image_factory
-                .generate_image(image_generation_request, "cover_art.png")
+                .try_generate_image(image_generation_request, "cover_art.png", 3)
                 .await
+                .expect("Unable to generate cover art.")
         };
 
         let narrative = async {
@@ -101,54 +103,54 @@ impl Game {
             state
                 .send_update(String::from("Generating story narrative pages."))
                 .await;
-            let narrative = Narrative::generate(&openai, &summary.summary).await;
+            let narrative = narrative_factory
+                .create()
+                .await
+                .expect("Unable to create narrative.");
 
             trace!("Generated narrative: {:#?}", narrative);
             narrative
         };
 
-        let scene_summary = async {
+        let scene_details = async {
             info!("Generating scene summary information.");
             state
                 .send_update(String::from("Generating scene summary information."))
                 .await;
             let scene_summary =
-                SceneSummary::generate(&summary.summary, &summary.win_condition, &openai).await;
+                SceneSummary::generate(&summary.summary, &summary.win_condition, &openai)
+                    .await
+                    .expect("Unable to create scene summary.");
 
             trace!("Generated scene summary: {:#?}", scene_summary);
-            scene_summary
-        };
 
-        let (cover_art, narrative, scene_summary) =
-            tokio::join!(cover_art, narrative, scene_summary);
-        let cover_art = cover_art.expect("Failed to generate cover art.");
-        let narrative = narrative.expect("Failed to generate narrative.");
-        let scene_summary = scene_summary.expect("Failed to generate scene summary.");
+            async {
+                let mut futures = Vec::new();
+                for summarized_scene in &scene_summary.scenes {
+                    let openai_ref = &openai;
+                    let summary_ref = &summary;
 
-        let scene_details = async {
-            let mut futures = Vec::new();
-            for summarized_scene in &scene_summary.scenes {
-                let openai_ref = &openai;
-                let summary_ref = &summary;
+                    let future = async move {
+                        SceneDetail::generate(&summary_ref.summary, &summarized_scene, openai_ref)
+                            .await
+                            .expect("Failed to generate scene detail.")
+                    };
 
-                let future = async move {
-                    SceneDetail::generate(&summary_ref.summary, &summarized_scene, openai_ref)
-                        .await
-                        .expect("Failed to generate scene detail.")
-                };
+                    futures.push(future);
+                }
 
-                futures.push(future);
+                state
+                    .send_update(String::from("Generating scene details."))
+                    .await;
+
+                let stream = futures::stream::iter(futures).buffered(5);
+                stream.collect::<Vec<_>>().await
             }
-
-            state
-                .send_update(String::from("Generating scene details."))
-                .await;
-
-            let stream = futures::stream::iter(futures).buffered(5);
-            stream.collect::<Vec<_>>().await
+            .await
         };
 
-        let scene_details = scene_details.await;
+        let (cover_art, narrative, scene_details) =
+            tokio::join!(cover_art, narrative, scene_details);
 
         let scenes = async {
             let mut futures = Vec::new();

@@ -28,8 +28,8 @@ pub struct CharacterFactory<'a> {
 
 impl<'a> CharacterFactory<'a> {
     pub fn new(
-        game_summary: &'a str,
         openai_client: &'a OpenAIClient,
+        game_summary: &'a str,
         image_factory: &'a ImageFactory<'a>,
     ) -> Self {
         Self {
@@ -85,13 +85,14 @@ impl<'a> CharacterFactory<'a> {
                     let filepath = format!("characters/{}.png", &id);
                     let image = self
                         .image_factory
-                        .generate_image(
+                        .try_generate_image(
                             ImageGenerationRequest::new(
                                 character_output.image.to_string(),
                                 ImageGenerationModel::Dall_E_2,
                                 ImageGenerationSize::Size1024x1024,
                             ),
                             &filepath,
+                            3,
                         )
                         .await
                         .expect("Failed to generate image.");

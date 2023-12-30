@@ -23,6 +23,8 @@ pub struct Scene {
     pub name: String,
     pub narrative: String,
     pub metadata: String,
+    pub characters: Vec<String>,
+    pub items: Vec<String>,
     pub image: Image,
 }
 
@@ -46,7 +48,7 @@ impl Scene {
         let filepath = format!("scenes/{}.png", id);
 
         let image = image_factory
-            .generate_image(image_generation_request, &filepath)
+            .try_generate_image(image_generation_request, &filepath, 3)
             .await?;
 
         Ok(Scene {
@@ -54,6 +56,8 @@ impl Scene {
             name,
             narrative,
             metadata,
+            characters: scene_detail.characters.clone(),
+            items: scene_detail.items.clone(),
             image,
         })
     }

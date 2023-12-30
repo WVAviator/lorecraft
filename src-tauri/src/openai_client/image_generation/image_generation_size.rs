@@ -1,3 +1,4 @@
+#[derive(Debug, Clone)]
 pub enum ImageGenerationSize {
     Size256x256,
     Size512x512,

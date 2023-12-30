@@ -76,13 +76,14 @@ impl<'a> ItemFactory<'a> {
                     let filepath = format!("items/{}.png", &id);
                     let image = self
                         .image_factory
-                        .generate_image(
+                        .try_generate_image(
                             ImageGenerationRequest::new(
                                 item.image,
                                 ImageGenerationModel::Dall_E_2,
                                 ImageGenerationSize::Size256x256,
                             ),
                             &filepath,
+                            3
                         )
                         .await
                         .expect("Failed to generate image.");
