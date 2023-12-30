@@ -95,7 +95,7 @@ impl<'a> ImageFactory<'a> {
     ) -> Result<Image, OpenAIClientError> {
         self.rate_limit(&image_generation_request.model).await;
 
-        let prompt = image_generation_request.user_prompt.clone();
+        let prompt = format!("{}\n{}", &image_generation_request.user_prompt, &self.style);
         let response = self
             .openai_client
             .image_generation_request(image_generation_request)
