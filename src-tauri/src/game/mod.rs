@@ -9,6 +9,7 @@ use crate::{
     game::{
         character::{character_factory::CharacterFactory, Character},
         image::image_factory::ImageFactory,
+        item::item_factory::ItemFactory,
         narrative::Narrative,
         scene::Scene,
         scene_detail::SceneDetail,
@@ -28,16 +29,16 @@ use crate::{
 
 use tauri::State;
 
-use self::image::Image;
+use self::{image::Image, item::Item};
 
 mod character;
 mod image;
+mod item;
 mod narrative;
 mod scene;
 mod scene_detail;
 mod scene_summary;
 mod summary;
-mod item;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Game {
@@ -46,9 +47,9 @@ pub struct Game {
     pub summary: Summary,
     pub cover_art: Image,
     pub narrative: Narrative,
-    pub scene_summary: SceneSummary,
     pub scenes: Vec<Scene>,
     pub characters: Vec<Character>,
+    pub items: Vec<Item>,
 }
 
 impl Game {
@@ -74,6 +75,7 @@ impl Game {
         );
         let image_factory = ImageFactory::new(&openai, &state.file_manager, &id, style_string);
         let character_factory = CharacterFactory::new(&summary.summary, &openai, &image_factory);
+        let item_factory = ItemFactory::new(&openai, &summary.summary, &image_factory);
 
         let name = summary.name.clone();
         info!("Generated game: {}.", name);
@@ -196,7 +198,35 @@ impl Game {
                 .collect::<Vec<Character>>()
         };
 
-        let (scenes, characters) = join!(scenes, characters);
+        let scene_items = async {
+            let item_list: Vec<String> = scene_details
+                .iter()
+                .map(|scene_detail| scene_detail.items.clone())
+                .flatten()
+                .collect();
+            item_factory
+                .create_items(item_list)
+                .await
+                .expect("Unable to create scene items.")
+        };
+
+        let (scenes, characters, scene_items) = join!(scenes, characters, scene_items);
+
+        let character_items = async {
+            let item_list: Vec<String> = characters
+                .iter()
+                .map(|character| character.inventory.clone())
+                .flatten()
+                .collect();
+            item_factory
+                .create_items(item_list)
+                .await
+                .expect("Unable to create character inventory items")
+        };
+
+        let character_items = character_items.await;
+
+        let items = [&scene_items[..], &character_items[..]].concat();
 
         info!("Game generation completed for game with id: {}.", id);
 
@@ -206,9 +236,9 @@ impl Game {
             summary,
             cover_art,
             narrative,
-            scene_summary,
             scenes,
             characters,
+            items,
         };
 
         trace!("Generated full game: {:#?}", game);
