@@ -1,3 +1,4 @@
+#[derive(Eq, Hash, PartialEq, Debug, Clone)]
 pub enum ImageGenerationModel {
     Dall_E_2,
     Dall_E_3,

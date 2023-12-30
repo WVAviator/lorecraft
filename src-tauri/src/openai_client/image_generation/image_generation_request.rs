@@ -7,8 +7,8 @@ use super::{
 
 pub struct ImageGenerationRequest {
     pub user_prompt: String,
-    model: ImageGenerationModel,
-    size: ImageGenerationSize,
+    pub model: ImageGenerationModel,
+    pub size: ImageGenerationSize,
 }
 
 impl ImageGenerationRequest {
