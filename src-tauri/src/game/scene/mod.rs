@@ -15,6 +15,9 @@ use super::{
     scene_detail::SceneDetail,
 };
 
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Scene {
     pub id: String,
     pub name: String,

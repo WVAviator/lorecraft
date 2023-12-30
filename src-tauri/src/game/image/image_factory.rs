@@ -32,12 +32,18 @@ impl<'a> ImageFactory<'a> {
         image_generation_request: ImageGenerationRequest,
         filepath: &str,
     ) -> Result<Image, OpenAIClientError> {
+        let prompt = image_generation_request.user_prompt.clone();
         let response = self
             .openai_client
             .image_generation_request(image_generation_request)
             .await?;
 
-        let alt = response.data[0].revised_prompt.clone();
+        let alt = response.data[0]
+            .revised_prompt
+            .as_ref()
+            .unwrap_or(&prompt)
+            .clone();
+
         let base64_encoded = response.data[0].b64_json.split(",").last().unwrap();
         let image_data = base64::decode(base64_encoded).expect("Failed to decode base64 image.");
 

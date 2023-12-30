@@ -44,6 +44,7 @@ pub struct Game {
     pub cover_art: Image,
     pub narrative: Narrative,
     pub scene_summary: SceneSummary,
+    pub scenes: Vec<Scene>,
 }
 
 impl Game {
@@ -113,23 +114,34 @@ impl Game {
         let narrative = narrative.expect("Failed to generate narrative.");
         let scene_summary = scene_summary.expect("Failed to generate scene summary.");
 
-        // let scenes = {
-        //     let futures_ordered: FuturesOrdered<_> = scene_summary
-        //         .scenes
-        //         .iter()
-        //         .map(|summarized_scene| async {
-        //             let scene_detail =
-        //                 SceneDetail::generate(&summary.summary, summarized_scene, &openai)
-        //                     .await
-        //                     .expect("Failed to generate scene detail.");
-        //             Scene::from_scene_detail(scene_detail, &image_factory)
-        //                 .await
-        //                 .expect("Failed to generate scene.")
-        //         })
-        //         .collect();
+        let scenes = {
+            let mut futures = Vec::new();
+            for summarized_scene in &scene_summary.scenes {
+                let openai_ref = &openai;
+                let image_factory_ref = &image_factory;
+                let summary_ref = &summary;
 
-        //     futures_ordered.collect::<Vec<_>>().await
-        // };
+                let future = async move {
+                    let scene_detail =
+                        SceneDetail::generate(&summary_ref.summary, &summarized_scene, openai_ref)
+                            .await
+                            .expect("Failed to generate scene detail.");
+                    let scene = Scene::from_scene_detail(scene_detail, image_factory_ref)
+                        .await
+                        .expect("Failed to generate scene.");
+
+                    trace!("Generated scene: {:#?}", &scene);
+                    scene
+                };
+
+                futures.push(future);
+            }
+
+            state.send_update(String::from("Generating scenes.")).await;
+
+            let stream = futures::stream::iter(futures).buffered(3);
+            stream.collect::<Vec<_>>().await
+        };
 
         info!("Game generation completed for game with id: {}.", id);
 
@@ -140,6 +152,7 @@ impl Game {
             cover_art,
             narrative,
             scene_summary,
+            scenes,
         };
 
         trace!("Generated full game: {:#?}", game);

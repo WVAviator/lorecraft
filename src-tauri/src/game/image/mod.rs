@@ -21,31 +21,3 @@ pub struct Image {
     pub src: String,
     pub alt: String,
 }
-
-impl Image {
-    pub async fn from_image_prompt(
-        image_generation_request: ImageGenerationRequest,
-        openai_client: &OpenAIClient,
-        filepath: &str,
-        file_manager: &FileManager,
-    ) -> Result<Self, OpenAIClientError> {
-        info!("Generating image '{}'.", filepath);
-
-        let response = openai_client
-            .image_generation_request(image_generation_request)
-            .await
-            .expect("Failed to get response from OpenAI API.");
-
-        info!("Image {} generated. Decoding b64 image data.", filepath);
-        let alt = response.data[0].revised_prompt.clone();
-        let base64_encoded = response.data[0].b64_json.split(",").last().unwrap();
-        let image_data = base64::decode(base64_encoded).expect("Failed to decode base64 image.");
-
-        info!("Writing image to file '{}'.", filepath);
-        let src = file_manager
-            .write_bytes_to_file(filepath, image_data)
-            .expect("Failed to write image to file.");
-
-        Ok(Image { src, alt })
-    }
-}

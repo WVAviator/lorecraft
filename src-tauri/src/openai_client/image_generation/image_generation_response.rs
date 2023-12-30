@@ -8,6 +8,6 @@ pub struct ImageGenerationResponse {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ImageB64 {
-  pub b64_json: String,
-  pub revised_prompt: String,
+    pub b64_json: String,
+    pub revised_prompt: Option<String>,
 }

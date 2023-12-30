@@ -6,7 +6,7 @@ use super::{
 };
 
 pub struct ImageGenerationRequest {
-    user_prompt: String,
+    pub user_prompt: String,
     model: ImageGenerationModel,
     size: ImageGenerationSize,
 }
@@ -17,8 +17,11 @@ impl ImageGenerationRequest {
         model: ImageGenerationModel,
         size: ImageGenerationSize,
     ) -> Self {
-        let model = match size {
-            ImageGenerationSize::Size256x256 | ImageGenerationSize::Size512x512 => {
+        let model = match (&size, &model) {
+            (
+                ImageGenerationSize::Size256x256 | ImageGenerationSize::Size512x512,
+                ImageGenerationModel::Dall_E_3,
+            ) => {
                 warn!(
                     "Image size {} not supported by model {}, using dall-e-2 instead",
                     size.to_string(),
@@ -26,7 +29,10 @@ impl ImageGenerationRequest {
                 );
                 ImageGenerationModel::Dall_E_2
             }
-            ImageGenerationSize::Size1024x1792 | ImageGenerationSize::Size1792x1024 => {
+            (
+                ImageGenerationSize::Size1024x1792 | ImageGenerationSize::Size1792x1024,
+                ImageGenerationModel::Dall_E_2,
+            ) => {
                 warn!(
                     "Image size {} not supported by model {}, using dall-e-3 instead",
                     size.to_string(),
