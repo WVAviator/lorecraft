@@ -28,22 +28,22 @@ pub struct Scene {
 
 impl Scene {
     pub async fn from_scene_detail(
-        scene_detail: SceneDetail,
+        scene_detail: &SceneDetail,
         image_factory: &ImageFactory<'_>,
     ) -> Result<Self, OpenAIClientError> {
         let id = Random::generate_id();
 
-        let name = scene_detail.name;
-        let narrative = scene_detail.narrative;
-        let metadata = scene_detail.metadata;
+        let name = scene_detail.name.clone();
+        let narrative = scene_detail.narrative.clone();
+        let metadata = scene_detail.metadata.clone();
 
         let image_generation_request = ImageGenerationRequest::new(
-            scene_detail.image,
+            scene_detail.image.clone(),
             ImageGenerationModel::Dall_E_2,
             ImageGenerationSize::Size1024x1024,
         );
 
-        let filepath = format!("{}/image.png", id);
+        let filepath = format!("scenes/{}.png", id);
 
         let image = image_factory
             .generate_image(image_generation_request, &filepath)

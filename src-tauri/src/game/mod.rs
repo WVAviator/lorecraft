@@ -2,11 +2,12 @@ use futures::stream::FuturesOrdered;
 use futures::StreamExt;
 use log::{info, trace};
 use serde::{Deserialize, Serialize};
-use tokio::stream;
+use tokio::{join, stream};
 
 use crate::{
     application_state::ApplicationState,
     game::{
+        character::{character_factory::CharacterFactory, Character},
         image::image_factory::ImageFactory,
         narrative::Narrative,
         scene::Scene,
@@ -29,6 +30,7 @@ use tauri::State;
 
 use self::image::Image;
 
+mod character;
 mod image;
 mod narrative;
 mod scene;
@@ -45,6 +47,7 @@ pub struct Game {
     pub narrative: Narrative,
     pub scene_summary: SceneSummary,
     pub scenes: Vec<Scene>,
+    pub characters: Vec<Character>,
 }
 
 impl Game {
@@ -53,8 +56,6 @@ impl Game {
         info!("Generated new game id: {}.", id);
 
         let openai = OpenAIClient::new();
-
-        let image_factory = ImageFactory::new(&openai, &state.file_manager, &id);
 
         let summary = async {
             info!("Generating game summary information.");
@@ -65,6 +66,13 @@ impl Game {
         };
 
         let summary = summary.await.expect("Failed to generate summary.");
+
+        let style_string = format!(
+            "Use a style of {}. Use themes of {}.",
+            &summary.art_style, &summary.art_theme
+        );
+        let image_factory = ImageFactory::new(&openai, &state.file_manager, &id, style_string);
+        let character_factory = CharacterFactory::new(&summary.summary, &openai, &image_factory);
 
         let name = summary.name.clone();
         info!("Generated game: {}.", name);
@@ -114,18 +122,37 @@ impl Game {
         let narrative = narrative.expect("Failed to generate narrative.");
         let scene_summary = scene_summary.expect("Failed to generate scene summary.");
 
-        let scenes = {
+        let scene_details = async {
             let mut futures = Vec::new();
             for summarized_scene in &scene_summary.scenes {
                 let openai_ref = &openai;
-                let image_factory_ref = &image_factory;
                 let summary_ref = &summary;
 
                 let future = async move {
-                    let scene_detail =
-                        SceneDetail::generate(&summary_ref.summary, &summarized_scene, openai_ref)
-                            .await
-                            .expect("Failed to generate scene detail.");
+                    SceneDetail::generate(&summary_ref.summary, &summarized_scene, openai_ref)
+                        .await
+                        .expect("Failed to generate scene detail.")
+                };
+
+                futures.push(future);
+            }
+
+            state
+                .send_update(String::from("Generating scene details."))
+                .await;
+
+            let stream = futures::stream::iter(futures).buffered(5);
+            stream.collect::<Vec<_>>().await
+        };
+
+        let scene_details = scene_details.await;
+
+        let scenes = async {
+            let mut futures = Vec::new();
+            for scene_detail in &scene_details {
+                let image_factory_ref = &image_factory;
+
+                let future = async move {
                     let scene = Scene::from_scene_detail(scene_detail, image_factory_ref)
                         .await
                         .expect("Failed to generate scene.");
@@ -143,6 +170,33 @@ impl Game {
             stream.collect::<Vec<_>>().await
         };
 
+        let characters = async {
+            let mut futures = Vec::new();
+            let character_factory_ref = &character_factory;
+            for scene_detail in &scene_details {
+                let future = async move {
+                    let characters = character_factory_ref
+                        .from_scene_detail(scene_detail)
+                        .await
+                        .expect("Failed to create characters.");
+
+                    characters
+                };
+
+                futures.push(future);
+            }
+
+            let stream = futures::stream::iter(futures).buffered(3);
+            stream
+                .collect::<Vec<_>>()
+                .await
+                .into_iter()
+                .flatten()
+                .collect::<Vec<Character>>()
+        };
+
+        let (scenes, characters) = join!(scenes, characters);
+
         info!("Game generation completed for game with id: {}.", id);
 
         let game = Self {
@@ -153,6 +207,7 @@ impl Game {
             narrative,
             scene_summary,
             scenes,
+            characters,
         };
 
         trace!("Generated full game: {:#?}", game);
