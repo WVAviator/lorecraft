@@ -9,6 +9,21 @@ import GameSelectionScreen from './screens/GameSelectionScreen';
 import NarrativeScreen from './screens/NarrativeScreen';
 import GameProvider from './context/GameProvider';
 import GameMenuScreen from './screens/GameMenuScreen';
+import { ThemeProvider, createTheme } from '@mui/material';
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#FFFFFF',
+    },
+    text: {
+      primary: '#FFFFFF',
+    },
+  },
+  typography: {
+    fontFamily: 'Amarante, serif',
+  },
+});
 
 const router = createHashRouter([
   {
@@ -52,7 +67,9 @@ const router = createHashRouter([
 function App() {
   return (
     <GameProvider>
-      <RouterProvider router={router} />
+      <ThemeProvider theme={theme}>
+        <RouterProvider router={router} />
+      </ThemeProvider>
     </GameProvider>
   );
 }
