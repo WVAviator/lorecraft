@@ -1,5 +1,3 @@
-use futures::future;
-
 use crate::{
     game::image::image_factory::ImageFactory,
     openai_client::{
@@ -83,7 +81,7 @@ impl<'a> ItemFactory<'a> {
                                 ImageGenerationSize::Size256x256,
                             ),
                             &filepath,
-                            3
+                            3,
                         )
                         .await
                         .expect("Failed to generate image.");

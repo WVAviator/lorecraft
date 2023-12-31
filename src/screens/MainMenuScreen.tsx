@@ -1,11 +1,10 @@
 import React from 'react';
-import background from '/images/menu/scroll.png';
 import AbsoluteContainer from '../components/AbsoluteContainer/AbsoluteContainer';
 import BackgroundDiv from '../components/BackgroundDiv/BackgroundDiv';
 import MenuList from '../components/MenuList/MenuList';
 import MenuListItem from '../components/MenuListItem/MenuListItem';
-import { useNavigate } from 'react-router-dom';
 import useTransitionNavigate from '../hooks/useTransitionNavigate';
+import background from '/images/menu/scroll.png';
 
 interface MenuOption {
   label: string;

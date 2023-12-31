@@ -1,21 +1,12 @@
-use core::time;
-use std::{
-    collections::{BinaryHeap, HashMap, VecDeque},
-    sync::RwLock,
-    time::SystemTime,
-};
+use std::{collections::VecDeque, sync::RwLock, time::SystemTime};
 
 use log::{debug, error, info, trace};
 
 use crate::{
     file_manager::FileManager,
     openai_client::{
-        image_generation::{
-            image_generation_model::ImageGenerationModel,
-            image_generation_request::ImageGenerationRequest,
-        },
-        openai_client_error::OpenAIClientError,
-        OpenAIClient,
+        image_generation::image_generation_request::ImageGenerationRequest,
+        openai_client_error::OpenAIClientError, OpenAIClient,
     },
 };
 

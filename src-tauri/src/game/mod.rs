@@ -1,8 +1,7 @@
-use futures::stream::FuturesOrdered;
 use futures::StreamExt;
 use log::{info, trace};
 use serde::{Deserialize, Serialize};
-use tokio::{join, stream};
+use tokio::join;
 
 use crate::{
     application_state::ApplicationState,
@@ -13,7 +12,7 @@ use crate::{
         narrative::{narrative_factory::NarrativeFactory, Narrative},
         scene::Scene,
         scene_detail::SceneDetail,
-        scene_summary::{scene_summary_input::SceneSummaryInput, SceneSummary},
+        scene_summary::SceneSummary,
         summary::Summary,
     },
     openai_client::{
