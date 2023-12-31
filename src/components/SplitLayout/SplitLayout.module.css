@@ -1,0 +1,5 @@
+.container {
+  display: grid;
+  max-height: 100vh;
+  grid-template-columns: 50% 50%;
+}

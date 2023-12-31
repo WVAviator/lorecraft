@@ -40,3 +40,8 @@ body {
   font-family: 'Almendra';
   src: url('/fonts/Almendra-Regular.ttf') format('truetype');
 }
+
+@font-face {
+  font-family: 'Amarante';
+  src: url('/fonts/Amarante-Regular.ttf') format('truetype');
+}

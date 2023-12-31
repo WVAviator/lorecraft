@@ -32,7 +32,7 @@ const NarrativeScreen = () => {
     setFade(true);
     setTimeout(() => {
       if (pageIndex >= (game?.narrative.pages.length ?? 0) - 1) {
-        navigate('/mainmenu'); //TODO: Go to game
+        navigate('/game'); //TODO: Go to game
         return;
       }
       setPageIndex((pageIndex) => pageIndex + 1);
