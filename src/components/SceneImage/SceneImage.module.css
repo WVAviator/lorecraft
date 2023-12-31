@@ -41,12 +41,12 @@
 }
 
 .narrative_container {
-  padding: 0.5rem;
+  padding-top: 0.5rem;
   max-height: 30%;
   overflow: scroll;
 }
 
 .title_container {
-  padding-inline: 0.5rem;
+  padding-bottom: 0.5rem;
   height: 3rem;
 }
