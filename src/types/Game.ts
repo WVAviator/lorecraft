@@ -2,11 +2,44 @@ export interface Game {
   id: string;
   name: string;
   summary: GameSummary;
-  cover_art: {
-    src: string;
-    alt: string;
-  };
-  narrative: Narrative[];
+  cover_art: Image;
+  narrative: Narrative;
+  scenes: Scene[];
+  characters: Character[];
+  items: Item[];
+}
+
+export interface Item {
+  id: string;
+  name: string;
+  description: string;
+  image: Image;
+}
+
+export interface Character {
+  id: string;
+  name: string;
+  physical_description: string;
+  personality: string;
+  backstory: string;
+  thoughts: string;
+  inventory: string[];
+  image: Image;
+}
+
+export interface Scene {
+  id: string;
+  name: string;
+  narrative: string;
+  metadata: string;
+  characters: string[];
+  items: string[];
+  image: Image;
+}
+
+export interface Image {
+  src: string;
+  alt: string;
 }
 
 export interface GameSummary {
@@ -22,7 +55,7 @@ export interface GameSummary {
 export interface Narrative {
   pages: {
     narrative: string;
-    image: string;
+    image: Image;
   }[];
 }
 

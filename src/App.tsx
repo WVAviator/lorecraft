@@ -6,6 +6,8 @@ import SettingsScreen from './screens/SettingsScreen';
 import GameScreen from './screens/GameScreen';
 import GameGenerationScreen from './screens/GameGeneration';
 import GameSelectionScreen from './screens/GameSelectionScreen';
+import NarrativeScreen from './screens/NarrativeScreen';
+import GameProvider from './context/GameProvider';
 
 const router = createHashRouter([
   {
@@ -36,10 +38,18 @@ const router = createHashRouter([
     path: '/game',
     element: <GameScreen />,
   },
+  {
+    path: '/narrative',
+    element: <NarrativeScreen />,
+  },
 ]);
 
 function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <GameProvider>
+      <RouterProvider router={router} />
+    </GameProvider>
+  );
 }
 
 export default App;

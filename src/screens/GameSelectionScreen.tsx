@@ -1,7 +1,10 @@
 import BackgroundDiv from '../components/BackgroundDiv/BackgroundDiv';
 import ContainerCarousel from '../components/ContainerCarousel/ContainerCarousel';
 import GameSummaryCard from '../components/GameSummaryCard/GameSummaryCard';
+import useGameContext from '../context/useGameContext';
 import useSavedGames from '../hooks/useSavedGames';
+import useTransitionNavigate from '../hooks/useTransitionNavigate';
+import { Game } from '../types/Game';
 import background from '/images/menu/stone_hall.png';
 
 const BACKGROUND_ALT_DESC =
@@ -9,8 +12,21 @@ const BACKGROUND_ALT_DESC =
 
 const GameSelectionScreen = () => {
   const { games } = useSavedGames();
+  const { setGame } = useGameContext();
+  const { navigateWithTransition, isTransitioning } =
+    useTransitionNavigate(1000);
+
+  const handleClick = (game: Game) => {
+    setGame(game);
+    navigateWithTransition('/narrative');
+  };
+
   return (
-    <BackgroundDiv image={background} alt={BACKGROUND_ALT_DESC}>
+    <BackgroundDiv
+      image={background}
+      alt={BACKGROUND_ALT_DESC}
+      fade={isTransitioning}
+    >
       <ContainerCarousel
         inactiveItemProps={{ faceDown: true }}
         activeItemProps={{ faceDown: false }}
@@ -18,7 +34,13 @@ const GameSelectionScreen = () => {
         spacing={0.4}
       >
         {games.map((game) => {
-          return <GameSummaryCard key={game.id} game={game} />;
+          return (
+            <GameSummaryCard
+              key={game.id}
+              game={game}
+              onClick={() => handleClick(game)}
+            />
+          );
         })}
       </ContainerCarousel>
     </BackgroundDiv>

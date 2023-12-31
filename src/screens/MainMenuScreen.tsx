@@ -5,6 +5,7 @@ import BackgroundDiv from '../components/BackgroundDiv/BackgroundDiv';
 import MenuList from '../components/MenuList/MenuList';
 import MenuListItem from '../components/MenuListItem/MenuListItem';
 import { useNavigate } from 'react-router-dom';
+import useTransitionNavigate from '../hooks/useTransitionNavigate';
 
 interface MenuOption {
   label: string;
@@ -16,19 +17,20 @@ const BG_ALT_DESC =
 
 const MainMenuScreen = () => {
   const [selected, setSelected] = React.useState(0);
-  const navigate = useNavigate();
+  const { navigateWithTransition, isTransitioning } =
+    useTransitionNavigate(1000);
   const menuOptions: MenuOption[] = React.useMemo(
     () => [
       {
         label: 'New Game',
         onSelect: () => {
-          navigate('/generate-game');
+          navigateWithTransition('/generate-game');
         },
       },
       {
         label: 'Load Game',
         onSelect: () => {
-          navigate('/select-game');
+          navigateWithTransition('/select-game');
         },
       },
       {
@@ -64,7 +66,7 @@ const MainMenuScreen = () => {
   }, [menuOptions, selected]);
 
   return (
-    <BackgroundDiv image={background} alt={BG_ALT_DESC}>
+    <BackgroundDiv image={background} alt={BG_ALT_DESC} fade={isTransitioning}>
       <AbsoluteContainer left="32%" right="32%" top="36%" bottom="5%">
         <MenuList>
           {menuOptions.map((option, index) => (

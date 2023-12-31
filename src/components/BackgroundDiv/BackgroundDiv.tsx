@@ -1,7 +1,7 @@
 import React from 'react';
 import styles from './BackgroundDiv.module.css';
 
-interface BackgroundDivProps {
+interface BackgroundDivProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   image: string;
   alt: string;
@@ -16,11 +16,15 @@ const BackgroundDiv: React.FC<BackgroundDivProps> = ({
   alt,
   fade = false,
   onlyFadeImage = false,
+  ...rest
 }) => {
   const fadeClass = fade ? styles.fadeOut : styles.fadeIn;
 
   return (
-    <div className={`${styles.container} ${onlyFadeImage ? '' : fadeClass}`}>
+    <div
+      className={`${styles.container} ${onlyFadeImage ? '' : fadeClass}`}
+      {...rest}
+    >
       <img
         src={image}
         alt={alt}
