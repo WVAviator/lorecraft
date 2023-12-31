@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import useGameContext from '../context/useGameContext';
+import useGameContext from '../hooks/useGameContext';
 import React from 'react';
 import BackgroundDiv from '../components/BackgroundDiv/BackgroundDiv';
 import { convertFileSrc } from '@tauri-apps/api/tauri';

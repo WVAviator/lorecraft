@@ -4,10 +4,11 @@ import SetupScreen from './screens/SetupScreen';
 import MainMenuScreen from './screens/MainMenuScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import GameScreen from './screens/GameScreen';
-import GameGenerationScreen from './screens/GameGeneration';
+import GameGenerationScreen from './screens/GameGenerationScreen';
 import GameSelectionScreen from './screens/GameSelectionScreen';
 import NarrativeScreen from './screens/NarrativeScreen';
 import GameProvider from './context/GameProvider';
+import GameMenuScreen from './screens/GameMenuScreen';
 
 const router = createHashRouter([
   {
@@ -41,6 +42,10 @@ const router = createHashRouter([
   {
     path: '/narrative',
     element: <NarrativeScreen />,
+  },
+  {
+    path: '/gamemenu',
+    element: <GameMenuScreen />,
   },
 ]);
 

@@ -1,7 +1,7 @@
 import BackgroundDiv from '../components/BackgroundDiv/BackgroundDiv';
 import ContainerCarousel from '../components/ContainerCarousel/ContainerCarousel';
 import GameSummaryCard from '../components/GameSummaryCard/GameSummaryCard';
-import useGameContext from '../context/useGameContext';
+import useGameContext from '../hooks/useGameContext';
 import useSavedGames from '../hooks/useSavedGames';
 import useTransitionNavigate from '../hooks/useTransitionNavigate';
 import { Game } from '../types/Game';
@@ -18,7 +18,7 @@ const GameSelectionScreen = () => {
 
   const handleClick = (game: Game) => {
     setGame(game);
-    navigateWithTransition('/narrative');
+    navigateWithTransition('/gamemenu');
   };
 
   return (

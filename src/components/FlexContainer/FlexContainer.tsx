@@ -16,6 +16,7 @@ interface FlexContainerProps {
   height?: string;
   padding?: string;
   gap?: string;
+  backgroundColor?: string;
 }
 
 const FlexContainer: React.FC<FlexContainerProps> = ({
@@ -31,6 +32,7 @@ const FlexContainer: React.FC<FlexContainerProps> = ({
   height = 'auto',
   padding = '0',
   gap = '0',
+  backgroundColor = 'transparent',
 }) => {
   return (
     <div
@@ -47,6 +49,7 @@ const FlexContainer: React.FC<FlexContainerProps> = ({
         height,
         padding,
         gap,
+        backgroundColor,
       }}
     >
       {children}

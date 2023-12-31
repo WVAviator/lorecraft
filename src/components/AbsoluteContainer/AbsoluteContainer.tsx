@@ -7,31 +7,20 @@ interface AbsoluteContainerProps {
   width?: string;
   height?: string;
   backgroundColor?: string;
+  padding?: string;
   className?: string;
 }
 
 const AbsoluteContainer: React.FC<AbsoluteContainerProps> = ({
   children,
-  top = 'auto',
-  left = 'auto',
-  right = 'auto',
-  bottom = 'auto',
-  width = 'auto',
-  height = 'auto',
-  backgroundColor = 'transparent',
   className = '',
+  ...rest
 }) => {
   return (
     <div
       style={{
         position: 'absolute',
-        top,
-        left,
-        right,
-        bottom,
-        width,
-        height,
-        backgroundColor,
+        ...rest,
       }}
       className={className}
     >
