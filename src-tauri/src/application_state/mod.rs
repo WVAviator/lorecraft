@@ -4,7 +4,6 @@ use tokio::sync::mpsc;
 use tokio::sync::Mutex;
 
 use crate::file_manager::FileManager;
-use crate::openai_client;
 use crate::openai_client::OpenAIClient;
 
 pub struct ApplicationState {
@@ -32,6 +31,7 @@ impl ApplicationState {
 
     pub fn verify_setup(&self) -> Result<(), anyhow::Error> {
         ensure!(self.file_manager.is_some(), "File system not set up.");
+        ensure!(self.openai_client.is_some(), "OpenAI client not set up.");
 
         Ok(())
     }

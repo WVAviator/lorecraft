@@ -5,7 +5,7 @@ import LoadingSpinner from '../components/LoadingSpinner/LoadingSpinner';
 import React from 'react';
 import useTransitionNavigate from '../hooks/useTransitionNavigate';
 import { invoke } from '@tauri-apps/api';
-import { SetupResponse, isSetupResponse } from '../types/Setup';
+import { isSetupResponse } from '../types/Setup';
 import ApiKeyEntry from '../components/ApiKeyEntry/ApiKeyEntry';
 import AlertDialog from '../components/AlertDialog/AlertDialog';
 
