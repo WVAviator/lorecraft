@@ -7,6 +7,7 @@ use self::{
     },
     openai_client_error::OpenAIClientError,
 };
+use anyhow::Context;
 use log::{info, trace};
 use reqwest::{
     header::{HeaderMap, HeaderValue},
@@ -24,11 +25,7 @@ pub struct OpenAIClient {
 }
 
 impl OpenAIClient {
-    pub fn new() -> Self {
-        info!("Initializing OpenAI Client.");
-
-        let api_key = std::env::var("OPENAI_API_KEY").expect("OPENAI_API_KEY must be set");
-
+    pub fn new(api_key: &str) -> Self {
         let mut headers = HeaderMap::new();
         headers.insert("Content-Type", HeaderValue::from_static("application/json"));
         headers.insert(
@@ -46,6 +43,26 @@ impl OpenAIClient {
 }
 
 impl OpenAIClient {
+    pub async fn verify_connection(&self) -> Result<(), OpenAIClientError> {
+        let response = self
+            .client
+            .get("https://api.openai.com/v1/models")
+            .send()
+            .await
+            .map_err(|e| {
+                OpenAIClientError::RequestFailed(format!(
+                    "Error occurred making request to OpenAI:\n{}\n",
+                    e.to_string()
+                ))
+            })?;
+
+        if response.status().is_client_error() {
+            return Err(OpenAIClientError::NotAuthorized);
+        }
+
+        Ok(())
+    }
+
     pub async fn chat_completion_request(
         &self,
         request: ChatCompletionRequest,

@@ -13,12 +13,19 @@ import { ThemeProvider, createTheme } from '@mui/material';
 
 const theme = createTheme({
   palette: {
-    primary: {
-      main: '#FFFFFF',
-    },
-    text: {
-      primary: '#FFFFFF',
-    },
+    mode: 'dark',
+    // primary: {
+    //   main: '#FFFFFF',
+    // },
+    // text: {
+    //   primary: '#FFFFFF',
+    //   secondary: '#FFFFFF',
+    //   disabled: '#c9c9c9',
+    // },
+    // background: {
+    //   default: '#000000',
+    //   paper: '#010101',
+    // },
   },
   typography: {
     fontFamily: 'Amarante, serif',

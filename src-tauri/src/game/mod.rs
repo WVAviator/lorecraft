@@ -60,22 +60,14 @@ impl Game {
         let id = Random::generate_id();
         info!("Generated new game id: {}.", id);
 
-        let openai = OpenAIClient::new();
-
-        let summary = async {
-            info!("Generating game summary information.");
-            state
-                .send_update(String::from("Generating game summary information."))
-                .await;
-            Summary::generate(&openai, &user_prompt).await
+        let openai_client = match &state.openai_client {
+            Some(openai_client) => openai_client,
+            None => {
+                return Err(anyhow!(
+                    "Unable to access OpenAI client from application state."
+                ))
+            }
         };
-
-        let summary = summary.await.expect("Failed to generate summary.");
-
-        let style_string = format!(
-            "Use a style of {}. Use themes of {}.",
-            &summary.art_style, &summary.art_theme
-        );
 
         let file_manager = match &state.file_manager {
             Some(file_manager) => file_manager,
@@ -86,10 +78,27 @@ impl Game {
             }
         };
 
-        let image_factory = ImageFactory::new(&openai, &file_manager, &id, style_string);
-        let narrative_factory = NarrativeFactory::new(&openai, &summary.summary, &image_factory);
-        let character_factory = CharacterFactory::new(&openai, &summary.summary, &image_factory);
-        let item_factory = ItemFactory::new(&openai, &summary.summary, &image_factory);
+        let summary = async {
+            info!("Generating game summary information.");
+            state
+                .send_update(String::from("Generating game summary information."))
+                .await;
+            Summary::generate(&openai_client, &user_prompt).await
+        };
+
+        let summary = summary.await.expect("Failed to generate summary.");
+
+        let style_string = format!(
+            "Use a style of {}. Use themes of {}.",
+            &summary.art_style, &summary.art_theme
+        );
+
+        let image_factory = ImageFactory::new(&openai_client, &file_manager, &id, style_string);
+        let narrative_factory =
+            NarrativeFactory::new(&openai_client, &summary.summary, &image_factory);
+        let character_factory =
+            CharacterFactory::new(&openai_client, &summary.summary, &image_factory);
+        let item_factory = ItemFactory::new(&openai_client, &summary.summary, &image_factory);
 
         let name = summary.name.clone();
         info!("Generated game: {}.", name);
@@ -131,7 +140,7 @@ impl Game {
                 .send_update(String::from("Generating scene summary information."))
                 .await;
             let scene_summary =
-                SceneSummary::generate(&summary.summary, &summary.win_condition, &openai)
+                SceneSummary::generate(&summary.summary, &summary.win_condition, &openai_client)
                     .await
                     .expect("Unable to create scene summary.");
 
@@ -140,7 +149,7 @@ impl Game {
             async {
                 let mut futures = Vec::new();
                 for summarized_scene in &scene_summary.scenes {
-                    let openai_ref = &openai;
+                    let openai_ref = &openai_client;
                     let summary_ref = &summary;
 
                     let future = async move {

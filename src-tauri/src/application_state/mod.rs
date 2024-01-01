@@ -4,12 +4,13 @@ use tokio::sync::mpsc;
 use tokio::sync::Mutex;
 
 use crate::file_manager::FileManager;
-
-pub mod application_settings;
+use crate::openai_client;
+use crate::openai_client::OpenAIClient;
 
 pub struct ApplicationState {
     pub updates_tx: Mutex<mpsc::Sender<String>>,
     pub file_manager: Option<FileManager>,
+    pub openai_client: Option<OpenAIClient>,
 }
 
 impl ApplicationState {
@@ -17,11 +18,16 @@ impl ApplicationState {
         Self {
             updates_tx,
             file_manager: None,
+            openai_client: None,
         }
     }
 
     pub fn set_file_manager(&mut self, file_manager: FileManager) {
         self.file_manager = Some(file_manager);
+    }
+
+    pub fn set_openai_client(&mut self, openai_client: OpenAIClient) {
+        self.openai_client = Some(openai_client);
     }
 
     pub fn verify_setup(&self) -> Result<(), anyhow::Error> {

@@ -4,4 +4,5 @@ pub enum OpenAIClientError {
     ResponseBadStatus(String),
     InvalidResponse(String),
     MaxAttemptsExceeded(String),
+    NotAuthorized,
 }

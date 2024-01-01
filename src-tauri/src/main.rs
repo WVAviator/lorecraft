@@ -12,6 +12,7 @@ use utils::logger::Logger;
 
 mod application_state;
 mod commands;
+mod config;
 mod file_manager;
 mod game;
 mod openai_client;

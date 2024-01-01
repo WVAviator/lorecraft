@@ -81,27 +81,19 @@ impl FileManager {
         Ok(())
     }
 
-    pub fn read_from_file(&self, file_name: &str) -> std::io::Result<String> {
+    pub fn file_exists(&self, file_name: &str) -> Result<bool, anyhow::Error> {
         let file_path: PathBuf = self.data_dir.join(file_name);
 
-        let contents = std::fs::read_to_string(file_path)?;
+        file_path
+            .try_exists()
+            .context("File existence could not be verfied.")
+    }
+
+    pub fn read_from_file(&self, file_name: &str) -> Result<String, anyhow::Error> {
+        let file_path: PathBuf = self.data_dir.join(file_name);
+
+        let contents = std::fs::read_to_string(file_path).context("Unable to read from file.")?;
 
         Ok(contents)
-    }
-
-    pub fn delete_file(&self, file_name: &str) -> std::io::Result<()> {
-        let file_path: PathBuf = self.data_dir.join(file_name);
-
-        std::fs::remove_file(file_path)?;
-
-        Ok(())
-    }
-
-    pub fn delete_dir(&self, dir_name: &str) -> std::io::Result<()> {
-        let dir_path: PathBuf = self.data_dir.join(dir_name);
-
-        std::fs::remove_dir_all(dir_path)?;
-
-        Ok(())
     }
 }
