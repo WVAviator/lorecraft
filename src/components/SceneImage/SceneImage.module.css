@@ -13,6 +13,7 @@
   flex: 1;
   box-shadow: 2px 0px 2px 2px #00000040 inset;
   overflow: hidden;
+  border-radius: 4px;
 }
 
 .image {

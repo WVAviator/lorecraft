@@ -1,6 +1,7 @@
 use std::io::Write;
 use std::{fs::OpenOptions, path::PathBuf};
 
+use anyhow::Context;
 use log::info;
 use tauri::PathResolver;
 
@@ -9,16 +10,23 @@ pub struct FileManager {
 }
 
 impl FileManager {
-    pub fn new(path_resolver: &PathResolver) -> FileManager {
-        let data_dir = path_resolver.app_local_data_dir().unwrap(); //TODO: Handle this error.
+    pub fn new(path_resolver: &PathResolver) -> Result<FileManager, anyhow::Error> {
+        let data_dir = path_resolver
+            .app_local_data_dir()
+            .context("Unable to resolve app local data directory.")?;
 
         if !data_dir.exists() {
-            std::fs::create_dir_all(&data_dir).unwrap(); //TODO: Handle this error.
+            std::fs::create_dir_all(&data_dir).with_context(|| {
+                format!(
+                    "Unable to create game directory at {} for local data files.",
+                    &data_dir.display()
+                )
+            })?;
         }
 
         info!("Verified data directory: {:?}", data_dir);
 
-        FileManager { data_dir }
+        Ok(FileManager { data_dir })
     }
 
     pub fn write_to_file(&self, file_name: &str, contents: &str) -> std::io::Result<String> {

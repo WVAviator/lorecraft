@@ -1,3 +1,4 @@
+use anyhow::ensure;
 use log::error;
 use tokio::sync::mpsc;
 use tokio::sync::Mutex;
@@ -8,15 +9,25 @@ pub mod application_settings;
 
 pub struct ApplicationState {
     pub updates_tx: Mutex<mpsc::Sender<String>>,
-    pub file_manager: FileManager,
+    pub file_manager: Option<FileManager>,
 }
 
 impl ApplicationState {
-    pub fn new(updates_tx: Mutex<mpsc::Sender<String>>, file_manager: FileManager) -> Self {
+    pub fn new(updates_tx: Mutex<mpsc::Sender<String>>) -> Self {
         Self {
             updates_tx,
-            file_manager,
+            file_manager: None,
         }
+    }
+
+    pub fn set_file_manager(&mut self, file_manager: FileManager) {
+        self.file_manager = Some(file_manager);
+    }
+
+    pub fn verify_setup(&self) -> Result<(), anyhow::Error> {
+        ensure!(self.file_manager.is_some(), "File system not set up.");
+
+        Ok(())
     }
 
     pub async fn send_update(&self, update: String) {

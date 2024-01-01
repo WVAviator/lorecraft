@@ -8,6 +8,10 @@ import FlexContainer from '../components/FlexContainer/FlexContainer';
 import LoadingSpinner from '../components/LoadingSpinner/LoadingSpinner';
 import useGameContext from '../hooks/useGameContext';
 import useTransitionNavigate from '../hooks/useTransitionNavigate';
+import {
+  CreateNewGameRequest,
+  CreateNewGameResponse,
+} from '../types/CreateNewGame';
 
 interface GameGenerationScreenProps {}
 
@@ -19,8 +23,18 @@ const GameGenerationScreen: React.FC<GameGenerationScreenProps> = () => {
 
   React.useEffect(() => {
     const createGame = async () => {
-      const game = (await invoke('create_new_game', { prompt: '' })) as Game;
-      setGame(game);
+      const request: CreateNewGameRequest = {
+        prompt: '',
+      };
+      const response = (await invoke('create_new_game', {
+        request,
+      })) as CreateNewGameResponse;
+      if (response.success === false || !response.game) {
+        console.error('Failed to generate game.');
+        navigateWithTransition('/mainmenu');
+        return;
+      }
+      setGame(response.game);
       navigateWithTransition('/gamemenu');
     };
     createGame();

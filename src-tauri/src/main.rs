@@ -1,7 +1,8 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use crate::commands::create_new_game::create_new_game;
-use crate::file_manager::FileManager;
+use crate::commands::setup::setup;
+
 use application_state::ApplicationState;
 use log::{error, info};
 use tokio::sync::{mpsc, Mutex};
@@ -17,20 +18,18 @@ mod openai_client;
 mod prompt_builder;
 mod utils;
 
-fn main() {
+fn main() -> Result<(), anyhow::Error> {
     let (updates_tx, mut updates_rx) = mpsc::channel(1);
     let updates_tx = Mutex::new(updates_tx);
 
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![create_new_game])
+        .invoke_handler(tauri::generate_handler![create_new_game, setup])
         .setup(|app| {
             Logger::setup(app);
 
-            info!("Initializing file manager.");
-            let file_manager = FileManager::new(&app.path_resolver());
-
             info!("Initializing application state.");
-            let state = ApplicationState::new(updates_tx, file_manager);
+            let state = ApplicationState::new(updates_tx);
+            let state = Mutex::new(state);
             app.manage(state);
 
             info!("Initializing updates event emitter.");
@@ -51,4 +50,6 @@ fn main() {
         })
         .run(tauri::generate_context!())
         .expect("Error occurred during app initialization.");
+
+    Ok(())
 }

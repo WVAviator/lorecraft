@@ -1,7 +1,8 @@
+use anyhow::anyhow;
 use futures::StreamExt;
 use log::{info, trace};
 use serde::{Deserialize, Serialize};
-use tokio::join;
+use tokio::{join, sync::MutexGuard};
 
 use crate::{
     application_state::ApplicationState,
@@ -52,7 +53,10 @@ pub struct Game {
 }
 
 impl Game {
-    pub async fn create_new(user_prompt: String, state: &State<'_, ApplicationState>) -> Self {
+    pub async fn create_new(
+        user_prompt: String,
+        state: &MutexGuard<'_, ApplicationState>,
+    ) -> Result<Self, anyhow::Error> {
         let id = Random::generate_id();
         info!("Generated new game id: {}.", id);
 
@@ -72,7 +76,17 @@ impl Game {
             "Use a style of {}. Use themes of {}.",
             &summary.art_style, &summary.art_theme
         );
-        let image_factory = ImageFactory::new(&openai, &state.file_manager, &id, style_string);
+
+        let file_manager = match &state.file_manager {
+            Some(file_manager) => file_manager,
+            None => {
+                return Err(anyhow!(
+                    "Unable to access file manager from application state."
+                ))
+            }
+        };
+
+        let image_factory = ImageFactory::new(&openai, &file_manager, &id, style_string);
         let narrative_factory = NarrativeFactory::new(&openai, &summary.summary, &image_factory);
         let character_factory = CharacterFactory::new(&openai, &summary.summary, &image_factory);
         let item_factory = ItemFactory::new(&openai, &summary.summary, &image_factory);
@@ -243,6 +257,6 @@ impl Game {
         };
 
         trace!("Generated full game: {:#?}", game);
-        game
+        Ok(game)
     }
 }
