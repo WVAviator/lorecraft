@@ -57,7 +57,7 @@ impl<'a> ItemFactory<'a> {
             .chat_completion_request(ChatCompletionRequest::new(
                 system_prompt,
                 user_prompt,
-                ChatCompletionModel::Gpt_35_Turbo_1106,
+                ChatCompletionModel::Gpt3_5Turbo1106,
             ))
             .await
             .expect("Failed to retrieve response from OpenAI")
@@ -77,7 +77,7 @@ impl<'a> ItemFactory<'a> {
                         .try_generate_image(
                             ImageGenerationRequest::new(
                                 item.image,
-                                ImageGenerationModel::Dall_E_2,
+                                ImageGenerationModel::DallE2,
                                 ImageGenerationSize::Size256x256,
                             ),
                             &filepath,

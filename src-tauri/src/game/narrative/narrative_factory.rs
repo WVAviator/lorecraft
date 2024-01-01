@@ -53,7 +53,7 @@ impl<'a> NarrativeFactory<'a> {
             .chat_completion_request(ChatCompletionRequest::new(
                 system_prompt,
                 user_prompt,
-                ChatCompletionModel::Gpt_35_Turbo_1106,
+                ChatCompletionModel::Gpt3_5Turbo1106,
             ))
             .await
             .expect("Failed to get response from OpenAI API.")
@@ -72,7 +72,7 @@ impl<'a> NarrativeFactory<'a> {
                         .try_generate_image(
                             ImageGenerationRequest::new(
                                 page.image.clone(),
-                                ImageGenerationModel::Dall_E_3,
+                                ImageGenerationModel::DallE3,
                                 ImageGenerationSize::Size1792x1024,
                             ),
                             &filepath,

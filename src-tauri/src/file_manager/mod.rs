@@ -69,18 +69,6 @@ impl FileManager {
         Ok(file_path_string)
     }
 
-    pub fn append_to_file(&self, file_name: &str, contents: &str) -> std::io::Result<()> {
-        let mut open_options = OpenOptions::new();
-        open_options.write(true).create(true).append(true);
-
-        let file_path: PathBuf = self.data_dir.join(file_name);
-
-        let mut file = open_options.open(file_path)?;
-        file.write_all(contents.as_bytes())?;
-
-        Ok(())
-    }
-
     pub fn file_exists(&self, file_name: &str) -> Result<bool, anyhow::Error> {
         let file_path: PathBuf = self.data_dir.join(file_name);
 

@@ -70,7 +70,7 @@ impl<'a> CharacterFactory<'a> {
                         .chat_completion_request(ChatCompletionRequest::new(
                             system_prompt,
                             user_prompt,
-                            ChatCompletionModel::Gpt_35_Turbo_1106,
+                            ChatCompletionModel::Gpt3_5Turbo1106,
                         ))
                         .await
                         .expect("Failed to get response from OpenAI API")
@@ -88,7 +88,7 @@ impl<'a> CharacterFactory<'a> {
                         .try_generate_image(
                             ImageGenerationRequest::new(
                                 character_output.image.to_string(),
-                                ImageGenerationModel::Dall_E_2,
+                                ImageGenerationModel::DallE2,
                                 ImageGenerationSize::Size1024x1024,
                             ),
                             &filepath,

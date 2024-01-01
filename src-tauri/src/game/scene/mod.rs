@@ -41,7 +41,7 @@ impl Scene {
 
         let image_generation_request = ImageGenerationRequest::new(
             scene_detail.image.clone(),
-            ImageGenerationModel::Dall_E_2,
+            ImageGenerationModel::DallE2,
             ImageGenerationSize::Size1024x1024,
         );
 

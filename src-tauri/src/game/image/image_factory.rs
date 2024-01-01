@@ -1,5 +1,6 @@
 use std::{collections::VecDeque, sync::RwLock, time::SystemTime};
 
+use base64::{engine::general_purpose, Engine as _};
 use log::{debug, error, info, trace};
 
 use crate::{
@@ -124,7 +125,9 @@ impl<'a> ImageFactory<'a> {
             .clone();
 
         let base64_encoded = response.data[0].b64_json.split(",").last().unwrap();
-        let image_data = base64::decode(base64_encoded).expect("Failed to decode base64 image.");
+        let image_data = general_purpose::STANDARD
+            .decode(base64_encoded)
+            .expect("Failed to decode base64 image.");
 
         let filepath = format!("{}/{}", self.game_id, filepath);
 

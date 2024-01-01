@@ -21,25 +21,25 @@ impl ImageGenerationRequest {
         let model = match (&size, &model) {
             (
                 ImageGenerationSize::Size256x256 | ImageGenerationSize::Size512x512,
-                ImageGenerationModel::Dall_E_3,
+                ImageGenerationModel::DallE3,
             ) => {
                 warn!(
                     "Image size {} not supported by model {}, using dall-e-2 instead",
                     size.to_string(),
                     model.to_string()
                 );
-                ImageGenerationModel::Dall_E_2
+                ImageGenerationModel::DallE2
             }
             (
                 ImageGenerationSize::Size1024x1792 | ImageGenerationSize::Size1792x1024,
-                ImageGenerationModel::Dall_E_2,
+                ImageGenerationModel::DallE2,
             ) => {
                 warn!(
                     "Image size {} not supported by model {}, using dall-e-3 instead",
                     size.to_string(),
                     model.to_string()
                 );
-                ImageGenerationModel::Dall_E_3
+                ImageGenerationModel::DallE3
             }
             _ => model,
         };

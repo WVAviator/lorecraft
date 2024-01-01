@@ -7,8 +7,7 @@ use self::{
     },
     openai_client_error::OpenAIClientError,
 };
-use anyhow::Context;
-use log::{info, trace};
+use log::trace;
 use reqwest::{
     header::{HeaderMap, HeaderValue},
     Client, ClientBuilder,

@@ -12,7 +12,6 @@ impl SetupError {
             SetupError::MissingOpenAIKey(_) => String::from("missing_openai_key"),
             SetupError::ConnectionFailed(_) => String::from("connection_failed"),
             SetupError::BadOpenAIKey(_) => String::from("bad_openai_key"),
-            _ => String::new(),
         }
     }
 
@@ -22,7 +21,6 @@ impl SetupError {
             SetupError::MissingOpenAIKey(message) => message.clone(),
             SetupError::ConnectionFailed(message) => message.clone(),
             SetupError::BadOpenAIKey(message) => message.clone(),
-            _ => String::new(),
         }
     }
 }

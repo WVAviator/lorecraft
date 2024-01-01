@@ -99,6 +99,7 @@ pub async fn setup(
     {
         let mut state = state.lock().await;
         state.set_file_manager(file_manager);
+        state.set_openai_client(openai_client);
     }
 
     info!("Initialization complete.");

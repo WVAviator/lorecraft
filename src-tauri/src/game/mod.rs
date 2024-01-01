@@ -16,18 +16,13 @@ use crate::{
         scene_summary::SceneSummary,
         summary::Summary,
     },
-    openai_client::{
-        image_generation::{
-            image_generation_model::ImageGenerationModel,
-            image_generation_request::ImageGenerationRequest,
-            image_generation_size::ImageGenerationSize,
-        },
-        OpenAIClient,
+    openai_client::image_generation::{
+        image_generation_model::ImageGenerationModel,
+        image_generation_request::ImageGenerationRequest,
+        image_generation_size::ImageGenerationSize,
     },
     utils::random::Random,
 };
-
-use tauri::State;
 
 use self::{image::Image, item::Item};
 
@@ -111,7 +106,7 @@ impl Game {
                 .await;
             let image_generation_request = ImageGenerationRequest::new(
                 summary.cover_art.clone(),
-                ImageGenerationModel::Dall_E_3,
+                ImageGenerationModel::DallE3,
                 ImageGenerationSize::Size1792x1024,
             );
             image_factory
