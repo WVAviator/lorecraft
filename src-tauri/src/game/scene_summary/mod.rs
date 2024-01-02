@@ -5,7 +5,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     openai_client::{
-        chat_completion_model::ChatCompletionModel, chat_completion_request::ChatCompletionRequest,
+        chat_completion::chat_completion_model::ChatCompletionModel,
+        chat_completion::chat_completion_request::ChatCompletionRequest,
         openai_client_error::OpenAIClientError, OpenAIClient,
     },
     prompt_builder::PromptBuilder,

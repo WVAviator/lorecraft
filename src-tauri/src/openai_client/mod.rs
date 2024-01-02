@@ -1,21 +1,24 @@
 use self::{
-    chat_completion_request::ChatCompletionRequest,
-    chat_completion_response::ChatCompletionResponse,
+    assisstant_api::{
+        assisstant_create_request::AssisstantCreateRequest,
+        assisstant_create_response::AssisstantCreateResponse,
+    },
+    chat_completion::chat_completion_request::ChatCompletionRequest,
+    chat_completion::chat_completion_response::ChatCompletionResponse,
     image_generation::{
         image_generation_request::ImageGenerationRequest,
         image_generation_response::ImageGenerationResponse,
     },
     openai_client_error::OpenAIClientError,
 };
-use log::trace;
+use log::{error, trace};
 use reqwest::{
     header::{HeaderMap, HeaderValue},
     Client, ClientBuilder,
 };
 
-pub mod chat_completion_model;
-pub mod chat_completion_request;
-pub mod chat_completion_response;
+pub mod assisstant_api;
+pub mod chat_completion;
 pub mod image_generation;
 pub mod openai_client_error;
 
@@ -160,6 +163,52 @@ impl OpenAIClient {
 
             return Ok(response);
         } else {
+            return Err(OpenAIClientError::ResponseBadStatus(format!(
+                "Client response status unsuccessful: {}",
+                response.status()
+            )));
+        }
+    }
+
+    pub async fn create_assisstant(
+        &self,
+        request: AssisstantCreateRequest,
+    ) -> Result<AssisstantCreateResponse, OpenAIClientError> {
+        let body = request.to_request_body();
+
+        trace!(
+            "Sending OpenAI assisstant create request with body:\n\n{}\n\n",
+            body
+        );
+
+        let response = self
+            .client
+            .post("https://api.openai.com/v1/assistants")
+            .header("OpenAI-Beta", "assisstants=v1")
+            .body(body)
+            .send()
+            .await
+            .map_err(|e| {
+                OpenAIClientError::RequestFailed(format!(
+                    "Error occurred making request to OpenAI:\n{}\n",
+                    e.to_string()
+                ))
+            })?;
+
+        if response.status().is_success() {
+            let response = response
+                .json::<AssisstantCreateResponse>()
+                .await
+                .map_err(|e| {
+                    OpenAIClientError::InvalidResponse(format!(
+                        "Failed to convert response into JSON:\n{}\n",
+                        e.to_string()
+                    ))
+                })?;
+
+            return Ok(response);
+        } else {
+            error!("Received bad status from OpenAI: {}", response.status());
             return Err(OpenAIClientError::ResponseBadStatus(format!(
                 "Client response status unsuccessful: {}",
                 response.status()

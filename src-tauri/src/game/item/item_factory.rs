@@ -1,8 +1,8 @@
 use crate::{
     game::image::image_factory::ImageFactory,
     openai_client::{
-        chat_completion_model::ChatCompletionModel,
-        chat_completion_request::ChatCompletionRequest,
+        chat_completion::chat_completion_model::ChatCompletionModel,
+        chat_completion::chat_completion_request::ChatCompletionRequest,
         image_generation::{
             image_generation_model::ImageGenerationModel,
             image_generation_request::ImageGenerationRequest,
