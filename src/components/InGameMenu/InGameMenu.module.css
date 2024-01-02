@@ -1,0 +1,26 @@
+.container {
+  display: flex;
+  flex-direction: row-reverse;
+  width: 100%;
+  align-items: center;
+  gap: 1rem;
+  height: 3.5rem;
+}
+
+.icon_container {
+  width: 2rem;
+  height: 2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon {
+  color: white;
+  font-size: 1.5rem;
+}
+
+.icon:hover {
+  color: rgb(197, 197, 197);
+}

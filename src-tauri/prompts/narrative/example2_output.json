@@ -1,0 +1,24 @@
+{
+  "pages": [
+    {
+      "narrative": "The mining ship Orion was a pinnacle of human spacefaring, designed to excavate and process resources from the far reaches of the galaxy.",
+      "image": "A massive mining ship orbiting a barren planet, its drills and machinery extended for operation."
+    },
+    {
+      "narrative": "A distress signal awakes you from cryosleep, only to find the corridors silent, systems failing, and evidence of a catastrophe that took the crew.",
+      "image": "An emergency alarm blaring in a cold, desolate sleep chamber with eerie silence suggesting the absence of crewmates."
+    },
+    {
+      "narrative": "In the void of space, your survival depends on restoring the ship's functions and uncovering what horror befell the Orion and her crew.",
+      "image": "A tangled web of sparking cables, broken consoles, and dim emergency lights casting shadows on blood-stained walls."
+    },
+    {
+      "narrative": "An insidious presence has made the ship its own, lurking in the dark recesses, a threat born from the very depths of the cosmos.",
+      "image": "Alien tendrils creeping along the ship's interior, pulsating with bioluminescent light."
+    },
+    {
+      "narrative": "You must gather your courage, for the fate of the Orion and its secrets rests upon your shoulders.",
+      "image": "A stranded silhouette, facing an open hatch leading to the mysterious parts of the ship, reflecting determination in the face of uncertainty."
+    }
+  ]
+}

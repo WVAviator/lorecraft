@@ -1,0 +1,37 @@
+name: Test Game Summary
+
+art_style: Test art style.
+art_theme: Test art theme.
+
+cover_art: Test cover art.
+
+summary: Test summary.
+
+win_condition: Test win condition.
+
+narrative:
+  - narrative: Test narrative.
+    image: Test image.
+
+  - narrative: Test narrative.
+    image: Test image.
+
+player_attributes:
+  - name: Test Attribute
+    advancement: Test attribute advancement.
+    significance: Test attribute significance.
+    starting_value: 1
+
+  - name: Test Attribute 2
+    description: Test attribute 2 description.
+    advancement: Test attribute 2 advancement.
+    significance: Test attribute 2 significance.
+    starting_value: 4
+
+key_areas:
+
+key_characters:
+  - name: Test Key Character
+    description: Test key character description.
+    significance: Test key character significance.
+    image: Test key character image.

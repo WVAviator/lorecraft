@@ -1,0 +1,64 @@
+{
+  "scenes": [
+    {
+      "name": "Cryosleep Chamber",
+      "description": "A dimly lit chamber with rows of cryosleep pods, most of which are open and empty. The atmosphere is eerie, and the player's pod is the only one functioning.",
+      "actions": "The player can examine their own pod, look for clues about the crew in other pods, or leave the chamber to explore the Corridor Junction."
+    },
+    {
+      "name": "Corridor Junction",
+      "description": "A central hub connecting various sections of the Orion. It's poorly lit, with flickering lights and a map of the ship.",
+      "actions": "The player can consult the ship's map, choose a direction to explore (Crew Quarters, Engine Room, Bridge, Cargo Hold), or return to the Cryosleep Chamber."
+    },
+    {
+      "name": "Crew Quarters",
+      "description": "A personal space for crew members, now abandoned. Personal belongings are scattered, offering clues to the crew's fate.",
+      "actions": "The player can search for crew logs, gather personal items for clues, or return to the Corridor Junction."
+    },
+    {
+      "name": "Engine Room",
+      "description": "The heart of the Orion, filled with machinery. The room is in disrepair, requiring significant knowledge of ship schematics to fix.",
+      "actions": "The player can attempt to repair ship systems using knowledge from manuals, find spare parts, or return to the Corridor Junction."
+    },
+    {
+      "name": "Bridge",
+      "description": "The command center of the ship, with control panels and a view of space. Evidence of a struggle is visible.",
+      "actions": "The player can access ship logs, investigate the control panels, or return to the Corridor Junction."
+    },
+    {
+      "name": "Cargo Hold",
+      "description": "A large storage area with crates of ore and minerals. A hidden Alien Artifact is among the cargo.",
+      "actions": "The player can search the cargo for useful items, discover the Alien Artifact, or return to the Corridor Junction."
+    },
+    {
+      "name": "Maintenance Tunnels",
+      "description": "Narrow, claustrophobic tunnels behind the ship's walls, used for repairs and maintenance.",
+      "actions": "The player can navigate the tunnels to bypass damaged sections of the ship or escape the alien, or return to the Corridor Junction."
+    },
+    {
+      "name": "Medical Bay",
+      "description": "A facility for treating injuries, now deserted. Medical supplies and logs of crew health can be found.",
+      "actions": "The player can gather medical supplies, examine crew health logs for clues, or return to the Corridor Junction."
+    },
+    {
+      "name": "Auxiliary Shuttle Bay",
+      "description": "An emergency escape shuttle bay. The shuttle requires repair before it can be used.",
+      "actions": "The player can work on repairing the shuttle, gather tools, or return to the Corridor Junction."
+    },
+    {
+      "name": "Communications Room",
+      "description": "A room dedicated to external communications. The equipment is damaged but repairable.",
+      "actions": "The player can attempt to repair the communications equipment to send a distress signal or return to the Corridor Junction. The player can also interface with VIKA, the ship's AI assistant, to learn more about the ship's systems."
+    },
+    {
+      "name": "Alien's Nest",
+      "description": "A hidden area the alien has claimed as its own, filled with eerie signs of its presence.",
+      "actions": "The player can confront the alien, set up a trap using the Alien Artifact, or stealthily gather information about the alien."
+    },
+    {
+      "name": "Observation Deck",
+      "description": "A serene space with a panoramic view of the stars, offering a moment of respite amidst chaos.",
+      "actions": "The player can reflect on their journey, gather their thoughts for strategic planning, or return to the Corridor Junction."
+    }
+  ]
+}

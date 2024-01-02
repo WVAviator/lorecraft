@@ -1,52 +1,83 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/tauri";
-import "./App.css";
+import { RouterProvider, createHashRouter } from 'react-router-dom';
+import SplashLoadingScreen from './screens/SplashLoadingScreen';
+import SetupScreen from './screens/SetupScreen';
+import MainMenuScreen from './screens/MainMenuScreen';
+import SettingsScreen from './screens/SettingsScreen';
+import GameScreen from './screens/GameScreen';
+import GameGenerationScreen from './screens/GameGenerationScreen';
+import GameSelectionScreen from './screens/GameSelectionScreen';
+import NarrativeScreen from './screens/NarrativeScreen';
+import GameProvider from './context/GameProvider';
+import GameMenuScreen from './screens/GameMenuScreen';
+import { ThemeProvider, createTheme } from '@mui/material';
+
+const theme = createTheme({
+  palette: {
+    mode: 'dark',
+    // primary: {
+    //   main: '#FFFFFF',
+    // },
+    // text: {
+    //   primary: '#FFFFFF',
+    //   secondary: '#FFFFFF',
+    //   disabled: '#c9c9c9',
+    // },
+    // background: {
+    //   default: '#000000',
+    //   paper: '#010101',
+    // },
+  },
+  typography: {
+    fontFamily: 'Amarante, serif',
+  },
+});
+
+const router = createHashRouter([
+  {
+    path: '/',
+    element: <SplashLoadingScreen />,
+  },
+  {
+    path: '/setup',
+    element: <SetupScreen />,
+  },
+  {
+    path: '/mainmenu',
+    element: <MainMenuScreen />,
+  },
+  {
+    path: '/select-game',
+    element: <GameSelectionScreen />,
+  },
+  {
+    path: '/settings',
+    element: <SettingsScreen />,
+  },
+  {
+    path: '/generate-game',
+    element: <GameGenerationScreen />,
+  },
+  {
+    path: '/game',
+    element: <GameScreen />,
+  },
+  {
+    path: '/narrative',
+    element: <NarrativeScreen />,
+  },
+  {
+    path: '/gamemenu',
+    element: <GameMenuScreen />,
+  },
+]);
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
-
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-    setGreetMsg(await invoke("greet", { name }));
-  }
-
   return (
-    <div className="container">
-      <h1>Welcome to Tauri!</h1>
-
-      <div className="row">
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-
-      <p>{greetMsg}</p>
-    </div>
+    <GameProvider>
+      <ThemeProvider theme={theme}>
+        <RouterProvider router={router} />
+      </ThemeProvider>
+    </GameProvider>
   );
 }
 

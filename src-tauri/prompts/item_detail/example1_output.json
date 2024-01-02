@@ -1,0 +1,34 @@
+{
+  "items": [
+    {
+      "name": "Echo Crystal",
+      "description": "A radiant crystal pulsating with ancient energy.",
+      "image": "A glowing, multi-faceted crystal emitting a soft light, held aloft on a dark, solid background. The crystal appears ancient and mystical, with intricate patterns etched into its surface, reminiscent of arcane symbols."
+    },
+    {
+      "name": "Temple Map",
+      "description": "A worn parchment map, detailing the labyrinthine corridors of the Temple of Shadows.",
+      "image": "An old, slightly tattered parchment map on a dark background. It shows a complex maze of corridors and rooms, with faded markings and symbols in an ancient script. The edges of the map are frayed, adding to its ancient and mysterious appearance."
+    },
+    {
+      "name": "Ancient Tome",
+      "description": "A dusty tome filled with forgotten knowledge and arcane secrets.",
+      "image": "A thick, leather-bound book with weathered pages, resting on a dark background. The cover is embossed with mysterious symbols and runes, and a faint golden glow emanates from between the slightly ajar pages, suggesting magical content within."
+    },
+    {
+      "name": "Small Knife",
+      "description": "A handy, sharp knife essential for survival in the wilderness.",
+      "image": "A small but sturdy knife with a wooden handle and a gleaming, sharp blade, displayed on a dark background. The knife is simple in design, practical for various survival tasks, and has a leather sheath attached to its handle."
+    },
+    {
+      "name": "Onion",
+      "description": "A basic yet vital ingredient for cooking and sustenance.",
+      "image": "A fresh, round onion with a shiny, papery skin, sitting on a dark background. The onion is depicted with its natural textures and layers visible, and its top has a few sprouting green shoots, indicating freshness."
+    },
+    {
+      "name": "Medicinal Herbs",
+      "description": "A bundle of herbs known for their healing properties.",
+      "image": "A collection of various green herbs tied together with a twine, against a dark background. The herbs have different textures and leaf shapes, suggesting a variety of medicinal uses, and some small flowers are visible among the leaves."
+    }
+  ]
+}
