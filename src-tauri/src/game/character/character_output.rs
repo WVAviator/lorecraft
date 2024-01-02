@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 pub struct CharacterOutput {
     pub name: String,
     pub physical_description: String,
+    pub speech: String,
     pub personality: String,
     pub backstory: String,
     pub thoughts: String,

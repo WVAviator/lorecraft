@@ -1,0 +1,14 @@
+{
+  "name": "give_item",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "item": {
+        "type": "string",
+        "description": "The item you wish to give. It should exist in your inventory."
+      }
+    },
+    "required": ["item"]
+  },
+  "description": "Give an item from your inventory to the player."
+}
