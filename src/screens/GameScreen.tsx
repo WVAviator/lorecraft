@@ -9,7 +9,7 @@ import { IoExitSharp } from 'react-icons/io5';
 import useTransitionNavigate from '../hooks/useTransitionNavigate';
 import BackgroundDiv from '../components/BackgroundDiv/BackgroundDiv';
 import NarrativeWindow from '../components/NarrativeWindow/NarrativeWindow';
-import { InputAdornment, TextField } from '@mui/material';
+import { TextField } from '@mui/material';
 import React from 'react';
 
 const GameScreen = () => {
@@ -59,10 +59,9 @@ const GameScreen = () => {
           />
           <NarrativeWindow messages={messages} />
           <TextField
-            color="primary"
             id="outlined-basic"
+            tabIndex={0}
             variant="outlined"
-            focused
             value={playerInput}
             onChange={(e) => {
               if (playerInput.length >= 497) return;
@@ -70,7 +69,7 @@ const GameScreen = () => {
             }}
             multiline
             rows={2}
-            sx={{ width: '100%' }}
+            fullWidth
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();

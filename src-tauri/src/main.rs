@@ -2,6 +2,7 @@
 
 use crate::commands::create_new_game::create_new_game;
 use crate::commands::setup::setup;
+use crate::commands::start_game::start_game;
 
 use application_state::ApplicationState;
 use log::{error, info};
@@ -25,7 +26,7 @@ fn main() -> Result<(), anyhow::Error> {
     let updates_tx = Mutex::new(updates_tx);
 
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![create_new_game, setup])
+        .invoke_handler(tauri::generate_handler![create_new_game, setup, start_game])
         .setup(|app| {
             Logger::setup(app);
 

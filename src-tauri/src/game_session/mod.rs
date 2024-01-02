@@ -1,3 +1,5 @@
+pub mod game_session_error;
+
 use anyhow::Context;
 use log::info;
 
