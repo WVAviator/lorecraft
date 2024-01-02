@@ -6,4 +6,5 @@ use serde::{Deserialize, Serialize};
 pub enum GameSessionError {
     SetupFailure(String),
     ConfigError(String),
+    APIError(String,)
 }

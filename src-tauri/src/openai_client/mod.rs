@@ -10,6 +10,7 @@ use self::{
         image_generation_response::ImageGenerationResponse,
     },
     openai_client_error::OpenAIClientError,
+    thread::thread_create_response::ThreadCreateResponse,
 };
 use log::{error, trace};
 use reqwest::{
@@ -21,6 +22,7 @@ pub mod assisstant_api;
 pub mod chat_completion;
 pub mod image_generation;
 pub mod openai_client_error;
+pub mod thread;
 
 pub struct OpenAIClient {
     client: Client,
@@ -215,4 +217,42 @@ impl OpenAIClient {
             )));
         }
     }
+
+    pub async fn create_thread(&self) -> Result<ThreadCreateResponse, OpenAIClientError> {
+        let response = self
+            .client
+            .post("https://api.openai.com/v1/threads")
+            .header("OpenAI-Beta", "assistants=v1")
+            .send()
+            .await
+            .map_err(|e| {
+                OpenAIClientError::RequestFailed(format!(
+                    "Error occurred making request to OpenAI:\n{}\n",
+                    e.to_string()
+                ))
+            })?;
+
+        if response.status().is_success() {
+            let response = response.json::<ThreadCreateResponse>().await.map_err(|e| {
+                OpenAIClientError::InvalidResponse(format!(
+                    "Failed to convert response into JSON:\n{}\n",
+                    e.to_string()
+                ))
+            })?;
+
+            return Ok(response);
+        } else {
+            error!("Received bad status from OpenAI: {}", response.status());
+            return Err(OpenAIClientError::ResponseBadStatus(format!(
+                "Client response status unsuccessful: {}",
+                response.status()
+            )));
+        }
+    }
 }
+
+// curl https://api.openai.com/v1/threads \
+//   -H "Content-Type: application/json" \
+//   -H "Authorization: Bearer $OPENAI_API_KEY" \
+//   -H "OpenAI-Beta: assistants=v1" \
+//   -d ''

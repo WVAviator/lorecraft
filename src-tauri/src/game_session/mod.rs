@@ -1,21 +1,27 @@
 pub mod game_session_error;
 
-use anyhow::Context;
-use log::info;
+use anyhow::{anyhow, Context};
+use log::{error, info};
+use serde::{Deserialize, Serialize};
 
 use crate::{
-    file_manager::FileManager,
+    file_manager::{self, FileManager},
     game::Game,
+    game_session::game_session_error::GameSessionError,
     openai_client::{
         assisstant_api::assisstant_create_request::AssisstantCreateRequest,
         chat_completion::chat_completion_model::ChatCompletionModel, OpenAIClient,
     },
     prompt_builder::PromptBuilder,
+    utils::random::Random,
 };
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct GameSession {
+    pub id: String,
     pub game: Game,
     pub narrator_assisstant_id: String,
+    pub thread_id: String,
 }
 
 impl GameSession {
@@ -47,7 +53,7 @@ impl GameSession {
             .add_plain_text(&scene_list_text)
             .build();
 
-        let response = openai_client
+        let assisstant_response = openai_client
             .create_assisstant(AssisstantCreateRequest::new(
                 instructions,
                 game_id.to_string(),
@@ -56,11 +62,37 @@ impl GameSession {
             .await
             .expect("Failed to create assisstant.");
 
-        let narrator_assisstant_id = response.id;
+        let narrator_assisstant_id = assisstant_response.id;
 
-        Ok(GameSession {
+        let thread_response = openai_client.create_thread().await.map_err(|e| {
+            error!("Failed to create thread for Assisstant API:\n{:?}", e);
+            anyhow!("Failed to start thread.")
+        })?;
+
+        let thread_id = thread_response.id;
+
+        let id = Random::generate_id();
+
+        let game_session = GameSession {
+            id,
             game,
             narrator_assisstant_id,
-        })
+            thread_id,
+        };
+
+        game_session.save(file_manager)?;
+
+        Ok(game_session)
+    }
+
+    pub fn save(&self, file_manager: &FileManager) -> Result<(), anyhow::Error> {
+        let filepath = format!("save_data/{}/{}.json", self.game.id, self.id);
+        let json =
+            serde_json::to_string(&self).context("Error serializing game session to json.")?;
+        file_manager
+            .write_to_file(&filepath, &json)
+            .context("Error writing game session to file.")?;
+
+        Ok(())
     }
 }
