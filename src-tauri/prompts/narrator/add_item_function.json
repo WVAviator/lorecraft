@@ -1,0 +1,14 @@
+{
+  "name": "add_item",
+  "description": "Ad an item to the player's inventory.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "item": {
+        "type": "string",
+        "description": "The item should usually be from the scene item list, but it can also be any other random keepsake the player wants - if it makes sense and isn't too large to keep in a backpack."
+      }
+    },
+    "required": ["item"]
+  }
+}

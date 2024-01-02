@@ -1,0 +1,14 @@
+{
+  "name": "character_interact",
+  "description": "Start an interaction between the player and a character in the scene.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "character": {
+        "type": "string",
+        "description": "The character the player wants to interact with. This should match a name in the character list of the current scene."
+      }
+    },
+    "required": ["character"]
+  }
+}

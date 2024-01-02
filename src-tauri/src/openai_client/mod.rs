@@ -22,6 +22,7 @@ pub mod assisstant_api;
 pub mod chat_completion;
 pub mod image_generation;
 pub mod openai_client_error;
+pub mod openai_tool;
 pub mod thread;
 
 pub struct OpenAIClient {

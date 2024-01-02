@@ -1,0 +1,14 @@
+{
+  "name": "new_scene",
+  "description": "Move the player to a new scene in the game.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "scene": {
+        "type": "string",
+        "description": "The scene to which the player should be moved. This must match a scene in the provided scene list, and travelling to the new scene must make sense based on the player's current scene."
+      }
+    },
+    "required": ["scene"]
+  }
+}

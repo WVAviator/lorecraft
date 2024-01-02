@@ -1,0 +1,14 @@
+{
+  "name": "end_game",
+  "description": "Ends the current game either due to player success or failure to complete their objective.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "reason": {
+        "type": "string",
+        "description": "A narrative explaining the reason the game has ended."
+      }
+    },
+    "required": ["reason"]
+  }
+}
