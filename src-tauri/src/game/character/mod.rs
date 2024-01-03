@@ -12,7 +12,9 @@ mod character_output;
 pub struct Character {
     pub id: String,
     pub name: String,
+    pub short_description: String,
     pub physical_description: String,
+    pub speech: String,
     pub personality: String,
     pub backstory: String,
     pub thoughts: String,
@@ -25,7 +27,9 @@ impl Character {
         Character {
             id,
             name: character_output.name,
+            short_description: character_output.short_description,
             physical_description: character_output.physical_description,
+            speech: character_output.speech,
             personality: character_output.personality,
             backstory: character_output.backstory,
             thoughts: character_output.thoughts,

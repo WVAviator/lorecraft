@@ -1,5 +1,6 @@
 {
   "name": "VIKA",
+  "short_description": "An advanced ship AI system, represented by a holographic interface.",
   "physical_description": "VIKA, the ship's AI system, is represented by a holographic interface that appears above the main console in the Communications Room. Her visual representation is a luminous, three-dimensional geometric shape that shifts subtly in color and form, primarily displaying calming shades of blue and green. The interface is designed to be both visually appealing and functional, with intuitive touch-based controls.",
   "speech": "VIKA communicates in a clear, articulate, and slightly synthesized voice. Her responses use a lot of advanced technical words and jargon.",
   "personality": "Her programming enables her to adapt her communication style based on the player's actions, showing a range of simulated emotions from calm reassurance to urgent warnings. She is knowledgeable, often providing essential information about the ship and its systems. VIKA's interactions are guided by logic and protocol, yet she has an underlying warmth, designed to be comforting to the crew in stressful situations.",
