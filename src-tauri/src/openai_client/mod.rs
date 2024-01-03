@@ -5,12 +5,18 @@ use self::{
     },
     chat_completion::chat_completion_request::ChatCompletionRequest,
     chat_completion::chat_completion_response::ChatCompletionResponse,
+    create_message::{
+        create_message_request::CreateMessageRequest,
+        create_message_response::CreateMessageResponse,
+    },
     create_run::{create_run_request::CreateRunRequest, create_run_response::CreateRunResponse},
     image_generation::{
         image_generation_request::ImageGenerationRequest,
         image_generation_response::ImageGenerationResponse,
     },
-    message::{message_request::MessageRequest, message_response::MessageResponse},
+    list_messages::{
+        list_messages_query::ListMessagesQuery, list_messages_response::ListMessagesResponse,
+    },
     openai_client_error::OpenAIClientError,
     retrieve_run::retrieve_run_response::RetrieveRunResponse,
     thread::thread_create_response::ThreadCreateResponse,
@@ -24,9 +30,10 @@ use reqwest::{
 pub mod assistant;
 pub mod assistant_tool;
 pub mod chat_completion;
+pub mod create_message;
 pub mod create_run;
 pub mod image_generation;
-pub mod message;
+pub mod list_messages;
 pub mod openai_client_error;
 pub mod retrieve_run;
 pub mod thread;
@@ -259,9 +266,9 @@ impl OpenAIClient {
 
     pub async fn create_message(
         &self,
-        message_request: MessageRequest,
+        message_request: CreateMessageRequest,
         thread_id: &str,
-    ) -> Result<MessageResponse, OpenAIClientError> {
+    ) -> Result<CreateMessageResponse, OpenAIClientError> {
         let body = message_request.to_request_body().map_err(|e| {
             error!("Invalid request body:\n{:?}", e);
             OpenAIClientError::RequestFailed(format!("Invalid request body."))
@@ -282,7 +289,46 @@ impl OpenAIClient {
             })?;
 
         if response.status().is_success() {
-            let response = response.json::<MessageResponse>().await.map_err(|e| {
+            let response = response
+                .json::<CreateMessageResponse>()
+                .await
+                .map_err(|e| {
+                    OpenAIClientError::InvalidResponse(format!(
+                        "Failed to convert response into JSON:\n{}\n",
+                        e.to_string()
+                    ))
+                })?;
+
+            return Ok(response);
+        } else {
+            error!("Received bad status from OpenAI: {}", response.status());
+            return Err(OpenAIClientError::ResponseBadStatus(format!(
+                "Client response status unsuccessful: {}",
+                response.status()
+            )));
+        }
+    }
+
+    pub async fn list_messages(
+        &self,
+        query: ListMessagesQuery,
+    ) -> Result<ListMessagesResponse, OpenAIClientError> {
+
+        let response = self
+            .client
+            .get(&query.url)
+            .header("OpenAI-Beta", "assistants=v1")
+            .send()
+            .await
+            .map_err(|e| {
+                OpenAIClientError::RequestFailed(format!(
+                    "Error occurred making request to OpenAI:\n{}\n",
+                    e.to_string()
+                ))
+            })?;
+
+        if response.status().is_success() {
+            let response = response.json::<ListMessagesResponse>().await.map_err(|e| {
                 OpenAIClientError::InvalidResponse(format!(
                     "Failed to convert response into JSON:\n{}\n",
                     e.to_string()

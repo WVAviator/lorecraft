@@ -2,14 +2,14 @@ use anyhow::Context;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MessageRequest {
+pub struct CreateMessageRequest {
     role: String,
     content: String,
 }
 
-impl MessageRequest {
+impl CreateMessageRequest {
     pub fn new(content: &str) -> Self {
-        MessageRequest {
+        CreateMessageRequest {
             role: String::from("user"),
             content: String::from(content),
         }
