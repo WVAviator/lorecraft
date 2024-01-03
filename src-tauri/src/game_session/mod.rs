@@ -10,7 +10,7 @@ use crate::{
     game::Game,
     game_state::GameState,
     openai_client::{
-        assistant_api::assistant_create_request::AssistantCreateRequest,
+        assistant::assistant_create_request::AssistantCreateRequest,
         assistant_tool::function::Function,
         chat_completion::chat_completion_model::ChatCompletionModel, OpenAIClient,
     },

@@ -1,5 +1,5 @@
 use self::{
-    assistant_api::{
+    assistant::{
         assistant_create_request::AssistantCreateRequest,
         assistant_create_response::AssistantCreateResponse,
     },
@@ -9,6 +9,7 @@ use self::{
         image_generation_request::ImageGenerationRequest,
         image_generation_response::ImageGenerationResponse,
     },
+    message::{message_request::MessageRequest, message_response::MessageResponse},
     openai_client_error::OpenAIClientError,
     thread::thread_create_response::ThreadCreateResponse,
 };
@@ -18,10 +19,11 @@ use reqwest::{
     Client, ClientBuilder,
 };
 
-pub mod assistant_api;
+pub mod assistant;
 pub mod assistant_tool;
 pub mod chat_completion;
 pub mod image_generation;
+pub mod message;
 pub mod openai_client_error;
 pub mod thread;
 
@@ -250,10 +252,55 @@ impl OpenAIClient {
             )));
         }
     }
+
+    pub async fn create_message(
+        &self,
+        message_request: MessageRequest,
+        thread_id: &str,
+    ) -> Result<MessageResponse, OpenAIClientError> {
+        let body = message_request.to_request_body().map_err(|e| {
+            error!("Invalid request body:\n{:?}", e);
+            OpenAIClientError::RequestFailed(format!("Invalid request body."))
+        })?;
+        let url = format!("https://api.openai.com/v1/threads/{}/messages", thread_id);
+        let response = self
+            .client
+            .post(&url)
+            .header("OpenAI-Beta", "assistants=v1")
+            .body(body)
+            .send()
+            .await
+            .map_err(|e| {
+                OpenAIClientError::RequestFailed(format!(
+                    "Error occurred making request to OpenAI:\n{}\n",
+                    e.to_string()
+                ))
+            })?;
+
+        if response.status().is_success() {
+            let response = response.json::<MessageResponse>().await.map_err(|e| {
+                OpenAIClientError::InvalidResponse(format!(
+                    "Failed to convert response into JSON:\n{}\n",
+                    e.to_string()
+                ))
+            })?;
+
+            return Ok(response);
+        } else {
+            error!("Received bad status from OpenAI: {}", response.status());
+            return Err(OpenAIClientError::ResponseBadStatus(format!(
+                "Client response status unsuccessful: {}",
+                response.status()
+            )));
+        }
+    }
 }
 
-// curl https://api.openai.com/v1/threads \
+// curl https://api.openai.com/v1/threads/thread_abc123/messages \
 //   -H "Content-Type: application/json" \
 //   -H "Authorization: Bearer $OPENAI_API_KEY" \
 //   -H "OpenAI-Beta: assistants=v1" \
-//   -d ''
+//   -d '{
+//       "role": "user",
+//       "content": "How does AI work? Explain it in simple terms."
+//     }'
