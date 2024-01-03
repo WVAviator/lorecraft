@@ -1,3 +1,4 @@
+pub mod character_session;
 pub mod game_session_error;
 
 use anyhow::{anyhow, Context};
@@ -7,6 +8,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     file_manager::FileManager,
     game::Game,
+    game_state::GameState,
     openai_client::{
         assistant_api::assistant_create_request::AssistantCreateRequest,
         assistant_tool::function::Function,
@@ -16,12 +18,16 @@ use crate::{
     utils::random::Random,
 };
 
+use self::character_session::CharacterSession;
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GameSession {
     pub id: String,
     pub game: Game,
     pub narrator_assistant_id: String,
     pub thread_id: String,
+    pub game_state: GameState,
+    pub character_session: Option<CharacterSession>,
 }
 
 impl GameSession {
@@ -87,6 +93,8 @@ impl GameSession {
             game,
             narrator_assistant_id,
             thread_id,
+            game_state: GameState::new(),
+            character_session: None,
         };
 
         game_session.save(file_manager)?;
