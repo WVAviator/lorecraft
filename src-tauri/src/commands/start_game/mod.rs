@@ -16,7 +16,7 @@ pub async fn start_game(
     request: StartGameRequest,
     state: State<'_, Mutex<ApplicationState>>,
 ) -> Result<(), GameSessionError> {
-    let state = state.lock().await;
+    let mut state = state.lock().await;
     let file_manager = &state.file_manager.as_ref();
     let file_manager = file_manager.ok_or(GameSessionError::ConfigError(String::from(
         "Unable to access file manager.",
@@ -27,7 +27,7 @@ pub async fn start_game(
         "Unable to access OpenAI client.",
     )))?;
 
-    GameSession::start_new(request.game_id, openai_client, file_manager)
+    let game_session = GameSession::start_new(request.game_id, openai_client, file_manager)
         .await
         .map_err(|e| {
             error!("Unable to establish game session:\n{:?}", e);
@@ -36,6 +36,8 @@ pub async fn start_game(
                 e
             ))
         })?;
+
+    state.game_session = Some(game_session);
 
     Ok(())
 }

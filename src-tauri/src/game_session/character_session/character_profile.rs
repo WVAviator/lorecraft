@@ -19,9 +19,7 @@ impl CharacterProfile {
         game_id: &str,
         file_manager: &FileManager,
     ) -> Result<Self, anyhow::Error> {
-        let game_path = format!("{}/game.json", game_id);
-        let game_json = file_manager.read_from_file(&game_path)?;
-        let game = serde_json::from_str::<Game>(&game_json)?;
+        let game = Game::load(game_id, file_manager)?;
 
         let character = game
             .characters

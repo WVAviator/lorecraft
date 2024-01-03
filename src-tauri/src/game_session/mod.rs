@@ -23,7 +23,7 @@ use self::character_session::CharacterSession;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GameSession {
     pub id: String,
-    pub game: Game,
+    pub game_id: String,
     pub narrator_assistant_id: String,
     pub thread_id: String,
     pub game_state: GameState,
@@ -37,12 +37,7 @@ impl GameSession {
         file_manager: &FileManager,
     ) -> Result<Self, anyhow::Error> {
         info!("Starting new game session for game id {}.", &game_id);
-        let filepath = format!("{}/game.json", game_id);
-        let game_json = file_manager
-            .read_from_file(&filepath)
-            .with_context(|| format!("Unable to read from file at '{}'.", &filepath))?;
-        let game = serde_json::from_str::<Game>(&game_json)
-            .context("Unable to parse game from json file.")?;
+        let game = Game::load(&game_id, file_manager)?;
 
         let summary_text = format!("Game Summary:\n{}", &game.summary.summary);
         let scene_list_text = format!(
@@ -90,7 +85,7 @@ impl GameSession {
 
         let game_session = GameSession {
             id,
-            game,
+            game_id,
             narrator_assistant_id,
             thread_id,
             game_state: GameState::new(),
@@ -103,7 +98,7 @@ impl GameSession {
     }
 
     pub fn save(&self, file_manager: &FileManager) -> Result<(), anyhow::Error> {
-        let filepath = format!("save_data/{}/{}.json", self.game.id, self.id);
+        let filepath = format!("save_data/{}/{}.json", self.game_id, self.id);
         let json =
             serde_json::to_string(&self).context("Error serializing game session to json.")?;
         file_manager

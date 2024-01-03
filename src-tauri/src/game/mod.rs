@@ -1,4 +1,4 @@
-use anyhow::anyhow;
+use anyhow::{anyhow, Context};
 use futures::StreamExt;
 use log::{info, trace};
 use serde::{Deserialize, Serialize};
@@ -6,6 +6,7 @@ use tokio::{join, sync::MutexGuard};
 
 use crate::{
     application_state::ApplicationState,
+    file_manager::FileManager,
     game::{
         character::{character_factory::CharacterFactory, Character},
         image::image_factory::ImageFactory,
@@ -261,6 +262,17 @@ impl Game {
         };
 
         trace!("Generated full game: {:#?}", game);
+        Ok(game)
+    }
+
+    pub fn load(game_id: &str, file_manager: &FileManager) -> Result<Self, anyhow::Error> {
+        let filepath = format!("{}/game.json", game_id);
+        let game_json = file_manager
+            .read_from_file(&filepath)
+            .with_context(|| format!("Unable to read from file at '{}'.", &filepath))?;
+        let game = serde_json::from_str::<Game>(&game_json)
+            .context("Unable to parse game from json file.")?;
+
         Ok(game)
     }
 }
