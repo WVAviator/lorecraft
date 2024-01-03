@@ -19,6 +19,7 @@ use self::{
     },
     openai_client_error::OpenAIClientError,
     retrieve_run::retrieve_run_response::RetrieveRunResponse,
+    submit_tool_outputs::submit_tool_outputs_request::SubmitToolOutputsRequest,
     thread::thread_create_response::ThreadCreateResponse,
 };
 use log::{error, trace};
@@ -36,6 +37,7 @@ pub mod image_generation;
 pub mod list_messages;
 pub mod openai_client_error;
 pub mod retrieve_run;
+pub mod submit_tool_outputs;
 pub mod thread;
 
 pub struct OpenAIClient {
@@ -313,7 +315,6 @@ impl OpenAIClient {
         &self,
         query: ListMessagesQuery,
     ) -> Result<ListMessagesResponse, OpenAIClientError> {
-
         let response = self
             .client
             .get(&query.url)
@@ -428,8 +429,64 @@ impl OpenAIClient {
             )));
         }
     }
+
+    pub async fn submit_tool_outputs(
+        &self,
+        request: SubmitToolOutputsRequest,
+        thread_id: &str,
+        run_id: &str,
+    ) -> Result<RetrieveRunResponse, OpenAIClientError> {
+        let body = request.to_request_body().map_err(|e| {
+            error!("Invalid request body:\n{:?}", e);
+            OpenAIClientError::RequestFailed(format!("Invalid request body."))
+        })?;
+        let url = format!(
+            "https://api.openai.com/v1/threads/{}/runs/{}/submit_tool_outputs",
+            thread_id, run_id
+        );
+
+        let response = self
+            .client
+            .post(&url)
+            .header("OpenAI-Beta", "assistants=v1")
+            .body(body)
+            .send()
+            .await
+            .map_err(|e| {
+                OpenAIClientError::RequestFailed(format!(
+                    "Error occurred making request to OpenAI:\n{}\n",
+                    e.to_string()
+                ))
+            })?;
+
+        if response.status().is_success() {
+            let response = response.json::<RetrieveRunResponse>().await.map_err(|e| {
+                OpenAIClientError::InvalidResponse(format!(
+                    "Failed to convert response into JSON:\n{}\n",
+                    e.to_string()
+                ))
+            })?;
+
+            return Ok(response);
+        } else {
+            error!("Received bad status from OpenAI: {}", response.status());
+            return Err(OpenAIClientError::ResponseBadStatus(format!(
+                "Client response status unsuccessful: {}",
+                response.status()
+            )));
+        }
+    }
 }
 
-// curl https://api.openai.com/v1/threads/thread_abc123/runs/run_abc123 \
+// curl https://api.openai.com/v1/threads/thread_abc123/runs/run_abc123/submit_tool_outputs \
 //   -H "Authorization: Bearer $OPENAI_API_KEY" \
-//   -H "OpenAI-Beta: assistants=v1"
+//   -H "Content-Type: application/json" \
+//   -H "OpenAI-Beta: assistants=v1" \
+//   -d '{
+//     "tool_outputs": [
+//       {
+//         "tool_call_id": "call_abc123",
+//         "output": "28C"
+//       }
+//     ]
+//   }'
