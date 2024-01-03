@@ -17,6 +17,7 @@ mod config;
 mod file_manager;
 mod game;
 mod game_session;
+mod game_state;
 mod openai_client;
 mod prompt_builder;
 mod utils;
