@@ -3,19 +3,20 @@ use crate::{
     game_session::{game_session_error::GameSessionError, GameSession},
 };
 
-use self::start_game_request::StartGameRequest;
+use self::{start_game_request::StartGameRequest, start_game_response::StartGameResponse};
 
 use log::error;
 use tauri::State;
 use tokio::sync::Mutex;
 
 mod start_game_request;
+mod start_game_response;
 
 #[tauri::command]
 pub async fn start_game(
     request: StartGameRequest,
     state: State<'_, Mutex<ApplicationState>>,
-) -> Result<(), GameSessionError> {
+) -> Result<StartGameResponse, GameSessionError> {
     let mut state = state.lock().await;
     let file_manager = &state.file_manager.as_ref();
     let file_manager = file_manager.ok_or(GameSessionError::ConfigError(String::from(
@@ -37,7 +38,8 @@ pub async fn start_game(
             ))
         })?;
 
-    state.game_session = Some(game_session);
+    let game_state = &game_session.game_state;
+    state.game_session = Some(game_session.clone());
 
-    Ok(())
+    Ok(StartGameResponse::new(game_state))
 }

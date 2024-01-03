@@ -1,9 +1,11 @@
 pub mod character_session;
+pub mod game_functions;
 pub mod game_session_error;
 
-use anyhow::{anyhow, Context};
+use anyhow::{anyhow, bail, Context};
 use log::{error, info};
 use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
 
 use crate::{
     file_manager::FileManager,
@@ -12,15 +14,24 @@ use crate::{
     openai_client::{
         assistant::assistant_create_request::AssistantCreateRequest,
         assistant_tool::function::Function,
-        chat_completion::chat_completion_model::ChatCompletionModel, OpenAIClient,
+        chat_completion::chat_completion_model::ChatCompletionModel,
+        create_message::create_message_request::CreateMessageRequest,
+        create_run::create_run_request::CreateRunRequest,
+        list_messages::list_messages_query::{ListMessagesQuery, ListMessagesQueryBuilder},
+        retrieve_run::retrieve_run_response::ToolCall,
+        submit_tool_outputs::submit_tool_outputs_request::SubmitToolOutputsRequest,
+        OpenAIClient,
     },
     prompt_builder::PromptBuilder,
     utils::random::Random,
 };
 
-use self::character_session::CharacterSession;
+use self::{
+    character_session::CharacterSession,
+    game_functions::{item_update::ItemUpdate, scene_update::SceneUpdate},
+};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct GameSession {
     pub id: String,
     pub game_id: String,
@@ -106,5 +117,144 @@ impl GameSession {
             .context("Error writing game session to file.")?;
 
         Ok(())
+    }
+
+    pub async fn process_game_prompt(
+        &mut self,
+        prompt: &str,
+        openai_client: &OpenAIClient,
+        file_manager: &FileManager,
+    ) -> Result<&GameState, anyhow::Error> {
+        let game = Game::load(&self.game_id, file_manager)?;
+        let create_message_response = openai_client
+            .create_message(CreateMessageRequest::new(prompt), &self.thread_id)
+            .await
+            .map_err(|e| anyhow!("Failed to create new message and add to thread: {:?}", e))?;
+
+        self.game_state
+            .add_player_message(&create_message_response.content[0].text.value);
+
+        let run_request = CreateRunRequest::builder()
+            .assistant_id(&self.narrator_assistant_id)
+            .additional_instructions(self.game_state.get_inventory().join(", "))
+            .build();
+
+        let create_run_response = openai_client
+            .create_run(run_request, &self.thread_id)
+            .await
+            .map_err(|e| anyhow!("Failed to create run: {:?}", e))?;
+
+        let run_id = create_run_response.id;
+
+        loop {
+            if let Ok(retrieve_run_response) =
+                openai_client.retrieve_run(&self.thread_id, &run_id).await
+            {
+                match retrieve_run_response.status.as_str() {
+                    "requires_action" => {
+                        // TODO: Check for tool requests, process those, update state
+                        let tool_calls: Vec<ToolCall> = retrieve_run_response.required_action.ok_or(anyhow!("Received requires_action status with no required_action field on run response."))?.submit_tool_outputs.tool_calls;
+
+                        let mut submit_tool_outputs_request = SubmitToolOutputsRequest::new();
+
+                        for tool_call in tool_calls {
+                            let function_name = tool_call.function.name.as_str();
+                            let arguments =
+                                serde_json::from_str::<Value>(&tool_call.function.arguments)?;
+                            match function_name {
+                                "new_scene" => {
+                                    let scene_info = SceneUpdate::new_scene(
+                                        arguments,
+                                        &game,
+                                        &mut self.game_state,
+                                    )
+                                    .context("Unable to create response object for new_scene")?;
+                                    let output = serde_json::to_string(&scene_info).context(
+                                        "Unable to serialize response object for new_scene.",
+                                    )?;
+                                    submit_tool_outputs_request.add_output(&tool_call.id, &output);
+                                }
+                                "add_item" => {
+                                    let item_update =
+                                        ItemUpdate::add_item(arguments, &mut self.game_state)
+                                            .context(
+                                                "Unable to create response object for add_item.",
+                                            )?;
+                                    let output = serde_json::to_string(&item_update).context(
+                                        "Unable to serialize response object for add_item",
+                                    )?;
+                                    submit_tool_outputs_request.add_output(&tool_call.id, &output);
+                                }
+                                "remove_item" => {
+                                    let item_update =
+                                        ItemUpdate::remove_item(arguments, &mut self.game_state)
+                                            .context(
+                                                "Unable to create response object for remove_item.",
+                                            )?;
+                                    let output = serde_json::to_string(&item_update).context(
+                                        "Unable to serialize response object for remove_item.",
+                                    )?;
+                                    submit_tool_outputs_request.add_output(&tool_call.id, &output);
+                                }
+                                "character_interact" => {
+                                    todo!("Set up character interaction function.")
+                                }
+                                "end_game" => {
+                                    let reason = arguments["reason"]
+                                        .as_str()
+                                        .ok_or(anyhow!(
+                                            "Unable to interpret arguments for end_game function."
+                                        ))?
+                                        .to_string();
+                                    self.game_state.end_game = Some(reason);
+
+                                    submit_tool_outputs_request.add_output(
+                                        &tool_call.id,
+                                        &json!({
+                                            "success": "true"
+                                        })
+                                        .to_string(),
+                                    )
+                                }
+                                _ => bail!(
+                                    "Received invalid function call request for narrator: {}.",
+                                    tool_call.function.name
+                                ),
+                            }
+                        }
+
+                        openai_client
+                            .submit_tool_outputs(
+                                submit_tool_outputs_request,
+                                &self.thread_id,
+                                &run_id,
+                            )
+                            .await
+                            .map_err(|e| anyhow!("Unable to submit tool outputs: {:?}", e))?;
+                    }
+                    "cancelling" | "cancelled" | "failed" | "expired" => {
+                        bail!("Unable to complete request - assistant run failed or expired.")
+                    }
+                    "completed" => break,
+                    _ => {}
+                }
+            }
+
+            tokio::time::sleep(tokio::time::Duration::from_millis(250)).await
+        }
+
+        let list_messages_query = ListMessagesQueryBuilder::new(&self.thread_id)
+            .limit(1)
+            .order("desc")
+            .build();
+        let list_messages_response = openai_client
+            .list_messages(list_messages_query)
+            .await
+            .map_err(|e| anyhow!("Failed to list messages: {:?}", e))?;
+
+        let narrator_response = list_messages_response.data[0].content[0].text.value.clone();
+        self.game_state.add_narrator_message(&narrator_response);
+
+        Ok(&self.game_state)
     }
 }

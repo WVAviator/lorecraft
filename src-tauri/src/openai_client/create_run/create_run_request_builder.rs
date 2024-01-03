@@ -63,7 +63,7 @@ impl CreateRunRequestBuilderRequired {
         CreateRunRequestBuilderRequired {}
     }
 
-    pub fn assistant_id(assistant_id: &str) -> CreateRunRequestBuilder {
+    pub fn assistant_id(self, assistant_id: &str) -> CreateRunRequestBuilder {
         CreateRunRequestBuilder {
             assistant_id: assistant_id.to_string(),
             model: None,

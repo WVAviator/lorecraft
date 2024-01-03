@@ -19,7 +19,7 @@ mod character_context;
 mod character_profile;
 mod character_save_data;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CharacterSession {
     character_id: String,
     assistant_id: String,

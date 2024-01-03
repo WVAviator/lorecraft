@@ -38,8 +38,8 @@ impl GameState {
         self.current_scene_id = Some(new_scene_id.to_string());
     }
 
-    pub fn add_item(&mut self, item_id: &str) {
-        self.inventory.push(item_id.to_string());
+    pub fn add_item(&mut self, item_name: &str) {
+        self.inventory.push(item_name.to_string());
     }
 
     pub fn remove_item(&mut self, item_id: &str) -> Result<(), anyhow::Error> {
@@ -60,5 +60,9 @@ impl GameState {
 
     pub fn end_character_interaction(&mut self) {
         self.character_interaction = None;
+    }
+
+    pub fn get_inventory(&self) -> Vec<String> {
+        self.inventory.clone()
     }
 }

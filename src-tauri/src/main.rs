@@ -1,6 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use crate::commands::create_new_game::create_new_game;
+use crate::commands::game_prompt::game_prompt;
 use crate::commands::setup::setup;
 use crate::commands::start_game::start_game;
 
@@ -27,7 +28,12 @@ fn main() -> Result<(), anyhow::Error> {
     let updates_tx = Mutex::new(updates_tx);
 
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![create_new_game, setup, start_game])
+        .invoke_handler(tauri::generate_handler![
+            create_new_game,
+            setup,
+            start_game,
+            game_prompt
+        ])
         .setup(|app| {
             Logger::setup(app);
 

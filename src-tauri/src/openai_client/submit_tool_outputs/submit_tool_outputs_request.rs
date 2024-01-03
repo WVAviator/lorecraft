@@ -13,12 +13,11 @@ impl SubmitToolOutputsRequest {
         }
     }
 
-    pub fn add_output(mut self, tool_call_id: &str, output: &str) -> Self {
+    pub fn add_output(&mut self, tool_call_id: &str, output: &str) {
         self.tool_outputs.push(ToolOutput {
             tool_call_id: tool_call_id.to_string(),
             output: output.to_string(),
         });
-        self
     }
 
     pub fn to_request_body(self) -> Result<String, anyhow::Error> {
