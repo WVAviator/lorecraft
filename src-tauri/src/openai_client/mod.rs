@@ -1,7 +1,7 @@
 use self::{
-    assisstant_api::{
-        assisstant_create_request::AssisstantCreateRequest,
-        assisstant_create_response::AssisstantCreateResponse,
+    assistant_api::{
+        assistant_create_request::AssistantCreateRequest,
+        assistant_create_response::AssistantCreateResponse,
     },
     chat_completion::chat_completion_request::ChatCompletionRequest,
     chat_completion::chat_completion_response::ChatCompletionResponse,
@@ -18,11 +18,11 @@ use reqwest::{
     Client, ClientBuilder,
 };
 
-pub mod assisstant_api;
+pub mod assistant_api;
+pub mod assistant_tool;
 pub mod chat_completion;
 pub mod image_generation;
 pub mod openai_client_error;
-pub mod openai_tool;
 pub mod thread;
 
 pub struct OpenAIClient {
@@ -173,21 +173,21 @@ impl OpenAIClient {
         }
     }
 
-    pub async fn create_assisstant(
+    pub async fn create_assistant(
         &self,
-        request: AssisstantCreateRequest,
-    ) -> Result<AssisstantCreateResponse, OpenAIClientError> {
+        request: AssistantCreateRequest,
+    ) -> Result<AssistantCreateResponse, OpenAIClientError> {
         let body = request.to_request_body();
 
         trace!(
-            "Sending OpenAI assisstant create request with body:\n\n{}\n\n",
+            "Sending OpenAI assistant create request with body:\n\n{}\n\n",
             body
         );
 
         let response = self
             .client
             .post("https://api.openai.com/v1/assistants")
-            .header("OpenAI-Beta", "assisstants=v1")
+            .header("OpenAI-Beta", "assistants=v1")
             .body(body)
             .send()
             .await
@@ -200,7 +200,7 @@ impl OpenAIClient {
 
         if response.status().is_success() {
             let response = response
-                .json::<AssisstantCreateResponse>()
+                .json::<AssistantCreateResponse>()
                 .await
                 .map_err(|e| {
                     OpenAIClientError::InvalidResponse(format!(

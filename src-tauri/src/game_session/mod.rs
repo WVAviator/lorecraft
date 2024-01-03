@@ -5,11 +5,11 @@ use log::{error, info};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    file_manager::{self, FileManager},
+    file_manager::FileManager,
     game::Game,
-    game_session::game_session_error::GameSessionError,
     openai_client::{
-        assisstant_api::assisstant_create_request::AssisstantCreateRequest,
+        assistant_api::assistant_create_request::AssistantCreateRequest,
+        assistant_tool::function::Function,
         chat_completion::chat_completion_model::ChatCompletionModel, OpenAIClient,
     },
     prompt_builder::PromptBuilder,
@@ -20,7 +20,7 @@ use crate::{
 pub struct GameSession {
     pub id: String,
     pub game: Game,
-    pub narrator_assisstant_id: String,
+    pub narrator_assistant_id: String,
     pub thread_id: String,
 }
 
@@ -53,19 +53,28 @@ impl GameSession {
             .add_plain_text(&scene_list_text)
             .build();
 
-        let assisstant_response = openai_client
-            .create_assisstant(AssisstantCreateRequest::new(
+        let functions = vec![
+            Function::from_file("./prompts/narrator/add_item_function.json")?,
+            Function::from_file("./prompts/narrator/remove_item_function.json")?,
+            Function::from_file("./prompts/narrator/new_scene_function.json")?,
+            Function::from_file("./prompts/narrator/character_interact_function.json")?,
+            Function::from_file("./prompts/narrator/end_game_function.json")?,
+        ];
+
+        let assistant_response = openai_client
+            .create_assistant(AssistantCreateRequest::new(
                 instructions,
                 game_id.to_string(),
                 ChatCompletionModel::Gpt3_5Turbo1106,
+                functions,
             ))
             .await
-            .expect("Failed to create assisstant.");
+            .expect("Failed to create assistant.");
 
-        let narrator_assisstant_id = assisstant_response.id;
+        let narrator_assistant_id = assistant_response.id;
 
         let thread_response = openai_client.create_thread().await.map_err(|e| {
-            error!("Failed to create thread for Assisstant API:\n{:?}", e);
+            error!("Failed to create thread for Assistant API:\n{:?}", e);
             anyhow!("Failed to start thread.")
         })?;
 
@@ -76,7 +85,7 @@ impl GameSession {
         let game_session = GameSession {
             id,
             game,
-            narrator_assisstant_id,
+            narrator_assistant_id,
             thread_id,
         };
 
