@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::prompt_builder::PromptBuilder;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Function {
     pub name: String,
     pub parameters: Parameters,
@@ -24,7 +24,7 @@ impl Function {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Parameters {
     #[serde(rename = "type")]
     pub type_: String,
@@ -32,7 +32,7 @@ pub struct Parameters {
     pub required: Vec<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Property {
     #[serde(rename = "type")]
     pub type_: String,
