@@ -1,9 +1,11 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use crate::commands::create_new_game::create_new_game;
 use crate::commands::game_prompt::game_prompt;
 use crate::commands::setup::setup;
 use crate::commands::start_game::start_game;
+use crate::{
+    application_state::session_state::SessionState, commands::create_new_game::create_new_game,
+};
 
 use application_state::ApplicationState;
 use log::{error, info};
@@ -38,9 +40,14 @@ fn main() -> Result<(), anyhow::Error> {
             Logger::setup(app);
 
             info!("Initializing application state.");
-            let state = ApplicationState::new(updates_tx);
-            let state = Mutex::new(state);
-            app.manage(state);
+            let application_state = ApplicationState::new(updates_tx);
+            let application_state = Mutex::new(application_state);
+            app.manage(application_state);
+
+            info!("Initializing session state.");
+            let session_state = SessionState::new();
+            let session_state = Mutex::new(session_state);
+            app.manage(session_state);
 
             info!("Initializing updates event emitter.");
             let app_handle = app.handle();

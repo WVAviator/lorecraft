@@ -8,9 +8,7 @@ pub struct StartGameResponse {
 }
 
 impl StartGameResponse {
-    pub fn new(game_state: &GameState) -> Self {
-        StartGameResponse {
-            game_state: game_state.clone(),
-        }
+    pub fn new(game_state: GameState) -> Self {
+        StartGameResponse { game_state }
     }
 }

@@ -7,6 +7,8 @@ use crate::file_manager::FileManager;
 use crate::game_session::GameSession;
 use crate::openai_client::OpenAIClient;
 
+pub mod session_state;
+
 pub struct ApplicationState {
     pub updates_tx: Mutex<mpsc::Sender<String>>,
     pub file_manager: Option<FileManager>,

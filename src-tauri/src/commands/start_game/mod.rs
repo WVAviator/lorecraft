@@ -1,5 +1,5 @@
 use crate::{
-    application_state::ApplicationState,
+    application_state::{session_state::SessionState, ApplicationState},
     game_session::{game_session_error::GameSessionError, GameSession},
 };
 
@@ -15,15 +15,16 @@ mod start_game_response;
 #[tauri::command]
 pub async fn start_game(
     request: StartGameRequest,
-    state: State<'_, Mutex<ApplicationState>>,
+    application_state: State<'_, Mutex<ApplicationState>>,
+    session_state: State<'_, Mutex<SessionState>>,
 ) -> Result<StartGameResponse, GameSessionError> {
-    let mut state = state.lock().await;
-    let file_manager = &state.file_manager.as_ref();
+    let application_state = application_state.lock().await;
+    let file_manager = &application_state.file_manager.as_ref();
     let file_manager = file_manager.ok_or(GameSessionError::ConfigError(String::from(
         "Unable to access file manager.",
     )))?;
 
-    let openai_client = &state.openai_client.as_ref();
+    let openai_client = &application_state.openai_client.as_ref();
     let openai_client = openai_client.ok_or(GameSessionError::ConfigError(String::from(
         "Unable to access OpenAI client.",
     )))?;
@@ -38,8 +39,9 @@ pub async fn start_game(
             ))
         })?;
 
-    let game_state = &game_session.game_state;
-    state.game_session = Some(game_session.clone());
+    let game_state = game_session.game_state.clone();
+    let mut session_state = session_state.lock().await;
+    session_state.set_game_session(game_session);
 
     Ok(StartGameResponse::new(game_state))
 }
