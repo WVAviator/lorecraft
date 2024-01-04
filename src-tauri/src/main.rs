@@ -3,6 +3,7 @@
 use crate::commands::game_prompt::game_prompt;
 use crate::commands::setup::setup;
 use crate::commands::start_game::start_game;
+use crate::commands::character_prompt::character_prompt;
 use crate::{
     application_state::session_state::SessionState, commands::create_new_game::create_new_game,
 };
@@ -34,7 +35,8 @@ fn main() -> Result<(), anyhow::Error> {
             create_new_game,
             setup,
             start_game,
-            game_prompt
+            game_prompt,
+            character_prompt,
         ])
         .setup(|app| {
             Logger::setup(app);

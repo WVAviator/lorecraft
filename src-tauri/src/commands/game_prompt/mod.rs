@@ -1,7 +1,4 @@
-use crate::{
-    application_state::{session_state::SessionState, ApplicationState},
-    openai_client,
-};
+use crate::application_state::{session_state::SessionState, ApplicationState};
 
 use self::{
     game_prompt_error::GamePromptError, game_prompt_request::GamePromptRequest,

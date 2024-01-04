@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
 use crate::{
+    commands::character_prompt::character_prompt_request::CharacterPromptRequest,
     file_manager::FileManager,
     game::Game,
     game_state::GameState,
@@ -105,6 +106,8 @@ impl GameSession {
 
         game_session.save(file_manager)?;
 
+        // TODO: Run should be triggered immediately
+
         Ok(game_session)
     }
 
@@ -197,6 +200,7 @@ impl GameSession {
                                     submit_tool_outputs_request.add_output(&tool_call.id, &output);
                                 }
                                 "character_interact" => {
+                                    // TODO: Set character interaction here and on game state
                                     todo!("Set up character interaction function.")
                                 }
                                 "end_game" => {
@@ -254,6 +258,21 @@ impl GameSession {
 
         let narrator_response = list_messages_response.data[0].content[0].text.value.clone();
         self.game_state.add_narrator_message(&narrator_response);
+
+        Ok(&self.game_state)
+    }
+
+    pub async fn process_character_prompt(
+        &mut self,
+        request: &CharacterPromptRequest,
+        openai_client: &OpenAIClient,
+        file_manager: &FileManager,
+    ) -> Result<&GameState, anyhow::Error> {
+        self.character_session
+            .as_mut()
+            .ok_or(anyhow!("No active character session."))?
+            .process_prompt(request, openai_client, file_manager, &mut self.game_state)
+            .await?;
 
         Ok(&self.game_state)
     }
