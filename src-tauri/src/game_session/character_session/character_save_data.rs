@@ -7,8 +7,8 @@ use crate::{file_manager::FileManager, game::Game};
 pub struct CharacterSaveData {
     character_id: String,
     game_id: String,
-    previous_conversations: Vec<String>,
-    character_inventory: Vec<String>,
+    pub previous_conversations: Vec<String>,
+    pub character_inventory: Vec<String>,
 }
 
 impl CharacterSaveData {

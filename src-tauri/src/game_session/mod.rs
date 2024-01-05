@@ -13,7 +13,7 @@ use crate::{
     game::Game,
     game_state::GameState,
     openai_client::{
-        assistant::assistant_create_request::AssistantCreateRequest,
+        assistant_create::assistant_create_request::AssistantCreateRequest,
         assistant_tool::{function::Function, AssistantTool},
         chat_completion::chat_completion_model::ChatCompletionModel,
         create_message::create_message_request::CreateMessageRequest,
@@ -32,7 +32,7 @@ use self::{
     game_functions::{item_update::ItemUpdate, scene_update::SceneUpdate},
 };
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct GameSession {
     pub id: String,
     pub game_id: String,
@@ -40,6 +40,8 @@ pub struct GameSession {
     pub thread_id: String,
     pub game_state: GameState,
     pub character_session: Option<CharacterSession>,
+    #[serde(skip)]
+    character_end_tx: Option<tokio::sync::oneshot::Sender<String>>,
 }
 
 impl GameSession {
@@ -112,11 +114,14 @@ impl GameSession {
             thread_id,
             game_state: GameState::new(),
             character_session: None,
+            character_end_tx: None,
         };
 
         game_session.save(file_manager)?;
 
-        let narrator_response = game_session.process_run(openai_client, game).await?;
+        let narrator_response = game_session
+            .process_run(openai_client, game, file_manager)
+            .await?;
         game_session
             .game_state
             .add_narrator_message(&narrator_response);
@@ -154,7 +159,7 @@ impl GameSession {
         self.game_state
             .add_player_message(&create_message_response.content[0].text.value);
 
-        let narrator_response = self.process_run(openai_client, game).await?;
+        let narrator_response = self.process_run(openai_client, game, file_manager).await?;
         self.game_state.add_narrator_message(&narrator_response);
 
         Ok(&self.game_state)
@@ -164,6 +169,7 @@ impl GameSession {
         &mut self,
         openai_client: &OpenAIClient,
         game: Game,
+        file_manager: &FileManager,
     ) -> Result<String, anyhow::Error> {
         info!("Creating new run on thread.");
 
@@ -249,8 +255,40 @@ impl GameSession {
                                     );
                                 }
                                 "character_interact" => {
-                                    // TODO: Set character interaction here and on game state
-                                    todo!("Set up character interaction function.")
+                                    let name = arguments["name"].as_str().ok_or(anyhow!("Unable to interpret arguments for character_interact function."))?.to_string();
+
+                                    info!("Establishing character session for {}", &name);
+
+                                    let character_session = CharacterSession::new(
+                                        &name,
+                                        &self.game_id,
+                                        openai_client,
+                                        file_manager,
+                                        &mut self.game_state,
+                                    )
+                                    .await
+                                    .context("Failed to establish character session.")?;
+
+                                    self.character_session = Some(character_session);
+                                    let (tx, rx) = tokio::sync::oneshot::channel();
+                                    self.character_end_tx = Some(tx);
+
+                                    info!("Set oneshot transmitter, awaiting character summary.");
+
+                                    let conversation_summary = rx.await.context("Error receiving continution response for character interaction.")?;
+
+                                    info!(
+                                        "Conversation summary received: {}",
+                                        &conversation_summary
+                                    );
+
+                                    let output = json!({
+                                        "conversation_summary": &conversation_summary,
+                                        "updated_player_inventory": &self.game_state.get_inventory()
+                                    })
+                                    .to_string();
+
+                                    submit_tool_outputs_request.add_output(&tool_call.id, &output);
                                 }
                                 "end_game" => {
                                     let reason = arguments["reason"]
@@ -298,8 +336,18 @@ impl GameSession {
             tokio::time::sleep(tokio::time::Duration::from_millis(250)).await
         }
 
-        info!("Fetching latest message from thread");
+        let narrator_response = self.get_last_message(openai_client).await?;
 
+        info!("Received response from assistant: {}", &narrator_response);
+
+        Ok(narrator_response)
+    }
+
+    async fn get_last_message(
+        &mut self,
+        openai_client: &OpenAIClient,
+    ) -> Result<String, anyhow::Error> {
+        info!("Fetching latest message from thread");
         let list_messages_query = ListMessagesQueryBuilder::new(&self.thread_id)
             .limit(1)
             .order("desc")
@@ -308,11 +356,7 @@ impl GameSession {
             .list_messages(list_messages_query)
             .await
             .map_err(|e| anyhow!("Failed to list messages: {:?}", e))?;
-
         let narrator_response = list_messages_response.data[0].content[0].text.value.clone();
-
-        info!("Received response from assistant: {}", &narrator_response);
-
         Ok(narrator_response)
     }
 
@@ -322,11 +366,40 @@ impl GameSession {
         openai_client: &OpenAIClient,
         file_manager: &FileManager,
     ) -> Result<&GameState, anyhow::Error> {
+        if let Some(true) = &request.end_conversation {
+            return self.end_character_prompt(openai_client, file_manager).await;
+        }
+
         self.character_session
             .as_mut()
             .ok_or(anyhow!("No active character session."))?
             .process_prompt(request, openai_client, file_manager, &mut self.game_state)
             .await?;
+
+        Ok(&self.game_state)
+    }
+
+    pub async fn end_character_prompt(
+        &mut self,
+        openai_client: &OpenAIClient,
+        file_manager: &FileManager,
+    ) -> Result<&GameState, anyhow::Error> {
+        info!("Player requested to end the conversation.");
+        let conversation_summary = self
+            .character_session
+            .as_mut()
+            .ok_or(anyhow!("No active character session."))?
+            .end_session(openai_client, file_manager, &mut self.game_state)
+            .await?;
+
+        self.character_end_tx
+            .take()
+            .ok_or(anyhow!(
+                "Cannot transmit summary to rusume message processing."
+            ))?
+            .send(conversation_summary);
+
+        self.character_session = None;
 
         Ok(&self.game_state)
     }

@@ -128,6 +128,37 @@ const useGameState = () => {
     }
   };
 
+  const end_character_conversation = async () => {
+    if (!gameState || !started) {
+      console.error(
+        "Attempted to end a character conversation for a game that either doesn't exist or hasn't been started yet."
+      );
+    }
+    setLoading(true);
+
+    setGameState((state) => {
+      let newState = structuredClone(state);
+      if (newState) {
+        newState.character_interaction = null;
+      }
+      return newState;
+    });
+
+    try {
+      const { game_state } = (await invoke('character_prompt', {
+        request: { end_conversation: true },
+      })) as { game_state: GameState };
+      setGameState(game_state);
+      setLoading(false);
+    } catch (error) {
+      console.error(
+        'Failed to receive response from character prompt: ',
+        error
+      );
+      navigate('/mainmenu');
+    }
+  };
+
   return {
     gameState,
     startGame,

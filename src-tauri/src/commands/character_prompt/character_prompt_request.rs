@@ -4,4 +4,5 @@ use serde::{Deserialize, Serialize};
 pub struct CharacterPromptRequest {
     pub message: Option<String>,
     pub trade_accept: Option<bool>,
+    pub end_conversation: Option<bool>,
 }

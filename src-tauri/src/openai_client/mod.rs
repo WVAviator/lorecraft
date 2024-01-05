@@ -1,7 +1,7 @@
 use std::fs;
 
 use self::{
-    assistant::{
+    assistant_create::{
         assistant_create_request::AssistantCreateRequest,
         assistant_create_response::AssistantCreateResponse,
     },
@@ -22,7 +22,7 @@ use self::{
     openai_client_error::OpenAIClientError,
     retrieve_run::retrieve_run_response::RetrieveRunResponse,
     submit_tool_outputs::submit_tool_outputs_request::SubmitToolOutputsRequest,
-    thread::thread_create_response::ThreadCreateResponse,
+    thread_create::thread_create_response::ThreadCreateResponse,
 };
 use anyhow::Context;
 use log::{error, trace};
@@ -31,7 +31,7 @@ use reqwest::{
     Client, ClientBuilder,
 };
 
-pub mod assistant;
+pub mod assistant_create;
 pub mod assistant_tool;
 pub mod chat_completion;
 pub mod create_message;
@@ -41,7 +41,7 @@ pub mod list_messages;
 pub mod openai_client_error;
 pub mod retrieve_run;
 pub mod submit_tool_outputs;
-pub mod thread;
+pub mod thread_create;
 
 pub struct OpenAIClient {
     client: Client,
@@ -242,6 +242,33 @@ impl OpenAIClient {
         }
     }
 
+    pub async fn delete_assistant(&self, assistant_id: &str) -> Result<(), OpenAIClientError> {
+        let url = format!("https://api.openai.com/v1/assistants/{}", assistant_id);
+
+        let response = self
+            .client
+            .delete(&url)
+            .header("OpenAI-Beta", "assistants=v1")
+            .send()
+            .await
+            .map_err(|e| {
+                OpenAIClientError::RequestFailed(format!(
+                    "Error occurred making request to OpenAI:\n{}\n",
+                    e.to_string()
+                ))
+            })?;
+
+        if response.status().is_success() {
+            return Ok(());
+        } else {
+            error!("Received bad status from OpenAI: {}", response.status());
+            return Err(OpenAIClientError::ResponseBadStatus(format!(
+                "Client response status unsuccessful: {}",
+                response.status()
+            )));
+        }
+    }
+
     pub async fn create_thread(&self) -> Result<ThreadCreateResponse, OpenAIClientError> {
         let response = self
             .client
@@ -265,6 +292,33 @@ impl OpenAIClient {
             })?;
 
             return Ok(response);
+        } else {
+            error!("Received bad status from OpenAI: {}", response.status());
+            return Err(OpenAIClientError::ResponseBadStatus(format!(
+                "Client response status unsuccessful: {}",
+                response.status()
+            )));
+        }
+    }
+
+    pub async fn delete_thread(&self, thread_id: &str) -> Result<(), OpenAIClientError> {
+        let url = format!("https://api.openai.com/v1/threads/{}", thread_id);
+
+        let response = self
+            .client
+            .delete(&url)
+            .header("OpenAI-Beta", "assistants=v1")
+            .send()
+            .await
+            .map_err(|e| {
+                OpenAIClientError::RequestFailed(format!(
+                    "Error occurred making request to OpenAI:\n{}\n",
+                    e.to_string()
+                ))
+            })?;
+
+        if response.status().is_success() {
+            return Ok(());
         } else {
             error!("Received bad status from OpenAI: {}", response.status());
             return Err(OpenAIClientError::ResponseBadStatus(format!(

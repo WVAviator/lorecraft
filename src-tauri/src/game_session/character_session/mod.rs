@@ -3,6 +3,7 @@ use log::{error, info, trace};
 
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use tokio::join;
 
 use crate::{
     commands::character_prompt::character_prompt_request::CharacterPromptRequest,
@@ -10,7 +11,7 @@ use crate::{
     game::{character::Character, Game},
     game_state::GameState,
     openai_client::{
-        assistant::assistant_create_request::AssistantCreateRequest,
+        assistant_create::assistant_create_request::AssistantCreateRequest,
         assistant_tool::{function::Function, AssistantTool},
         chat_completion::chat_completion_model::ChatCompletionModel,
         create_message::create_message_request::CreateMessageRequest,
@@ -51,6 +52,7 @@ impl CharacterSession {
         game_id: &str,
         openai_client: &OpenAIClient,
         file_manager: &FileManager,
+        game_state: &mut GameState,
     ) -> Result<Self, anyhow::Error> {
         let game =
             Game::load(&game_id, file_manager).context("Unable to load game from game ID")?;
@@ -63,9 +65,19 @@ impl CharacterSession {
         let profile = CharacterProfile::from_character(&character)?;
         let profile = serde_json::to_string(&profile)?;
 
+        let character_save_data = CharacterSaveData::load(&character.id, &game.id, file_manager)
+            .context("Unable to load previous character data.")?;
+
+        let additional_context = json!({
+            "previous_conversations": &character_save_data.previous_conversations,
+            "character_inventory": &character_save_data.character_inventory,
+        })
+        .to_string();
+
         let instructions = PromptBuilder::new()
             .add_prompt("./prompts/character_actor/main.txt")
             .add_plain_text(&profile)
+            .add_plain_text(&additional_context)
             .build();
 
         let tools = vec![
@@ -96,11 +108,9 @@ impl CharacterSession {
 
         let thread_id = thread_response.id;
 
-        let character_save_data = CharacterSaveData::load(&character.id, game_id, file_manager)?;
-
         // TODO: Run should be triggered immediately
 
-        Ok(CharacterSession {
+        let mut character_session = CharacterSession {
             character_id: character.id.to_string(),
             character: character.clone(),
             assistant_id: character_assistant_id,
@@ -108,7 +118,14 @@ impl CharacterSession {
             character_save_data,
             last_run_id: None,
             last_tool_call: None,
-        })
+        };
+
+        character_session.trigger_new_run(openai_client).await?;
+        character_session
+            .poll_last_run(openai_client, game_state)
+            .await?;
+
+        Ok(character_session)
     }
 
     pub async fn process_prompt(
@@ -194,27 +211,82 @@ impl CharacterSession {
                     ))?
                     .add_message(&message);
 
-                let run_response = openai_client
-                    .create_run(
-                        CreateRunRequest::builder()
-                            .assistant_id(&self.assistant_id)
-                            .build(),
-                        &self.thread_id,
-                    )
-                    .await
-                    .map_err(|e| {
-                        anyhow!(
-                            "Unable to create run in thread of character session: {:?}",
-                            e
-                        )
-                    })?;
-
-                trace!("Received run response:\n{:?}", run_response);
-
-                self.last_run_id = Some(run_response.id);
+                self.trigger_new_run(openai_client).await?;
             }
         }
 
+        if let PollResponse::RequiresAction = self.poll_last_run(openai_client, game_state).await? {
+            return Ok(());
+        }
+
+        self.last_run_id = None;
+        self.last_tool_call = None;
+
+        let message_list_response = openai_client
+            .list_messages(
+                ListMessagesQuery::builder(&self.thread_id)
+                    .limit(1)
+                    .order("desc")
+                    .build(),
+            )
+            .await
+            .map_err(|e| anyhow!("Unable to retrieve latest message from thread:\n{:?}", e))?;
+
+        trace!(
+            "Received latest message from thread:\n{:?}",
+            &message_list_response
+        );
+
+        let character_message = message_list_response.data[0].content[0].text.value.clone();
+        let processed_messages = self.process_meta_commands(character_message);
+
+        info!("Received and processed character messages. Appending new messages to game state.");
+        for message in processed_messages {
+            if message.starts_with(format!("{}:", &self.character.name).as_str()) {
+                game_state
+                    .character_interaction
+                    .as_mut()
+                    .ok_or(anyhow!("No character interaction to append message to."))?
+                    .add_message(&message);
+            } else {
+                game_state
+                    .character_interaction
+                    .as_mut()
+                    .ok_or(anyhow!(
+                        "No character interaction to append nonverbal action to."
+                    ))?
+                    .add_nonverbal(&message);
+            }
+        }
+
+        Ok(())
+    }
+
+    async fn trigger_new_run(&mut self, openai_client: &OpenAIClient) -> Result<(), anyhow::Error> {
+        let run_response = openai_client
+            .create_run(
+                CreateRunRequest::builder()
+                    .assistant_id(&self.assistant_id)
+                    .build(),
+                &self.thread_id,
+            )
+            .await
+            .map_err(|e| {
+                anyhow!(
+                    "Unable to create run in thread of character session: {:?}",
+                    e
+                )
+            })?;
+        trace!("Received run response:\n{:?}", run_response);
+        self.last_run_id = Some(run_response.id);
+        Ok(())
+    }
+
+    async fn poll_last_run(
+        &mut self,
+        openai_client: &OpenAIClient,
+        game_state: &mut GameState,
+    ) -> Result<PollResponse, anyhow::Error> {
         loop {
             if let Ok(retrieve_run_response) = openai_client
                 .retrieve_run(
@@ -300,7 +372,7 @@ impl CharacterSession {
                         }
 
                         info!("Ending interaction early, awaiting response from player to submit function response.");
-                        return Ok(());
+                        return Ok(PollResponse::RequiresAction);
                     }
                     "cancelling" | "cancelled" | "failed" | "expired" => {
                         error!("The run has expired or has failed.");
@@ -315,47 +387,7 @@ impl CharacterSession {
             trace!("Polling for run response.");
         }
 
-        self.last_run_id = None;
-        self.last_tool_call = None;
-
-        let message_list_response = openai_client
-            .list_messages(
-                ListMessagesQuery::builder(&self.thread_id)
-                    .limit(1)
-                    .order("desc")
-                    .build(),
-            )
-            .await
-            .map_err(|e| anyhow!("Unable to retrieve latest message from thread:\n{:?}", e))?;
-
-        trace!(
-            "Received latest message from thread:\n{:?}",
-            &message_list_response
-        );
-
-        let character_message = message_list_response.data[0].content[0].text.value.clone();
-        let processed_messages = self.process_meta_commands(character_message);
-
-        info!("Received and processed character messages. Appending new messages to game state.");
-        for message in processed_messages {
-            if message.starts_with(format!("{}:", &self.character.name).as_str()) {
-                game_state
-                    .character_interaction
-                    .as_mut()
-                    .ok_or(anyhow!("No character interaction to append message to."))?
-                    .add_message(&message);
-            } else {
-                game_state
-                    .character_interaction
-                    .as_mut()
-                    .ok_or(anyhow!(
-                        "No character interaction to append nonverbal action to."
-                    ))?
-                    .add_nonverbal(&message);
-            }
-        }
-
-        Ok(())
+        Ok(PollResponse::Complete)
     }
 
     fn process_meta_commands(&mut self, message: String) -> Vec<String> {
@@ -413,4 +445,54 @@ impl CharacterSession {
 
         messages
     }
+
+    pub async fn end_session(
+        &mut self,
+        openai_client: &OpenAIClient,
+        file_manager: &FileManager,
+        game_state: &mut GameState,
+    ) -> Result<String, anyhow::Error> {
+        let request = CharacterPromptRequest {
+            message: Some(String::from("$summarize")),
+            trade_accept: None,
+            end_conversation: None,
+        };
+        self.process_prompt(&request, openai_client, file_manager, game_state)
+            .await?;
+
+        let summary = game_state
+            .character_interaction
+            .as_ref()
+            .ok_or(anyhow!("Missing charater interaction."))?
+            .messages
+            .last()
+            .ok_or(anyhow!("Missing last message, cannot get summary."))?
+            .text
+            .clone();
+
+        self.character_save_data
+            .previous_conversations
+            .push(summary.clone());
+
+        self.character_save_data
+            .save(file_manager)
+            .context("Unable to save updated character data.")?;
+
+        game_state.end_character_interaction();
+
+        let assistant_delete = openai_client.delete_assistant(&self.assistant_id);
+        let thread_delete = openai_client.delete_thread(&self.thread_id);
+
+        let (assistant_delete, thread_delete) = join!(assistant_delete, thread_delete);
+
+        assistant_delete.map_err(|e| anyhow!("Unable to delete character assistant: {:?}", e))?;
+        thread_delete.map_err(|e| anyhow!("Unable to delete character thread: {:?}", e))?;
+
+        Ok(summary)
+    }
+}
+
+enum PollResponse {
+    RequiresAction,
+    Complete,
 }
