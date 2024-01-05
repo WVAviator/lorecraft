@@ -70,7 +70,72 @@ const useGameState = () => {
     }
   };
 
-  return { gameState, startGame, sendNarrativeMessage, loading };
+  const sendCharacterMessage = async (message: string) => {
+    if (!gameState || !started) {
+      console.error(
+        "Attempted to send a character message to a game that either doesn't exist or hasn't been started yet."
+      );
+    }
+    setLoading(true);
+
+    console.log(`Player entered character message "${message}"`);
+
+    // Temporarily set the state with new message for immediate feedback
+    setGameState((state) => {
+      let newState = structuredClone(state);
+      newState?.character_interaction?.messages.push({
+        text: `Player: ${message}`,
+        is_dialog: true,
+      });
+      return newState;
+    });
+
+    try {
+      const { game_state } = (await invoke('character_prompt', {
+        request: { message },
+      })) as { game_state: GameState };
+      setGameState(game_state);
+      setLoading(false);
+    } catch (error) {
+      console.error(
+        'Failed to receive response from character prompt: ',
+        error
+      );
+      navigate('/mainmenu');
+    }
+  };
+
+  const characterTradeResponse = async (accept: boolean) => {
+    if (!gameState || !started) {
+      console.error(
+        "Attempted to send a character trade response to a game that either doesn't exist or hasn't been started yet."
+      );
+    }
+    setLoading(true);
+
+    try {
+      const { game_state } = (await invoke('character_prompt', {
+        request: { trade_accept: accept },
+      })) as { game_state: GameState };
+      setGameState(game_state);
+      setLoading(false);
+    } catch (error) {
+      console.error(
+        'Failed to receive response from character prompt: ',
+        error
+      );
+      navigate('/mainmenu');
+    }
+  };
+
+  return {
+    gameState,
+    startGame,
+    sendNarrativeMessage,
+    loading,
+    sendCharacterMessage,
+    characterTradeResponse,
+  };
 };
 
 export default useGameState;

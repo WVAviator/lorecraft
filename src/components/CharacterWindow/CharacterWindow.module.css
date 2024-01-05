@@ -1,0 +1,9 @@
+.window {
+  display: grid;
+  grid-template-columns: 60% 40%;
+}
+
+.messages {
+  display: grid;
+  grid-template-rows: 90%, 10%;
+}

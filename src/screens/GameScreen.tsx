@@ -12,6 +12,7 @@ import NarrativeWindow from '../components/NarrativeWindow/NarrativeWindow';
 import { TextField } from '@mui/material';
 import React from 'react';
 import useGameState from '../hooks/useGameState';
+import CharacterWindow from '../components/CharacterWindow/CharacterWindow';
 
 const GameScreen = () => {
   const { navigateWithTransition, isTransitioning } =
@@ -29,6 +30,7 @@ const GameScreen = () => {
 
   return (
     <BackgroundDiv fade={isTransitioning}>
+      <CharacterWindow characterInteraction={gameState.character_interaction} />
       <SplitLayout gridTemplateColumns="60% 40%">
         <SceneImage
           scene={game.scenes.find(
