@@ -1,7 +1,10 @@
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
 
-use crate::{file_manager::FileManager, game::{Game, character::Character}};
+use crate::{
+    file_manager::FileManager,
+    game::{character::Character, Game},
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CharacterProfile {
@@ -14,17 +17,14 @@ pub struct CharacterProfile {
 }
 
 impl CharacterProfile {
-    pub fn from_character(
-        character: &Character,
-    ) -> Result<Self, anyhow::Error> {
-
+    pub fn from_character(character: &Character) -> Result<Self, anyhow::Error> {
         Ok(CharacterProfile {
-            name: character.name,
-            physical_description: character.physical_description,
-            speech: character.speech,
-            personality: character.personality,
-            backstory: character.backstory,
-            thoughts: character.thoughts,
+            name: character.name.clone(),
+            physical_description: character.physical_description.clone(),
+            speech: character.speech.clone(),
+            personality: character.personality.clone(),
+            backstory: character.backstory.clone(),
+            thoughts: character.thoughts.clone(),
         })
     }
 }

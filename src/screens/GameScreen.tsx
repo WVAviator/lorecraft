@@ -11,6 +11,7 @@ import BackgroundDiv from '../components/BackgroundDiv/BackgroundDiv';
 import NarrativeWindow from '../components/NarrativeWindow/NarrativeWindow';
 import { TextField } from '@mui/material';
 import React from 'react';
+import useGameState from '../hooks/useGameState';
 
 const GameScreen = () => {
   const { navigateWithTransition, isTransitioning } =
@@ -18,14 +19,22 @@ const GameScreen = () => {
   const { game } = useGameContext({
     redirect: '/mainmenu',
   });
-
   const [playerInput, setPlayerInput] = React.useState<string>('');
-  const [messages, setMessages] = React.useState<string[]>([]);
+  const { gameState, loading, sendNarrativeMessage } = useGameState();
+
+  if (!gameState || !game) {
+    navigateWithTransition('/gamemenu');
+    return null;
+  }
 
   return (
     <BackgroundDiv fade={isTransitioning}>
       <SplitLayout gridTemplateColumns="60% 40%">
-        <SceneImage scene={game?.scenes[0]} />
+        <SceneImage
+          scene={game.scenes.find(
+            (scene) => scene.id === gameState.current_scene_id
+          )}
+        />
         <FlexContainer
           flexDirection="column"
           padding="0.5rem"
@@ -57,7 +66,7 @@ const GameScreen = () => {
               },
             ]}
           />
-          <NarrativeWindow messages={messages} />
+          <NarrativeWindow messages={gameState.messages} />
           <TextField
             id="outlined-basic"
             tabIndex={0}
@@ -73,10 +82,11 @@ const GameScreen = () => {
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                setMessages((messages) => [...messages, playerInput]);
+                sendNarrativeMessage(playerInput);
                 setPlayerInput('');
               }
             }}
+            disabled={loading}
           />
         </FlexContainer>
       </SplitLayout>

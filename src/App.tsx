@@ -10,6 +10,7 @@ import NarrativeScreen from './screens/NarrativeScreen';
 import GameProvider from './context/GameProvider';
 import GameMenuScreen from './screens/GameMenuScreen';
 import { ThemeProvider, createTheme } from '@mui/material';
+import GameStateProvider from './context/GameStateProvider';
 
 const theme = createTheme({
   palette: {
@@ -74,9 +75,11 @@ const router = createHashRouter([
 function App() {
   return (
     <GameProvider>
-      <ThemeProvider theme={theme}>
-        <RouterProvider router={router} />
-      </ThemeProvider>
+      <GameStateProvider>
+        <ThemeProvider theme={theme}>
+          <RouterProvider router={router} />
+        </ThemeProvider>
+      </GameStateProvider>
     </GameProvider>
   );
 }

@@ -95,7 +95,7 @@ impl GameSession {
 
         let id = Random::generate_id();
 
-        let game_session = GameSession {
+        let mut game_session = GameSession {
             id,
             game_id,
             narrator_assistant_id,
@@ -106,7 +106,10 @@ impl GameSession {
 
         game_session.save(file_manager)?;
 
-        // TODO: Run should be triggered immediately
+        let narrator_response = game_session.process_run(openai_client, game).await?;
+        game_session
+            .game_state
+            .add_narrator_message(&narrator_response);
 
         Ok(game_session)
     }
@@ -137,18 +140,29 @@ impl GameSession {
         self.game_state
             .add_player_message(&create_message_response.content[0].text.value);
 
+        let narrator_response = self.process_run(openai_client, game).await?;
+        self.game_state.add_narrator_message(&narrator_response);
+
+        Ok(&self.game_state)
+    }
+
+    async fn process_run(
+        &mut self,
+        openai_client: &OpenAIClient,
+        game: Game,
+    ) -> Result<String, anyhow::Error> {
         let run_request = CreateRunRequest::builder()
             .assistant_id(&self.narrator_assistant_id)
-            .additional_instructions(self.game_state.get_inventory().join(", "))
+            .additional_instructions(format!(
+                "Current player inventory: [{}]",
+                self.game_state.get_inventory().join(", ")
+            ))
             .build();
-
         let create_run_response = openai_client
             .create_run(run_request, &self.thread_id)
             .await
             .map_err(|e| anyhow!("Failed to create run: {:?}", e))?;
-
         let run_id = create_run_response.id;
-
         loop {
             if let Ok(retrieve_run_response) =
                 openai_client.retrieve_run(&self.thread_id, &run_id).await
@@ -245,7 +259,6 @@ impl GameSession {
 
             tokio::time::sleep(tokio::time::Duration::from_millis(250)).await
         }
-
         let list_messages_query = ListMessagesQueryBuilder::new(&self.thread_id)
             .limit(1)
             .order("desc")
@@ -254,11 +267,8 @@ impl GameSession {
             .list_messages(list_messages_query)
             .await
             .map_err(|e| anyhow!("Failed to list messages: {:?}", e))?;
-
         let narrator_response = list_messages_response.data[0].content[0].text.value.clone();
-        self.game_state.add_narrator_message(&narrator_response);
-
-        Ok(&self.game_state)
+        Ok(narrator_response)
     }
 
     pub async fn process_character_prompt(

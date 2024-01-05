@@ -12,8 +12,10 @@ mod character_output;
 pub struct Character {
     pub id: String,
     pub name: String,
+    #[serde(default = "default_short_description")]
     pub short_description: String,
     pub physical_description: String,
+    #[serde(default = "default_speech")]
     pub speech: String,
     pub personality: String,
     pub backstory: String,
@@ -37,4 +39,12 @@ impl Character {
             image,
         }
     }
+}
+
+fn default_short_description() -> String {
+    String::from("a stranger")
+}
+
+fn default_speech() -> String {
+    String::from("normal speaking voice")
 }

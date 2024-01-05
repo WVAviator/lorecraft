@@ -39,7 +39,8 @@ pub async fn character_prompt(
         game_session.ok_or(CharacterPromptError::new("Unable to access game session."))?;
 
     let updated_game_state = game_session
-        .process_character_prompt(&request.prompt, &openai_client, &file_manager)
+        .process_character_prompt(&request, &openai_client, &file_manager)
+        .await
         .map_err(|e| {
             error!(
                 "Error occurred attempting to process character prompt:\n{:?}",
@@ -48,5 +49,5 @@ pub async fn character_prompt(
             CharacterPromptError::new("Error occurred attempting to process character prompt.")
         })?;
 
-    Ok(CharacterPromptResponse::new(updated_game_state))
+    Ok(CharacterPromptResponse::new(updated_game_state.clone()))
 }

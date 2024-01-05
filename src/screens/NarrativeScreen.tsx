@@ -5,28 +5,21 @@ import BackgroundDiv from '../components/BackgroundDiv/BackgroundDiv';
 import { convertFileSrc } from '@tauri-apps/api/tauri';
 import AbsoluteContainer from '../components/AbsoluteContainer/AbsoluteContainer';
 import { invoke } from '@tauri-apps/api';
+import useGameState from '../hooks/useGameState';
 
 const NarrativeScreen = () => {
   const { game } = useGameContext();
   const navigate = useNavigate();
 
-  React.useEffect(() => {
-    const initializeGameSession = async () => {
-      try {
-        await invoke('start_game');
-      } catch {
-        console.error('Unable to start game session.');
-        navigate('/gamemenu');
-      }
-    };
-    initializeGameSession();
-  }, []);
+  const { startGame } = useGameState();
 
   React.useEffect(() => {
     if (!game) {
       navigate('/mainmenu');
+      return;
     }
-  }, [game]);
+    startGame(game.id);
+  }, [game, startGame]);
 
   const [pageIndex, setPageIndex] = React.useState(0);
   const [fade, setFade] = React.useState(false);
