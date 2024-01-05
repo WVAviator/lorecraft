@@ -255,7 +255,15 @@ impl GameSession {
                                     );
                                 }
                                 "character_interact" => {
-                                    let name = arguments["name"].as_str().ok_or(anyhow!("Unable to interpret arguments for character_interact function."))?.to_string();
+                                    let name = arguments["character"].as_str().ok_or(anyhow!("Unable to interpret arguments for character_interact function."))?.to_string();
+
+                                    let name = {
+                                        if name.contains(":") {
+                                            name.split(":").next().unwrap().to_string()
+                                        } else {
+                                            name
+                                        }
+                                    };
 
                                     info!("Establishing character session for {}", &name);
 

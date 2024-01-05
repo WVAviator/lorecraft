@@ -34,9 +34,9 @@ pub async fn character_prompt(
 
     let mut session_state = session_state.lock().await;
 
-    let game_session = session_state.game_session.as_mut();
-    let game_session =
-        game_session.ok_or(CharacterPromptError::new("Unable to access game session."))?;
+    let game_session = session_state
+        .get_game_session()
+        .ok_or(CharacterPromptError::new("Unable to access game session."))?;
 
     let updated_game_state = game_session
         .process_character_prompt(&request, &openai_client, &file_manager)

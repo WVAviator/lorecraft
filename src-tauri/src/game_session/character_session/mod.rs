@@ -1,5 +1,5 @@
 use anyhow::{anyhow, bail, Context};
-use log::{error, info, trace};
+use log::{debug, error, info, trace};
 
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -62,6 +62,11 @@ impl CharacterSession {
             .find(|c| c.name == character_name)
             .ok_or(anyhow!("Unable to find character with provided name."))?;
 
+        info!(
+            "Found character information for {}. Generating profile and context for assistant.",
+            &character_name
+        );
+
         let profile = CharacterProfile::from_character(&character)?;
         let profile = serde_json::to_string(&profile)?;
 
@@ -80,6 +85,9 @@ impl CharacterSession {
             .add_plain_text(&additional_context)
             .build();
 
+        info!("Loaded instructions for character assistant.");
+        trace!("{}", &instructions);
+
         let tools = vec![
             AssistantTool::new_function(Function::from_file(
                 "./prompts/character_actor/give_function.json",
@@ -88,6 +96,8 @@ impl CharacterSession {
                 "./prompts/character_actor/trade_function.json",
             )?),
         ];
+
+        info!("Creating character assistant.");
 
         let assistant_response = openai_client
             .create_assistant(AssistantCreateRequest::new(
@@ -101,6 +111,11 @@ impl CharacterSession {
 
         let character_assistant_id = assistant_response.id;
 
+        info!(
+            "Created assistant with id {} for character.",
+            &character_assistant_id
+        );
+
         let thread_response = openai_client.create_thread().await.map_err(|e| {
             error!("Failed to create thread for character assistant:\n{:?}", e);
             anyhow!("Failed to start thread.")
@@ -108,7 +123,10 @@ impl CharacterSession {
 
         let thread_id = thread_response.id;
 
-        // TODO: Run should be triggered immediately
+        info!(
+            "Created thread for character conversation with id {}.",
+            &thread_id
+        );
 
         let mut character_session = CharacterSession {
             character_id: character.id.to_string(),
@@ -120,10 +138,17 @@ impl CharacterSession {
             last_tool_call: None,
         };
 
+        info!("Triggering a run for initial conversation starter.");
+
         character_session.trigger_new_run(openai_client).await?;
+
+        info!("Run created, polling for response.");
+
         character_session
             .poll_last_run(openai_client, game_state)
             .await?;
+
+        info!("Initial response generated and applied to game state.");
 
         Ok(character_session)
     }
@@ -135,14 +160,20 @@ impl CharacterSession {
         file_manager: &FileManager,
         game_state: &mut GameState,
     ) -> Result<(), anyhow::Error> {
+        info!("Processes player interaction with character.");
+
         match &self.last_run_id {
             Some(run_id) => {
+                info!("Previous run id exists - processing as a trade response.");
+
                 let tool_call = self.last_tool_call.as_ref().ok_or(anyhow!(
                     "Missing last tool call, cannot return run function outputs."
                 ))?;
 
                 let output = match &request.trade_accept {
                     Some(true) => {
+                        info!("Processing trade acceptance.");
+
                         let trade = game_state
                             .character_interaction
                             .as_mut()
@@ -158,15 +189,23 @@ impl CharacterSession {
                         json!({ "player_response": "accept", "updated_player_inventory": &game_state.inventory }).to_string()
                     }
                     Some(false) => {
+                        info!("Processing declined trade request.");
+
                         game_state
                             .character_interaction
                             .as_mut()
                             .ok_or(anyhow!("Missing character interaction."))?
                             .trade = None;
+
                         json!({ "player_response": "reject" }).to_string()
                     }
-                    None => bail!("Expected trade response."),
+                    None => {
+                        error!("A previous run id exists, but the provided response did not include trade accept or decline.");
+                        bail!("Expected trade response.");
+                    }
                 };
+
+                info!("Submitting trade function tool outputs response.");
 
                 let mut submit_tool_outputs_request = SubmitToolOutputsRequest::new();
                 submit_tool_outputs_request.add_output(&tool_call.id, &output);
@@ -186,6 +225,8 @@ impl CharacterSession {
                 );
             }
             None => {
+                info!("No previous run_id exists, creating new message and appending to thread.");
+
                 let message = request
                     .message
                     .as_ref()
@@ -201,6 +242,8 @@ impl CharacterSession {
                     "Received create message response:\n{:?}",
                     create_message_response
                 );
+
+                info!("Updating game state with player message.");
 
                 let message = format!("Player: {}", &create_message_response.content[0].text.value);
                 game_state
@@ -222,6 +265,8 @@ impl CharacterSession {
         self.last_run_id = None;
         self.last_tool_call = None;
 
+        info!("Fetching latest message in thread.");
+
         let message_list_response = openai_client
             .list_messages(
                 ListMessagesQuery::builder(&self.thread_id)
@@ -237,10 +282,12 @@ impl CharacterSession {
             &message_list_response
         );
 
+        info!("Processing message meta-commands");
+
         let character_message = message_list_response.data[0].content[0].text.value.clone();
         let processed_messages = self.process_meta_commands(character_message);
 
-        info!("Received and processed character messages. Appending new messages to game state.");
+        info!("Appending new messages to game state.");
         for message in processed_messages {
             if message.starts_with(format!("{}:", &self.character.name).as_str()) {
                 game_state
@@ -263,6 +310,8 @@ impl CharacterSession {
     }
 
     async fn trigger_new_run(&mut self, openai_client: &OpenAIClient) -> Result<(), anyhow::Error> {
+        info!("Initiating new run on thread {}", &self.thread_id);
+
         let run_response = openai_client
             .create_run(
                 CreateRunRequest::builder()
@@ -288,6 +337,7 @@ impl CharacterSession {
         game_state: &mut GameState,
     ) -> Result<PollResponse, anyhow::Error> {
         loop {
+            info!("Polling for character run response.");
             if let Ok(retrieve_run_response) = openai_client
                 .retrieve_run(
                     &self.thread_id,
@@ -319,6 +369,8 @@ impl CharacterSession {
                             .ok_or(anyhow!("No tool calls available despite action required."))?;
 
                         self.last_tool_call = Some(tool_call.clone());
+
+                        info!("Assistant triggered function {}", &tool_call.function.name);
 
                         match tool_call.function.name.as_str() {
                             "trade_items" => {
@@ -379,19 +431,29 @@ impl CharacterSession {
                         bail!("Assistant run failed.")
                     }
                     "completed" => break,
-                    _ => bail!("Unknown status received for run retrieval."),
+                    "queued" | "in_progress" => {}
+                    _ => {
+                        error!(
+                            "Run returned a status of {} which is not handled.",
+                            &retrieve_run_response.status
+                        );
+                        bail!("Unknown status received for run retrieval.")
+                    }
                 }
             }
 
             tokio::time::sleep(tokio::time::Duration::from_millis(250)).await;
-            trace!("Polling for run response.");
         }
+
+        info!("Completed run polling, state updated.");
 
         Ok(PollResponse::Complete)
     }
 
     fn process_meta_commands(&mut self, message: String) -> Vec<String> {
         let mut messages = Vec::new();
+
+        debug!("Processing meta-commands for string: {}", &message);
 
         let message = {
             // Sometimes the LLM returns the character name prefix, sometimes it does not
@@ -402,46 +464,59 @@ impl CharacterSession {
             }
         };
 
+        debug!("Modified initial string: {}", &message);
+
         let mut current_message = Vec::new();
         for word in message.split(" ") {
             if word.starts_with("$emotion") {
-                messages.push(format!(
-                    "{}: {}",
-                    &self.character.name,
-                    current_message.join(" ")
-                ));
+                let new_message =
+                    format!("{}: {}", &self.character.name, current_message.join(" "));
+
+                debug!("Extracted message: {}", &new_message);
+                messages.push(new_message);
+
                 current_message.clear();
+
                 let emotion: String = word
                     .chars()
                     .skip(9)
                     .take(word.chars().count() - 10)
                     .collect();
-                messages.push(format!("{} is feeling {}", &self.character.name, emotion));
+                let emotion_message = format!("{} is feeling {}", &self.character.name, emotion);
+
+                debug!("Extracted nonverbal: {}", &emotion_message);
+                messages.push(emotion_message);
             } else if word.starts_with("$action") {
-                messages.push(format!(
-                    "{}: {}",
-                    &self.character.name,
-                    current_message.join(" ")
-                ));
+                let new_message =
+                    format!("{}: {}", &self.character.name, current_message.join(" "));
+
+                debug!("Extracted message: {}", &new_message);
+                messages.push(new_message);
+
                 current_message.clear();
+
                 let action: String = word
                     .chars()
                     .skip(8)
                     .take(word.chars().count() - 9)
                     .collect();
-                messages.push(format!("{} {}", &self.character.name, action));
+                let action_message = format!("{} {}", &self.character.name, action);
+
+                debug!("Extracted nonverbal: {}", &action_message);
+                messages.push(action_message);
             } else {
                 current_message.push(word);
             }
         }
 
         if !current_message.is_empty() {
-            messages.push(format!(
-                "{}: {}",
-                &self.character.name,
-                current_message.join(" ")
-            ));
+            let new_message = format!("{}: {}", &self.character.name, current_message.join(" "));
+
+            debug!("Extracted message: {}", &new_message);
+            messages.push(new_message);
         }
+
+        debug!("Finished. Returning messages: {:?}", messages);
 
         messages
     }
@@ -452,24 +527,33 @@ impl CharacterSession {
         file_manager: &FileManager,
         game_state: &mut GameState,
     ) -> Result<String, anyhow::Error> {
+        info!("Ending character session.");
+
+        info!("Processing summary request as internal message prompt.");
         let request = CharacterPromptRequest {
             message: Some(String::from("$summarize")),
             trade_accept: None,
             end_conversation: None,
         };
+
+        // TODO: Consider that a conversation may end in the middle of a trade request.
+
         self.process_prompt(&request, openai_client, file_manager, game_state)
             .await?;
+
+        info!("Extracting summary from newly modified game state.");
 
         let summary = game_state
             .character_interaction
             .as_ref()
             .ok_or(anyhow!("Missing charater interaction."))?
             .messages
-            .last()
+            .last() // This is fine because the state won't be returned back to the UI until after the interaction is deleted anyway. The player will never see the summary.
             .ok_or(anyhow!("Missing last message, cannot get summary."))?
             .text
             .clone();
 
+        info!("Savings summary to character previous conversations.");
         self.character_save_data
             .previous_conversations
             .push(summary.clone());
@@ -479,6 +563,8 @@ impl CharacterSession {
             .context("Unable to save updated character data.")?;
 
         game_state.end_character_interaction();
+
+        info!("Deleting character assistants and threads.");
 
         let assistant_delete = openai_client.delete_assistant(&self.assistant_id);
         let thread_delete = openai_client.delete_thread(&self.thread_id);

@@ -1,7 +1,7 @@
 use crate::game_session::GameSession;
 
 pub struct SessionState {
-    pub game_session: Option<GameSession>,
+    game_session: Option<GameSession>,
 }
 
 impl SessionState {

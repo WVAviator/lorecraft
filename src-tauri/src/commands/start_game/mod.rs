@@ -29,6 +29,13 @@ pub async fn start_game(
         "Unable to access OpenAI client.",
     )))?;
 
+    let mut session_state = session_state.lock().await;
+
+    if let Some(game_session) = session_state.get_game_session() {
+        let game_state = game_session.game_state.clone();
+        return Ok(StartGameResponse::new(game_state));
+    }
+
     let game_session = GameSession::start_new(request.game_id, openai_client, file_manager)
         .await
         .map_err(|e| {
@@ -40,7 +47,6 @@ pub async fn start_game(
         })?;
 
     let game_state = game_session.game_state.clone();
-    let mut session_state = session_state.lock().await;
     session_state.set_game_session(game_session);
 
     Ok(StartGameResponse::new(game_state))
