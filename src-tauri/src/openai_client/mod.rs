@@ -1,3 +1,5 @@
+use std::fs;
+
 use self::{
     assistant::{
         assistant_create_request::AssistantCreateRequest,
@@ -22,6 +24,7 @@ use self::{
     submit_tool_outputs::submit_tool_outputs_request::SubmitToolOutputsRequest,
     thread::thread_create_response::ThreadCreateResponse,
 };
+use anyhow::Context;
 use log::{error, trace};
 use reqwest::{
     header::{HeaderMap, HeaderValue},
@@ -42,6 +45,7 @@ pub mod thread;
 
 pub struct OpenAIClient {
     client: Client,
+    is_mock: bool,
 }
 
 impl OpenAIClient {
@@ -58,7 +62,11 @@ impl OpenAIClient {
             .build()
             .expect("Failed to initialize OpenAI Client.");
 
-        Self { client }
+        let is_mock = match std::env::var("LC_DEV") {
+            Ok(val) => val.parse::<bool>().unwrap_or(false),
+            Err(_) => false,
+        };
+        Self { client, is_mock }
     }
 }
 
@@ -476,17 +484,24 @@ impl OpenAIClient {
             )));
         }
     }
-}
 
-// curl https://api.openai.com/v1/threads/thread_abc123/runs/run_abc123/submit_tool_outputs \
-//   -H "Authorization: Bearer $OPENAI_API_KEY" \
-//   -H "Content-Type: application/json" \
-//   -H "OpenAI-Beta: assistants=v1" \
-//   -d '{
-//     "tool_outputs": [
-//       {
-//         "tool_call_id": "call_abc123",
-//         "output": "28C"
-//       }
-//     ]
-//   }'
+    fn mock_response<T>(path: &str) -> Result<T, anyhow::Error>
+    where
+        T: serde::de::DeserializeOwned,
+    {
+        let json = fs::read_to_string(path).with_context(|| {
+            format!(
+                "Something went wrong reading the mock response file at '{}'",
+                path
+            )
+        })?;
+        let response = serde_json::from_str::<T>(json.as_str()).with_context(|| {
+            format!(
+                "Something went wrong reading the mock response file at '{}'",
+                path
+            )
+        })?;
+
+        Ok(response)
+    }
+}
