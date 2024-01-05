@@ -27,14 +27,14 @@ use crate::{
 
 use self::{image::Image, item::Item};
 
-mod character;
-mod image;
-mod item;
-mod narrative;
-mod scene;
-mod scene_detail;
-mod scene_summary;
-mod summary;
+pub mod character;
+pub mod image;
+pub mod item;
+pub mod narrative;
+pub mod scene;
+pub mod scene_detail;
+pub mod scene_summary;
+pub mod summary;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Game {

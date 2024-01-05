@@ -1,7 +1,7 @@
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
 
-use crate::{file_manager::FileManager, game::Game};
+use crate::{file_manager::FileManager, game::{Game, character::Character}};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CharacterProfile {
@@ -14,19 +14,9 @@ pub struct CharacterProfile {
 }
 
 impl CharacterProfile {
-    pub fn load(
-        character_id: &str,
-        game_id: &str,
-        file_manager: &FileManager,
+    pub fn from_character(
+        character: &Character,
     ) -> Result<Self, anyhow::Error> {
-        let game = Game::load(game_id, file_manager)?;
-
-        let character = game
-            .characters
-            .iter()
-            .find(|c| c.id == character_id)
-            .context("Character not found in game.")?;
-        let character = character.clone();
 
         Ok(CharacterProfile {
             name: character.name,

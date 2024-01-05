@@ -17,7 +17,7 @@ use crate::{
         retrieve_run::retrieve_run_response::ToolCall,
         submit_tool_outputs::submit_tool_outputs_request::SubmitToolOutputsRequest, OpenAIClient,
     },
-    prompt_builder::PromptBuilder,
+    prompt_builder::PromptBuilder, game::Game,
 };
 
 use self::{
@@ -43,12 +43,15 @@ pub struct CharacterSession {
 
 impl CharacterSession {
     pub async fn new(
-        character_id: &str,
+        character_name: &str,
         game_id: &str,
         openai_client: &OpenAIClient,
         file_manager: &FileManager,
     ) -> Result<Self, anyhow::Error> {
-        let profile = CharacterProfile::load(character_id, game_id, file_manager)?;
+        let game = Game::load(&game_id, file_manager).context("Unable to load game from game ID")?;
+        let character = game.characters.iter().find(|c| c.name == character_name).ok_or(anyhow!("Unable to find character with provided name."))?;
+        
+        let profile = CharacterProfile::from_character(&character)?;
         let profile = serde_json::to_string(&profile)?;
 
         let instructions = PromptBuilder::new()
@@ -80,12 +83,12 @@ impl CharacterSession {
 
         let thread_id = thread_response.id;
 
-        let character_save_data = CharacterSaveData::load(character_id, game_id, file_manager)?;
+        let character_save_data = CharacterSaveData::load(&character.id, game_id, file_manager)?;
 
         // TODO: Run should be triggered immediately
 
         Ok(CharacterSession {
-            character_id: character_id.to_string(),
+            character_id: character.id.to_string(),
             assistant_id: character_assistant_id,
             thread_id,
             character_save_data,

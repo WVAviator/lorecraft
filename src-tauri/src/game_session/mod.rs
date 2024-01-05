@@ -155,7 +155,6 @@ impl GameSession {
             {
                 match retrieve_run_response.status.as_str() {
                     "requires_action" => {
-                        // TODO: Check for tool requests, process those, update state
                         let tool_calls: Vec<ToolCall> = retrieve_run_response.required_action.ok_or(anyhow!("Received requires_action status with no required_action field on run response."))?.submit_tool_outputs.tool_calls;
 
                         let mut submit_tool_outputs_request = SubmitToolOutputsRequest::new();
