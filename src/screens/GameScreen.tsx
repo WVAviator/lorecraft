@@ -86,7 +86,7 @@ const GameScreen = () => {
                 setPlayerInput('');
               }
             }}
-            disabled={loading}
+            // disabled={loading}
           />
         </FlexContainer>
       </SplitLayout>

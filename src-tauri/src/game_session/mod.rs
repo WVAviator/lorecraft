@@ -14,7 +14,7 @@ use crate::{
     game_state::GameState,
     openai_client::{
         assistant::assistant_create_request::AssistantCreateRequest,
-        assistant_tool::function::Function,
+        assistant_tool::{function::Function, AssistantTool},
         chat_completion::chat_completion_model::ChatCompletionModel,
         create_message::create_message_request::CreateMessageRequest,
         create_run::create_run_request::CreateRunRequest,
@@ -66,12 +66,22 @@ impl GameSession {
             .add_plain_text(&scene_list_text)
             .build();
 
-        let functions = vec![
-            Function::from_file("./prompts/narrator/add_item_function.json")?,
-            Function::from_file("./prompts/narrator/remove_item_function.json")?,
-            Function::from_file("./prompts/narrator/new_scene_function.json")?,
-            Function::from_file("./prompts/narrator/character_interact_function.json")?,
-            Function::from_file("./prompts/narrator/end_game_function.json")?,
+        let tools = vec![
+            AssistantTool::new_function(Function::from_file(
+                "./prompts/narrator/add_item_function.json",
+            )?),
+            AssistantTool::new_function(Function::from_file(
+                "./prompts/narrator/remove_item_function.json",
+            )?),
+            AssistantTool::new_function(Function::from_file(
+                "./prompts/narrator/new_scene_function.json",
+            )?),
+            AssistantTool::new_function(Function::from_file(
+                "./prompts/narrator/character_interact_function.json",
+            )?),
+            AssistantTool::new_function(Function::from_file(
+                "./prompts/narrator/end_game_function.json",
+            )?),
         ];
 
         let assistant_response = openai_client
@@ -79,7 +89,7 @@ impl GameSession {
                 instructions,
                 game_id.to_string(),
                 ChatCompletionModel::Gpt3_5Turbo1106,
-                functions,
+                tools,
             ))
             .await
             .expect("Failed to create assistant.");
@@ -132,11 +142,15 @@ impl GameSession {
         file_manager: &FileManager,
     ) -> Result<&GameState, anyhow::Error> {
         let game = Game::load(&self.game_id, file_manager)?;
+
+        info!("Loaded game from file.");
+
         let create_message_response = openai_client
             .create_message(CreateMessageRequest::new(prompt), &self.thread_id)
             .await
             .map_err(|e| anyhow!("Failed to create new message and add to thread: {:?}", e))?;
 
+        info!("Message appended to thread.");
         self.game_state
             .add_player_message(&create_message_response.content[0].text.value);
 
@@ -151,6 +165,8 @@ impl GameSession {
         openai_client: &OpenAIClient,
         game: Game,
     ) -> Result<String, anyhow::Error> {
+        info!("Creating new run on thread.");
+
         let run_request = CreateRunRequest::builder()
             .assistant_id(&self.narrator_assistant_id)
             .additional_instructions(format!(
@@ -163,12 +179,17 @@ impl GameSession {
             .await
             .map_err(|e| anyhow!("Failed to create run: {:?}", e))?;
         let run_id = create_run_response.id;
+
+        info!("Run triggered with id: {}", &run_id);
+
         loop {
+            info!("Polling for run response...");
             if let Ok(retrieve_run_response) =
                 openai_client.retrieve_run(&self.thread_id, &run_id).await
             {
                 match retrieve_run_response.status.as_str() {
                     "requires_action" => {
+                        info!("Assistant requested function tool invocation.");
                         let tool_calls: Vec<ToolCall> = retrieve_run_response.required_action.ok_or(anyhow!("Received requires_action status with no required_action field on run response."))?.submit_tool_outputs.tool_calls;
 
                         let mut submit_tool_outputs_request = SubmitToolOutputsRequest::new();
@@ -177,6 +198,12 @@ impl GameSession {
                             let function_name = tool_call.function.name.as_str();
                             let arguments =
                                 serde_json::from_str::<Value>(&tool_call.function.arguments)?;
+
+                            info!(
+                                "Processing arguments to function {}: {}",
+                                &function_name, &tool_call.function.arguments
+                            );
+
                             match function_name {
                                 "new_scene" => {
                                     let scene_info = SceneUpdate::new_scene(
@@ -189,6 +216,8 @@ impl GameSession {
                                         "Unable to serialize response object for new_scene.",
                                     )?;
                                     submit_tool_outputs_request.add_output(&tool_call.id, &output);
+
+                                    info!("Processed new scene function with output: {}", &output);
                                 }
                                 "add_item" => {
                                     let item_update =
@@ -200,6 +229,8 @@ impl GameSession {
                                         "Unable to serialize response object for add_item",
                                     )?;
                                     submit_tool_outputs_request.add_output(&tool_call.id, &output);
+
+                                    info!("Processed add_item function with output: {}", &output);
                                 }
                                 "remove_item" => {
                                     let item_update =
@@ -211,6 +242,11 @@ impl GameSession {
                                         "Unable to serialize response object for remove_item.",
                                     )?;
                                     submit_tool_outputs_request.add_output(&tool_call.id, &output);
+
+                                    info!(
+                                        "Processed remove_item function with output: {}",
+                                        &output
+                                    );
                                 }
                                 "character_interact" => {
                                     // TODO: Set character interaction here and on game state
@@ -224,14 +260,11 @@ impl GameSession {
                                         ))?
                                         .to_string();
                                     self.game_state.end_game = Some(reason);
+                                    let output = json!({ "success": "true" }).to_string();
 
-                                    submit_tool_outputs_request.add_output(
-                                        &tool_call.id,
-                                        &json!({
-                                            "success": "true"
-                                        })
-                                        .to_string(),
-                                    )
+                                    submit_tool_outputs_request.add_output(&tool_call.id, &output);
+
+                                    info!("Processed end_game function with output: {}", &output)
                                 }
                                 _ => bail!(
                                     "Received invalid function call request for narrator: {}.",
@@ -240,6 +273,7 @@ impl GameSession {
                             }
                         }
 
+                        info!("Sending tool outputs to run {}", &run_id);
                         openai_client
                             .submit_tool_outputs(
                                 submit_tool_outputs_request,
@@ -250,15 +284,22 @@ impl GameSession {
                             .map_err(|e| anyhow!("Unable to submit tool outputs: {:?}", e))?;
                     }
                     "cancelling" | "cancelled" | "failed" | "expired" => {
+                        error!("Run {} was cancelled or timed out.", &run_id);
                         bail!("Unable to complete request - assistant run failed or expired.")
                     }
-                    "completed" => break,
+                    "completed" => {
+                        info!("Run response shows completed.");
+                        break;
+                    }
                     _ => {}
                 }
             }
 
             tokio::time::sleep(tokio::time::Duration::from_millis(250)).await
         }
+
+        info!("Fetching latest message from thread");
+
         let list_messages_query = ListMessagesQueryBuilder::new(&self.thread_id)
             .limit(1)
             .order("desc")
@@ -267,7 +308,11 @@ impl GameSession {
             .list_messages(list_messages_query)
             .await
             .map_err(|e| anyhow!("Failed to list messages: {:?}", e))?;
+
         let narrator_response = list_messages_response.data[0].content[0].text.value.clone();
+
+        info!("Received response from assistant: {}", &narrator_response);
+
         Ok(narrator_response)
     }
 

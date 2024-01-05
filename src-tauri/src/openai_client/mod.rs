@@ -195,7 +195,7 @@ impl OpenAIClient {
         let body = request.to_request_body();
 
         trace!(
-            "Sending OpenAI assistant create request with body:\n\n{}\n\n",
+            "Sending OpenAI assistant create request with body:\n\n{:#?}\n\n",
             body
         );
 

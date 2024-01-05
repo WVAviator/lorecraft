@@ -5,7 +5,7 @@ use self::{
     game_prompt_response::GamePromptResponse,
 };
 
-use log::error;
+use log::{error, info};
 use tauri::State;
 use tokio::sync::Mutex;
 
@@ -20,6 +20,11 @@ pub async fn game_prompt(
     session_state: State<'_, Mutex<SessionState>>,
 ) -> Result<GamePromptResponse, GamePromptError> {
     // TODO: Moderation on request prompt
+
+    info!(
+        "Received game prompt request from player '{}'",
+        request.prompt
+    );
 
     let application_state = application_state.lock().await;
     let openai_client = &application_state.openai_client.as_ref();
@@ -39,6 +44,7 @@ pub async fn game_prompt(
         "Unable to submit prompt: No active game session.",
     ))?;
 
+    info!("Loaded game session, processing new prompt.");
     let updated_game_state = game_session
         .process_game_prompt(&request.prompt, &openai_client, &file_manager)
         .await
@@ -46,6 +52,8 @@ pub async fn game_prompt(
             error!("Unable to update game state with new prompt:\n{:?}", e);
             GamePromptError::new("An error occurred processing the request.")
         })?;
+
+    info!("Received updated game state, returning to UI for rendering.");
 
     Ok(GamePromptResponse::new(updated_game_state))
 }

@@ -4,7 +4,6 @@ import React from 'react';
 import BackgroundDiv from '../components/BackgroundDiv/BackgroundDiv';
 import { convertFileSrc } from '@tauri-apps/api/tauri';
 import AbsoluteContainer from '../components/AbsoluteContainer/AbsoluteContainer';
-import { invoke } from '@tauri-apps/api';
 import useGameState from '../hooks/useGameState';
 
 const NarrativeScreen = () => {

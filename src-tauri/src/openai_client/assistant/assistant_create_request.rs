@@ -1,13 +1,14 @@
 use serde::{Deserialize, Serialize};
 
 use crate::openai_client::assistant_tool::function::Function;
+use crate::openai_client::assistant_tool::AssistantTool;
 use crate::openai_client::chat_completion::chat_completion_model::ChatCompletionModel;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AssistantCreateRequest {
     pub instructions: String,
     pub name: String,
-    pub tools: Vec<Function>,
+    pub tools: Vec<AssistantTool>,
     pub model: String,
 }
 
@@ -16,7 +17,7 @@ impl AssistantCreateRequest {
         instructions: String,
         name: String,
         model: ChatCompletionModel,
-        tools: Vec<Function>,
+        tools: Vec<AssistantTool>,
     ) -> Self {
         Self {
             instructions,

@@ -11,13 +11,14 @@ use crate::{
     game_state::GameState,
     openai_client::{
         assistant::assistant_create_request::AssistantCreateRequest,
-        assistant_tool::function::Function,
+        assistant_tool::{function::Function, AssistantTool},
         chat_completion::chat_completion_model::ChatCompletionModel,
         create_message::create_message_request::CreateMessageRequest,
         create_run::create_run_request::CreateRunRequest,
         list_messages::list_messages_query::ListMessagesQuery,
         retrieve_run::retrieve_run_response::ToolCall,
-        submit_tool_outputs::submit_tool_outputs_request::SubmitToolOutputsRequest, OpenAIClient,
+        submit_tool_outputs::submit_tool_outputs_request::SubmitToolOutputsRequest,
+        OpenAIClient,
     },
     prompt_builder::PromptBuilder,
 };
@@ -67,9 +68,13 @@ impl CharacterSession {
             .add_plain_text(&profile)
             .build();
 
-        let functions = vec![
-            Function::from_file("./prompts/character_actor/give_function.json")?,
-            Function::from_file("./prompts/character_actor/trade_function.json")?,
+        let tools = vec![
+            AssistantTool::new_function(Function::from_file(
+                "./prompts/character_actor/give_function.json",
+            )?),
+            AssistantTool::new_function(Function::from_file(
+                "./prompts/character_actor/trade_function.json",
+            )?),
         ];
 
         let assistant_response = openai_client
@@ -77,7 +82,7 @@ impl CharacterSession {
                 instructions,
                 game_id.to_string(),
                 ChatCompletionModel::Gpt3_5Turbo1106,
-                functions,
+                tools,
             ))
             .await
             .expect("Failed to create assistant.");

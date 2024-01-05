@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-use crate::openai_client::assistant_tool::function::Function;
+use crate::openai_client::assistant_tool::{function::Function, AssistantTool};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RetrieveRunResponse {
@@ -20,7 +20,7 @@ pub struct RetrieveRunResponse {
     pub last_error: Option<String>,
     pub model: String,
     pub instructions: Option<String>,
-    pub tools: Vec<Function>,
+    pub tools: Vec<AssistantTool>,
     pub file_ids: Vec<String>,
     pub metadata: HashMap<String, String>,
     pub required_action: Option<RequiredAction>,
