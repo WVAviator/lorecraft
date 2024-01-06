@@ -37,7 +37,7 @@ mod character_trade_items;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CharacterSession {
-    character_id: String,
+    pub character_id: String,
     character: Character,
     assistant_id: String,
     thread_id: String,
@@ -148,6 +148,10 @@ impl CharacterSession {
             .poll_last_run(openai_client, game_state)
             .await?;
 
+        game_state.character_interact(&character.id);
+        character_session
+            .get_and_apply_response(openai_client, game_state)
+            .await?;
         info!("Initial response generated and applied to game state.");
 
         Ok(character_session)
@@ -160,7 +164,7 @@ impl CharacterSession {
         file_manager: &FileManager,
         game_state: &mut GameState,
     ) -> Result<(), anyhow::Error> {
-        info!("Processes player interaction with character.");
+        info!("Processing player interaction with character.");
 
         match &self.last_run_id {
             Some(run_id) => {
@@ -265,8 +269,18 @@ impl CharacterSession {
         self.last_run_id = None;
         self.last_tool_call = None;
 
-        info!("Fetching latest message in thread.");
+        self.get_and_apply_response(openai_client, game_state)
+            .await?;
 
+        Ok(())
+    }
+
+    async fn get_and_apply_response(
+        &mut self,
+        openai_client: &OpenAIClient,
+        game_state: &mut GameState,
+    ) -> Result<(), anyhow::Error> {
+        info!("Fetching latest message in thread.");
         let message_list_response = openai_client
             .list_messages(
                 ListMessagesQuery::builder(&self.thread_id)
@@ -276,19 +290,15 @@ impl CharacterSession {
             )
             .await
             .map_err(|e| anyhow!("Unable to retrieve latest message from thread:\n{:?}", e))?;
-
         trace!(
             "Received latest message from thread:\n{:?}",
             &message_list_response
         );
-
         info!("Processing message meta-commands");
-
         let character_message = message_list_response.data[0].content[0].text.value.clone();
         let processed_messages = self.process_meta_commands(character_message);
-
         info!("Appending new messages to game state.");
-        for message in processed_messages {
+        Ok(for message in processed_messages {
             if message.starts_with(format!("{}:", &self.character.name).as_str()) {
                 game_state
                     .character_interaction
@@ -304,9 +314,7 @@ impl CharacterSession {
                     ))?
                     .add_nonverbal(&message);
             }
-        }
-
-        Ok(())
+        })
     }
 
     async fn trigger_new_run(&mut self, openai_client: &OpenAIClient) -> Result<(), anyhow::Error> {

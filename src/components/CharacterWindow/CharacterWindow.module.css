@@ -5,5 +5,10 @@
 
 .messages {
   display: grid;
+  height: 100%;
   grid-template-rows: 90%, 10%;
+}
+
+.image {
+  object-fit: cover;
 }

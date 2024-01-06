@@ -47,7 +47,7 @@ pub async fn start_game(
         })?;
 
     let game_state = game_session.game_state.clone();
-    session_state.set_game_session(game_session);
+    session_state.set_game_session(game_session).await;
 
     Ok(StartGameResponse::new(game_state))
 }

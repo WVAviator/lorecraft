@@ -6,6 +6,7 @@ use anyhow::{anyhow, bail, Context};
 use log::{error, info};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use tokio::sync::{mpsc::Sender, Mutex};
 
 use crate::{
     commands::character_prompt::character_prompt_request::CharacterPromptRequest,
@@ -40,6 +41,8 @@ pub struct GameSession {
     pub thread_id: String,
     pub game_state: GameState,
     pub character_session: Option<CharacterSession>,
+    #[serde(skip)]
+    game_state_update_tx: Option<Sender<GameState>>,
     #[serde(skip)]
     character_end_tx: Option<tokio::sync::oneshot::Sender<String>>,
 }
@@ -114,6 +117,7 @@ impl GameSession {
             thread_id,
             game_state: GameState::new(),
             character_session: None,
+            game_state_update_tx: None,
             character_end_tx: None,
         };
 
@@ -140,6 +144,22 @@ impl GameSession {
         Ok(())
     }
 
+    pub fn add_state_tx(&mut self, game_state_update_tx: Sender<GameState>) {
+        self.game_state_update_tx = Some(game_state_update_tx);
+    }
+
+    async fn send_state_update(&self) -> Result<(), anyhow::Error> {
+        if let Some(game_state_update_tx) = &self.game_state_update_tx {
+            let game_state = self.game_state.clone();
+            game_state_update_tx
+                .send(game_state)
+                .await
+                .context("Error sending game state update.")?;
+        }
+
+        Ok(())
+    }
+
     pub async fn process_game_prompt(
         &mut self,
         prompt: &str,
@@ -159,8 +179,12 @@ impl GameSession {
         self.game_state
             .add_player_message(&create_message_response.content[0].text.value);
 
+        self.send_state_update().await?;
+
         let narrator_response = self.process_run(openai_client, game, file_manager).await?;
         self.game_state.add_narrator_message(&narrator_response);
+
+        self.send_state_update().await?;
 
         Ok(&self.game_state)
     }
@@ -281,6 +305,8 @@ impl GameSession {
                                     let (tx, rx) = tokio::sync::oneshot::channel();
                                     self.character_end_tx = Some(tx);
 
+                                    self.send_state_update().await?;
+
                                     info!("Set oneshot transmitter, awaiting character summary.");
 
                                     let conversation_summary = rx.await.context("Error receiving continution response for character interaction.")?;
@@ -375,6 +401,7 @@ impl GameSession {
         file_manager: &FileManager,
     ) -> Result<&GameState, anyhow::Error> {
         if let Some(true) = &request.end_conversation {
+            info!("Processing end of conversation.");
             return self.end_character_prompt(openai_client, file_manager).await;
         }
 
@@ -383,6 +410,8 @@ impl GameSession {
             .ok_or(anyhow!("No active character session."))?
             .process_prompt(request, openai_client, file_manager, &mut self.game_state)
             .await?;
+
+        info!("Finished processing character prompt.");
 
         Ok(&self.game_state)
     }
@@ -405,7 +434,8 @@ impl GameSession {
             .ok_or(anyhow!(
                 "Cannot transmit summary to rusume message processing."
             ))?
-            .send(conversation_summary);
+            .send(conversation_summary)
+            .map_err(|_| anyhow!("Unable to unblock state update."))?;
 
         self.character_session = None;
 

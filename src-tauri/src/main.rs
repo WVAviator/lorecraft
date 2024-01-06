@@ -1,9 +1,9 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use crate::commands::character_prompt::character_prompt;
 use crate::commands::game_prompt::game_prompt;
 use crate::commands::setup::setup;
 use crate::commands::start_game::start_game;
-use crate::commands::character_prompt::character_prompt;
 use crate::{
     application_state::session_state::SessionState, commands::create_new_game::create_new_game,
 };
@@ -30,6 +30,9 @@ fn main() -> Result<(), anyhow::Error> {
     let (updates_tx, mut updates_rx) = mpsc::channel(1);
     let updates_tx = Mutex::new(updates_tx);
 
+    let (state_update_tx, mut state_update_rx) = mpsc::channel(1);
+    let state_update_tx = Mutex::new(state_update_tx);
+
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             create_new_game,
@@ -47,7 +50,7 @@ fn main() -> Result<(), anyhow::Error> {
             app.manage(application_state);
 
             info!("Initializing session state.");
-            let session_state = SessionState::new();
+            let session_state = SessionState::new(state_update_tx);
             let session_state = Mutex::new(session_state);
             app.manage(session_state);
 
@@ -58,6 +61,19 @@ fn main() -> Result<(), anyhow::Error> {
                     if let Some(update) = updates_rx.recv().await {
                         info!("Sending update to UI: {:?}", update);
                         if let Err(e) = app_handle.emit_all("updates", update) {
+                            error!("Failed to emit update to UI:\n{:?}", e);
+                        }
+                    }
+                }
+            });
+
+            info!("Initializing state update event emitter.");
+            let app_handle = app.handle();
+            tauri::async_runtime::spawn(async move {
+                loop {
+                    if let Some(update) = state_update_rx.recv().await {
+                        info!("Sending state update to UI: {:?}", update);
+                        if let Err(e) = app_handle.emit_all("state", update) {
                             error!("Failed to emit update to UI:\n{:?}", e);
                         }
                     }

@@ -2,18 +2,30 @@ import { invoke } from '@tauri-apps/api';
 import React from 'react';
 import { GameStateContext } from '../context/GameStateProvider';
 import { useNavigate } from 'react-router-dom';
+import { appWindow } from '@tauri-apps/api/window';
+import { Event, UnlistenFn } from '@tauri-apps/api/event';
 
 const useGameState = () => {
   const { gameState, setGameState } = React.useContext(GameStateContext);
   const navigate = useNavigate();
   const [loading, setLoading] = React.useState(true);
-  const [started, setStarted] = React.useState(false);
+
+  React.useEffect(() => {
+    let unlisten: UnlistenFn;
+    const subscribe = async () => {
+      unlisten = await appWindow.listen('state', (event: Event<GameState>) => {
+        if (!event.payload) return;
+        console.log('Setting game state through event update: ', event.payload);
+        setGameState(event.payload);
+      });
+    };
+    subscribe();
+    return () => {
+      unlisten();
+    };
+  }, [setGameState]);
 
   const startGame = async (gameId: string) => {
-    if (started) {
-      console.warn('Attempted to start a game that has already been started.');
-    }
-    setStarted(true);
     setLoading(true);
     try {
       const { game_state } = (await invoke('start_game', {
@@ -36,9 +48,9 @@ const useGameState = () => {
   };
 
   const sendNarrativeMessage = async (message: string) => {
-    if (!gameState || !started) {
+    if (!gameState) {
       console.error(
-        "Attempted to send a message to a game that either doesn't exist or hasn't been started yet."
+        "Attempted to send a message to a game that doesn't exist."
       );
     }
     setLoading(true);
@@ -71,9 +83,9 @@ const useGameState = () => {
   };
 
   const sendCharacterMessage = async (message: string) => {
-    if (!gameState || !started) {
+    if (!gameState) {
       console.error(
-        "Attempted to send a character message to a game that either doesn't exist or hasn't been started yet."
+        "Attempted to send a character message to a game session that doesn't exist."
       );
     }
     setLoading(true);
@@ -106,9 +118,9 @@ const useGameState = () => {
   };
 
   const characterTradeResponse = async (accept: boolean) => {
-    if (!gameState || !started) {
+    if (!gameState) {
       console.error(
-        "Attempted to send a character trade response to a game that either doesn't exist or hasn't been started yet."
+        "Attempted to send a character trade response to a game session that doesn't exist."
       );
     }
     setLoading(true);
@@ -128,10 +140,10 @@ const useGameState = () => {
     }
   };
 
-  const end_character_conversation = async () => {
-    if (!gameState || !started) {
+  const endCharacterConversation = async () => {
+    if (!gameState) {
       console.error(
-        "Attempted to end a character conversation for a game that either doesn't exist or hasn't been started yet."
+        "Attempted to end a character conversation to a game session that doesn't exist."
       );
     }
     setLoading(true);
@@ -166,6 +178,7 @@ const useGameState = () => {
     loading,
     sendCharacterMessage,
     characterTradeResponse,
+    endCharacterConversation,
   };
 };
 

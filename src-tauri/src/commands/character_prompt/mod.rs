@@ -1,4 +1,4 @@
-use log::error;
+use log::{error, info};
 use tauri::State;
 use tokio::sync::Mutex;
 
@@ -22,6 +22,11 @@ pub async fn character_prompt(
     application_state: State<'_, Mutex<ApplicationState>>,
     session_state: State<'_, Mutex<SessionState>>,
 ) -> Result<CharacterPromptResponse, CharacterPromptError> {
+    info!(
+        "Character prompt command triggered with request: {:?}",
+        &request
+    );
+
     let application_state = application_state.lock().await;
 
     let openai_client = &application_state.openai_client.as_ref();
@@ -32,11 +37,13 @@ pub async fn character_prompt(
     let file_manager =
         file_manager.ok_or(CharacterPromptError::new("Unable to access file manager."))?;
 
-    let mut session_state = session_state.lock().await;
+    let mut session_state = session_state.lock().await; // TODO: Getting stuck here, need main session thread to release lock.
 
     let game_session = session_state
         .get_game_session()
         .ok_or(CharacterPromptError::new("Unable to access game session."))?;
+
+    info!("Loaded client, file manager, and game session for character prompt processing.");
 
     let updated_game_state = game_session
         .process_character_prompt(&request, &openai_client, &file_manager)
@@ -48,6 +55,8 @@ pub async fn character_prompt(
             );
             CharacterPromptError::new("Error occurred attempting to process character prompt.")
         })?;
+
+    info!("Character prompt processed, returning updated state.");
 
     Ok(CharacterPromptResponse::new(updated_game_state.clone()))
 }
