@@ -25,6 +25,7 @@ use crate::{
         OpenAIClient,
     },
     prompt_builder::PromptBuilder,
+    session_context::SessionContext,
     utils::random::Random,
 };
 
@@ -33,21 +34,15 @@ use self::{
     game_functions::{item_update::ItemUpdate, scene_update::SceneUpdate},
 };
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct GameSession {
-    pub id: String,
-    pub game_id: String,
-    pub narrator_assistant_id: String,
-    pub thread_id: String,
+#[derive(Debug)]
+pub struct GameSession<'a> {
+    pub game: Game,
     pub game_state: GameState,
-    pub character_session: Option<CharacterSession>,
-    #[serde(skip)]
-    game_state_update_tx: Option<Sender<GameState>>,
-    #[serde(skip)]
-    character_end_tx: Option<tokio::sync::oneshot::Sender<String>>,
+    session_context: SessionContext<'a>,
+    openai_client: OpenAIClient,
 }
 
-impl GameSession {
+impl<'a> GameSession<'a> {
     pub async fn start_new(
         game_id: String,
         openai_client: &OpenAIClient,
@@ -108,19 +103,15 @@ impl GameSession {
 
         let thread_id = thread_response.id;
 
-        let id = Random::generate_id();
-
         let game_state = GameState::new(&game, &narrator_assistant_id, &thread_id);
+        let openai_client = openai_client.clone();
+        let session_context = SessionContext::new(game.clone(), &openai_client);
 
         let mut game_session = GameSession {
-            id,
-            game_id,
-            narrator_assistant_id,
-            thread_id,
+            game,
             game_state,
-            character_session: None,
-            game_state_update_tx: None,
-            character_end_tx: None,
+            session_context,
+            openai_client,
         };
 
         game_session.save(file_manager)?;

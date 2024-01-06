@@ -12,6 +12,7 @@ use self::character_interaction::CharacterInteraction;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GameState {
+    pub game_id: String,
     pub current_scene_id: Option<String>,
     pub messages: Vec<String>,
     pub inventory: Vec<String>,
@@ -25,6 +26,8 @@ pub struct GameState {
 
 impl GameState {
     pub fn new(game: &Game, assistant_id: &str, thread_id: &str) -> Self {
+        let game_id = game.id.clone();
+
         let character_inventories = game
             .characters
             .iter()
@@ -38,6 +41,7 @@ impl GameState {
             .collect::<HashMap<String, Vec<String>>>();
 
         GameState {
+            game_id,
             current_scene_id: None,
             messages: vec![],
             inventory: vec![],
