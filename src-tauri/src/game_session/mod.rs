@@ -110,12 +110,14 @@ impl GameSession {
 
         let id = Random::generate_id();
 
+        let game_state = GameState::new(&game, &narrator_assistant_id, &thread_id);
+
         let mut game_session = GameSession {
             id,
             game_id,
             narrator_assistant_id,
             thread_id,
-            game_state: GameState::new(),
+            game_state,
             character_session: None,
             game_state_update_tx: None,
             character_end_tx: None,

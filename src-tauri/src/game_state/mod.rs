@@ -2,7 +2,11 @@ pub mod character_interaction;
 pub mod character_message;
 pub mod character_trade;
 
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
+
+use crate::game::Game;
 
 use self::character_interaction::CharacterInteraction;
 
@@ -12,16 +16,36 @@ pub struct GameState {
     pub messages: Vec<String>,
     pub inventory: Vec<String>,
     pub character_interaction: Option<CharacterInteraction>,
+    pub character_inventories: HashMap<String, Vec<String>>,
+    pub scene_inventories: HashMap<String, Vec<String>>,
+    pub assistant_id: String,
+    pub thread_id: String,
     pub end_game: Option<String>,
 }
 
 impl GameState {
-    pub fn new() -> Self {
+    pub fn new(game: &Game, assistant_id: &str, thread_id: &str) -> Self {
+        let character_inventories = game
+            .characters
+            .iter()
+            .map(|c| (c.id.clone(), c.inventory.clone()))
+            .collect::<HashMap<String, Vec<String>>>();
+
+        let scene_inventories = game
+            .scenes
+            .iter()
+            .map(|s| (s.id.clone(), s.items.clone()))
+            .collect::<HashMap<String, Vec<String>>>();
+
         GameState {
             current_scene_id: None,
             messages: vec![],
             inventory: vec![],
             character_interaction: None,
+            character_inventories,
+            scene_inventories,
+            assistant_id: assistant_id.to_string(),
+            thread_id: thread_id.to_string(),
             end_game: None,
         }
     }
