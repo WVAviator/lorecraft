@@ -1,7 +1,7 @@
-use anyhow::{anyhow, bail};
+use anyhow::{anyhow, bail, Context};
 use serde_json::json;
 
-use crate::{game::Game, game_state::GameState, session_context::session_request::SessionRequest};
+use crate::{game_state::GameState, session_context::session_request::SessionRequest};
 
 use super::SessionState;
 
@@ -14,7 +14,6 @@ impl ProcessRemoveItemState {
         run_id: String,
         tool_call_id: String,
         arguments: serde_json::Value,
-        game: &Game,
     ) -> Result<SessionState, anyhow::Error> {
         match request {
             SessionRequest::ContinueProcessing => {
@@ -26,7 +25,7 @@ impl ProcessRemoveItemState {
 
                 let output = match game_state.get_player_inventory().iter().any(|i| i.eq(&item)) {
                     true => {
-                        game_state.remove_item(&item);
+                        game_state.remove_item(&item).context("Unable to remove item from inventory.")?;
                         let updated_player_inventory = game_state.get_player_inventory();
                         json!({
                             "updated_player_inventory": format!("[{}]", updated_player_inventory.join(", "))

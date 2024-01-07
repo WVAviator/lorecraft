@@ -1,4 +1,3 @@
-use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
 
 use super::{
@@ -49,9 +48,5 @@ impl CharacterInteraction {
             to_player: Some(to_player.to_string()),
             from_player: None,
         });
-    }
-
-    pub fn complete_trade(&mut self) {
-        self.trade = None;
     }
 }

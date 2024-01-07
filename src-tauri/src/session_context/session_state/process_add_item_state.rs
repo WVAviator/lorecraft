@@ -1,7 +1,7 @@
 use anyhow::{anyhow, bail};
 use serde_json::json;
 
-use crate::{game::Game, game_state::GameState, session_context::session_request::SessionRequest};
+use crate::{game_state::GameState, session_context::session_request::SessionRequest};
 
 use super::SessionState;
 
@@ -14,7 +14,6 @@ impl ProcessAddItemState {
         run_id: String,
         tool_call_id: String,
         arguments: serde_json::Value,
-        game: &Game,
     ) -> Result<SessionState, anyhow::Error> {
         match request {
             SessionRequest::ContinueProcessing => {

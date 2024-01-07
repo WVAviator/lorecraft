@@ -1,7 +1,7 @@
 use anyhow::{bail, anyhow};
 use log::{info, error};
 
-use crate::{session_context::session_request::SessionRequest, openai_client::{self, OpenAIClient}, game_state::GameState};
+use crate::{session_context::session_request::SessionRequest, openai_client::OpenAIClient, game_state::GameState};
 
 use super::SessionState;
 

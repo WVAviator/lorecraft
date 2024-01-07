@@ -174,16 +174,9 @@ impl SessionState {
                 run_id,
                 tool_call_id,
                 arguments,
-            } => ProcessAddItemState::process(
-                request,
-                game_state,
-                run_id,
-                tool_call_id,
-                arguments,
-                game,
-            )
-            .await
-            .context("Failed to process state change from ProcessAddItemState."),
+            } => ProcessAddItemState::process(request, game_state, run_id, tool_call_id, arguments)
+                .await
+                .context("Failed to process state change from ProcessAddItemState."),
             SessionState::ProcessRemoveItemState {
                 run_id,
                 tool_call_id,
@@ -194,7 +187,6 @@ impl SessionState {
                 run_id,
                 tool_call_id,
                 arguments,
-                game,
             )
             .await
             .context("Failed to process state change from ProcessRemoveItemState."),
@@ -217,16 +209,9 @@ impl SessionState {
                 run_id,
                 tool_call_id,
                 arguments,
-            } => ProcessEndGameState::process(
-                request,
-                game_state,
-                run_id,
-                tool_call_id,
-                arguments,
-                game,
-            )
-            .await
-            .context("Failed to process state change from ProcessEndGameState."),
+            } => ProcessEndGameState::process(request, game_state, run_id, tool_call_id, arguments)
+                .await
+                .context("Failed to process state change from ProcessEndGameState."),
             SessionState::SubmitToolOutputsState {
                 run_id,
                 tool_call_id,
@@ -330,12 +315,12 @@ impl SessionState {
         match self {
             SessionState::IdleState => false,
             SessionState::AwaitingPlayerTradeResponseState {
-                run_id,
-                tool_call_id,
+                run_id: _,
+                tool_call_id: _,
             } => false,
             SessionState::AwaitingPlayerGiftResponseState {
-                run_id,
-                tool_call_id,
+                run_id: _,
+                tool_call_id: _,
             } => false,
             SessionState::CharacterIdleState => false,
             _ => true,

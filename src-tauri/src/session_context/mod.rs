@@ -1,8 +1,6 @@
 use log::error;
 
-use crate::{
-    file_manager::FileManager, game::Game, game_state::GameState, openai_client::OpenAIClient,
-};
+use crate::{game::Game, game_state::GameState, openai_client::OpenAIClient};
 
 use self::{session_request::SessionRequest, session_state::SessionState};
 
@@ -10,14 +8,14 @@ pub mod session_request;
 mod session_state;
 
 #[derive(Debug)]
-pub struct SessionContext<'a> {
+pub struct SessionContext {
     state: Option<SessionState>,
-    openai_client: &'a OpenAIClient,
+    openai_client: OpenAIClient,
     game: Game,
 }
 
-impl<'a> SessionContext<'a> {
-    pub fn new(game: Game, openai_client: &'a OpenAIClient) -> Self {
+impl SessionContext {
+    pub fn new(game: Game, openai_client: OpenAIClient) -> Self {
         let state = SessionState::PendingRunState;
 
         SessionContext {
@@ -34,7 +32,8 @@ impl<'a> SessionContext<'a> {
             match self.state.as_ref() {
                 Some(state) => {
                     if state.should_continue_processing() {
-                        self.process_state_change(SessionRequest::ContinueProcessing, game_state);
+                        self.process_state_change(SessionRequest::ContinueProcessing, game_state)
+                            .await;
                     } else {
                         break;
                     }
@@ -53,15 +52,19 @@ impl<'a> SessionContext<'a> {
             .state
             .take()
             .unwrap_or(SessionState::IdleState)
-            .process(session_request, self.openai_client, game_state, &self.game)
+            .process(session_request, &self.openai_client, game_state, &self.game)
             .await
             .unwrap_or_else(|e| {
                 error!(
                     "Error occurred processing in session state: {:?}. Resetting state.",
                     e
                 );
+
+                // TODO: Add a state reset method to GameState that clears out anything stateful
+
                 SessionState::IdleState
             });
+
         self.state = Some(new_state);
     }
 }

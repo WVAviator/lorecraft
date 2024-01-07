@@ -33,7 +33,7 @@ impl ProcessNewSceneState {
                     .ok_or(anyhow!("Invalid scene name provided: {}.", new_scene))?;
 
                 info!("Updating scene to {} in game state.", &new_scene.name);
-                game_state.current_scene_id = Some(new_scene.id.clone());
+                game_state.new_scene(&new_scene.id);
 
                 let characters = new_scene
                     .characters
