@@ -9,7 +9,7 @@ use super::SessionState;
 pub struct ProcessEndGameState {}
 
 impl ProcessEndGameState {
-    pub fn process(
+    pub async fn process(
         request: SessionRequest,
         game_state: &mut GameState,
         run_id: String,

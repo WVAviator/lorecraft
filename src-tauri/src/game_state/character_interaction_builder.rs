@@ -82,6 +82,7 @@ impl CharacterInteractionBuilder {
             ))?,
             messages: self.messages,
             trade: self.trade,
+            closed: false,
         })
     }
 }

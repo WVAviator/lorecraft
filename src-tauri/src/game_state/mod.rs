@@ -4,8 +4,9 @@ pub mod character_message;
 pub mod character_save_data;
 pub mod character_trade;
 
-use std::collections::HashMap;
+use std::{borrow::Borrow, collections::HashMap};
 
+use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
 
 use crate::game::Game;
@@ -92,7 +93,50 @@ impl GameState {
         self.character_interaction = None;
     }
 
-    pub fn get_inventory(&self) -> Vec<String> {
+    pub fn get_player_inventory(&self) -> Vec<String> {
         self.inventory.clone()
+    }
+
+    pub fn get_character_inventory(&self, character_id: &str) -> Vec<String> {
+        self.character_save_data
+            .entry(character_id.to_string())
+            .or_insert(CharacterSaveData::new(vec![]))
+            .character_inventory
+            .clone()
+    }
+
+    pub fn remove_character_item(&mut self, character_id: &str, item: &str) {
+        self.character_save_data
+            .entry(character_id.to_string())
+            .and_modify(|csd| {
+                let mut csd = *csd;
+                csd.character_inventory.retain(|i| i.ne(item));
+            });
+    }
+
+    pub fn add_player_item(&mut self, item: &str) {
+        self.inventory.push(item.to_string());
+    }
+
+    pub(crate) fn remove_player_item(&mut self, item: &str) {
+        self.inventory.retain(|i| i.ne(item));
+    }
+
+    pub(crate) fn add_character_item(&mut self, character_id: &str, from_player_item: &str) {
+        self.character_save_data
+            .entry(character_id.to_string())
+            .and_modify(|csd| {
+                let mut csd = *csd;
+                csd.character_inventory.push(from_player_item.to_string());
+            });
+    }
+
+    pub fn save_previous_conversation(&mut self, character_id: &str, summary: &str) {
+        self.character_save_data
+            .entry(character_id.to_string())
+            .and_modify(|csd| {
+                let mut csd = *csd;
+                csd.previous_conversations.push(summary.to_string());
+            });
     }
 }

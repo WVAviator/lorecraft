@@ -1,7 +1,4 @@
-use anyhow::{anyhow, Context};
 use serde::{Deserialize, Serialize};
-
-use crate::{file_manager::FileManager, game::Game};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CharacterSaveData {

@@ -114,33 +114,6 @@ impl<'a> GameSession<'a> {
         Ok(game_session)
     }
 
-    // pub fn save(&self, file_manager: &FileManager) -> Result<(), anyhow::Error> {
-    //     let filepath = format!("save_data/{}/{}.json", self.game_id, self.id);
-    //     let json =
-    //         serde_json::to_string(&self).context("Error serializing game session to json.")?;
-    //     file_manager
-    //         .write_to_file(&filepath, &json)
-    //         .context("Error writing game session to file.")?;
-
-    //     Ok(())
-    // }
-
-    // pub fn add_state_tx(&mut self, game_state_update_tx: Sender<GameState>) {
-    //     self.game_state_update_tx = Some(game_state_update_tx);
-    // }
-
-    // async fn send_state_update(&self) -> Result<(), anyhow::Error> {
-    //     if let Some(game_state_update_tx) = &self.game_state_update_tx {
-    //         let game_state = self.game_state.clone();
-    //         game_state_update_tx
-    //             .send(game_state)
-    //             .await
-    //             .context("Error sending game state update.")?;
-    //     }
-
-    //     Ok(())
-    // }
-
     pub async fn process_game_prompt(
         &mut self,
         prompt: &str,
@@ -182,7 +155,7 @@ impl<'a> GameSession<'a> {
             .assistant_id(&self.narrator_assistant_id)
             .additional_instructions(format!(
                 "Current player inventory: [{}]",
-                self.game_state.get_inventory().join(", ")
+                self.game_state.get_player_inventory().join(", ")
             ))
             .build();
         let create_run_response = openai_client
@@ -299,7 +272,7 @@ impl<'a> GameSession<'a> {
 
                                     let output = json!({
                                         "conversation_summary": &conversation_summary,
-                                        "updated_player_inventory": &self.game_state.get_inventory()
+                                        "updated_player_inventory": &self.game_state.get_player_inventory()
                                     })
                                     .to_string();
 

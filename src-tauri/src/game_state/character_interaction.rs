@@ -13,6 +13,7 @@ pub struct CharacterInteraction {
     pub thread_id: String,
     pub initiating_run_id: String,
     pub initiating_tool_call_id: String,
+    pub closed: bool,
     pub messages: Vec<CharacterMessage>,
     pub trade: Option<CharacterTrade>,
 }

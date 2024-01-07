@@ -8,7 +8,7 @@ use super::SessionState;
 pub struct ProcessRemoveItemState {}
 
 impl ProcessRemoveItemState {
-    pub fn process(
+    pub async fn process(
         request: SessionRequest,
         game_state: &mut GameState,
         run_id: String,
@@ -24,10 +24,10 @@ impl ProcessRemoveItemState {
                     .ok_or(anyhow!("Invalid arguments to add_item function."))?
                     .to_string();
 
-                let output = match game_state.get_inventory().iter().any(|i| i.eq(&item)) {
+                let output = match game_state.get_player_inventory().iter().any(|i| i.eq(&item)) {
                     true => {
                         game_state.remove_item(&item);
-                        let updated_player_inventory = game_state.get_inventory();
+                        let updated_player_inventory = game_state.get_player_inventory();
                         json!({
                             "updated_player_inventory": format!("[{}]", updated_player_inventory.join(", "))
                         }).to_string()

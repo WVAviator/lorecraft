@@ -7,22 +7,47 @@ use crate::{
 };
 
 use self::{
-    idle_state::IdleState, pending_run_state::PendingRunState, polling_run_state::PollingRunState,
-    read_message_state::ReadMessageState, requires_action_state::RequiresActionState,
+    awaiting_player_gift_response_state::AwaitingPlayerGiftResponseState,
+    awaiting_player_trade_response_state::AwaitingPlayerTradeResponseState,
+    character_end_interaction_state::CharacterEndInteractionState,
+    character_idle_state::CharacterIdleState,
+    character_polling_run_state::CharacterPollingRunState,
+    character_read_message_state::CharacterReadMessageState,
+    character_requires_action_state::CharacterRequiresActionState,
+    character_run_request_state::CharacterRunRequestState, idle_state::IdleState,
+    pending_run_state::PendingRunState, polling_run_state::PollingRunState,
+    process_add_item_state::ProcessAddItemState,
+    process_character_gift_state::ProcessCharacterGiftState,
+    process_character_interact_state::ProcessCharacterInteractState,
+    process_character_trade_state::ProcessCharacterTradeState,
+    process_end_game::ProcessEndGameState, process_new_scene_state::ProcessNewSceneState,
+    process_remove_item_state::ProcessRemoveItemState, read_message_state::ReadMessageState,
+    requires_action_state::RequiresActionState, submit_tool_outputs_state::SubmitToolOutputsState,
 };
 
 use super::session_request::SessionRequest;
 
+mod awaiting_player_gift_response_state;
+mod awaiting_player_trade_response_state;
+mod character_end_interaction_state;
+mod character_idle_state;
+mod character_polling_run_state;
+mod character_read_message_state;
+mod character_requires_action_state;
+mod character_run_request_state;
 mod idle_state;
 mod pending_run_state;
 mod polling_run_state;
 mod process_add_item_state;
+mod process_character_gift_state;
 mod process_character_interact_state;
+mod process_character_trade_state;
 mod process_end_game;
 mod process_new_scene_state;
 mod process_remove_item_state;
 mod read_message_state;
 mod requires_action_state;
+mod submit_tool_outputs_state;
 
 #[derive(Debug)]
 pub enum SessionState {
@@ -67,6 +92,36 @@ pub enum SessionState {
         output: String,
     },
     CharacterRunRequestState,
+    CharacterPollingRunState {
+        run_id: String,
+    },
+    CharacterRequiresActionState {
+        run_id: String,
+        tool_call: ToolCall,
+    },
+    ProcessCharacterTradeState {
+        run_id: String,
+        tool_call_id: String,
+        arguments: serde_json::Value,
+    },
+    ProcessCharacterGiftState {
+        run_id: String,
+        tool_call_id: String,
+        arguments: serde_json::Value,
+    },
+    AwaitingPlayerTradeResponseState {
+        run_id: String,
+        tool_call_id: String,
+    },
+    AwaitingPlayerGiftResponseState {
+        run_id: String,
+        tool_call_id: String,
+    },
+    CharacterReadMessageState,
+    CharacterIdleState,
+    CharacterEndInteractionState {
+        summary: Option<String>,
+    },
 }
 
 impl SessionState {
@@ -105,74 +160,185 @@ impl SessionState {
                 run_id,
                 tool_call_id,
                 arguments,
-            } => todo!(),
+            } => ProcessNewSceneState::process(
+                request,
+                game_state,
+                run_id,
+                tool_call_id,
+                arguments,
+                game,
+            )
+            .await
+            .context("Failed to process state change from ProcessNewSceneState."),
             SessionState::ProcessAddItemState {
                 run_id,
                 tool_call_id,
                 arguments,
-            } => todo!(),
+            } => ProcessAddItemState::process(
+                request,
+                game_state,
+                run_id,
+                tool_call_id,
+                arguments,
+                game,
+            )
+            .await
+            .context("Failed to process state change from ProcessAddItemState."),
             SessionState::ProcessRemoveItemState {
                 run_id,
                 tool_call_id,
                 arguments,
-            } => todo!(),
+            } => ProcessRemoveItemState::process(
+                request,
+                game_state,
+                run_id,
+                tool_call_id,
+                arguments,
+                game,
+            )
+            .await
+            .context("Failed to process state change from ProcessRemoveItemState."),
             SessionState::ProcessCharacterInteractState {
                 run_id,
                 tool_call_id,
                 arguments,
-            } => todo!(),
+            } => ProcessCharacterInteractState::process(
+                request,
+                openai_client,
+                game_state,
+                run_id,
+                tool_call_id,
+                arguments,
+                game,
+            )
+            .await
+            .context("Failed to process state change from ProcessCharacterInteractState"),
             SessionState::ProcessEndGameState {
                 run_id,
                 tool_call_id,
                 arguments,
-            } => todo!(),
+            } => ProcessEndGameState::process(
+                request,
+                game_state,
+                run_id,
+                tool_call_id,
+                arguments,
+                game,
+            )
+            .await
+            .context("Failed to process state change from ProcessEndGameState."),
             SessionState::SubmitToolOutputsState {
                 run_id,
                 tool_call_id,
                 output,
-            } => todo!(),
-            SessionState::CharacterRunRequestState => todo!(),
+            } => SubmitToolOutputsState::process(
+                request,
+                openai_client,
+                game_state,
+                run_id,
+                tool_call_id,
+                output,
+            )
+            .await
+            .context("Failed to process state change from SubmitToolOutputsState."),
+            SessionState::CharacterRunRequestState => {
+                CharacterRunRequestState::process(request, openai_client, game_state)
+                    .await
+                    .context("Failed to process state change from CharacterRunRequestState.")
+            }
+            SessionState::CharacterPollingRunState { run_id } => {
+                CharacterPollingRunState::process(request, openai_client, game_state, run_id)
+                    .await
+                    .context("Failed to process state change from CharacterPollingRunState.")
+            }
+            SessionState::CharacterRequiresActionState { run_id, tool_call } => {
+                CharacterRequiresActionState::process(request, game_state, run_id, tool_call)
+                    .await
+                    .context("Failed to process state change from CharacterRequiresActionState.")
+            }
+            SessionState::ProcessCharacterTradeState {
+                run_id,
+                tool_call_id,
+                arguments,
+            } => ProcessCharacterTradeState::process(
+                request,
+                openai_client,
+                game_state,
+                run_id,
+                tool_call_id,
+                arguments,
+            )
+            .await
+            .context("Failed to process state change from ProcessCharacterTradeState."),
+            SessionState::ProcessCharacterGiftState {
+                run_id,
+                tool_call_id,
+                arguments,
+            } => ProcessCharacterGiftState::process(
+                request,
+                openai_client,
+                game_state,
+                run_id,
+                tool_call_id,
+                arguments,
+            )
+            .await
+            .context("Failed to process state change from ProcessCharacterGiftState."),
+            SessionState::AwaitingPlayerTradeResponseState {
+                run_id,
+                tool_call_id,
+            } => AwaitingPlayerTradeResponseState::process(
+                request,
+                openai_client,
+                game_state,
+                run_id,
+                tool_call_id,
+            )
+            .await
+            .context("Failed to process state change from AwaitingPlayerTradeResponseState."),
+            SessionState::AwaitingPlayerGiftResponseState {
+                run_id,
+                tool_call_id,
+            } => AwaitingPlayerGiftResponseState::process(
+                request,
+                openai_client,
+                game_state,
+                run_id,
+                tool_call_id,
+            )
+            .await
+            .context("Failed to process state change from AwaitingPlayerGiftResponseState."),
+            SessionState::CharacterReadMessageState => {
+                CharacterReadMessageState::process(request, openai_client, game_state, game)
+                    .await
+                    .context("Failed to process state change from CharacterReadMessageState.")
+            }
+            SessionState::CharacterIdleState => {
+                CharacterIdleState::process(request, openai_client, game_state)
+                    .await
+                    .context("Failed to process state change from CharacterIdleState.")
+            }
+            SessionState::CharacterEndInteractionState { summary } => {
+                CharacterEndInteractionState::process(request, openai_client, game_state, summary)
+                    .await
+                    .context("Failed to process state change from CharacterEndInteractionState.")
+            }
         }
     }
 
     pub fn should_continue_processing(&self) -> bool {
         match self {
             SessionState::IdleState => false,
-            SessionState::PendingRunState => true,
-            SessionState::PollingRunState { run_id } => true,
-            SessionState::RequiresActionState { run_id, tool_call } => true,
-            SessionState::ReadMessageState => true,
-            SessionState::ProcessNewSceneState {
+            SessionState::AwaitingPlayerTradeResponseState {
                 run_id,
                 tool_call_id,
-                arguments,
-            } => todo!(),
-            SessionState::ProcessAddItemState {
+            } => false,
+            SessionState::AwaitingPlayerGiftResponseState {
                 run_id,
                 tool_call_id,
-                arguments,
-            } => todo!(),
-            SessionState::ProcessRemoveItemState {
-                run_id,
-                tool_call_id,
-                arguments,
-            } => todo!(),
-            SessionState::ProcessCharacterInteractState {
-                run_id,
-                tool_call_id,
-                arguments,
-            } => todo!(),
-            SessionState::ProcessEndGameState {
-                run_id,
-                tool_call_id,
-                arguments,
-            } => todo!(),
-            SessionState::SubmitToolOutputsState {
-                run_id,
-                tool_call_id,
-                output,
-            } => todo!(),
-            SessionState::CharacterRunRequestState => todo!(),
+            } => false,
+            SessionState::CharacterIdleState => false,
+            _ => true,
         }
     }
 }

@@ -24,7 +24,7 @@ impl PendingRunState {
                     .assistant_id(&game_state.assistant_id)
                     .additional_instructions(format!(
                         "Current player inventory: [{}]",
-                        game_state.get_inventory().join(", ")
+                        game_state.get_player_inventory().join(", ")
                     ))
                     .build();
                 let create_run_response = openai_client

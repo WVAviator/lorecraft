@@ -20,7 +20,7 @@ impl ItemUpdate {
             .to_string();
         // TODO: Remove the item from the scene
         game_state.add_item(&item);
-        let updated_player_inventory = game_state.get_inventory();
+        let updated_player_inventory = game_state.get_player_inventory();
 
         Ok(ItemUpdate {
             success: true,
@@ -39,7 +39,7 @@ impl ItemUpdate {
         if let Ok(_) = game_state.remove_item(&item) {
             success = true;
         }
-        let updated_player_inventory = game_state.get_inventory();
+        let updated_player_inventory = game_state.get_player_inventory();
 
         Ok(ItemUpdate {
             success,

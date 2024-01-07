@@ -8,7 +8,7 @@ use super::SessionState;
 pub struct ProcessAddItemState {}
 
 impl ProcessAddItemState {
-    pub fn process(
+    pub async fn process(
         request: SessionRequest,
         game_state: &mut GameState,
         run_id: String,
@@ -25,7 +25,7 @@ impl ProcessAddItemState {
                     .to_string();
                 // TODO: Remove the item from the scene
                 game_state.add_item(&item);
-                let updated_player_inventory = game_state.get_inventory();
+                let updated_player_inventory = game_state.get_player_inventory();
 
                 let output = json!({
                     "update_player_inventory": format!("[{}]", updated_player_inventory.join(", "))
