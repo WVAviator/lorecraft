@@ -1,21 +1,25 @@
+use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
 
-use super::{character_message::CharacterMessage, character_trade::CharacterTrade};
+use super::{
+    character_interaction_builder::CharacterInteractionBuilder,
+    character_message::CharacterMessage, character_trade::CharacterTrade,
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CharacterInteraction {
     pub character_id: String,
+    pub assistant_id: String,
+    pub thread_id: String,
+    pub initiating_run_id: String,
+    pub initiating_tool_call_id: String,
     pub messages: Vec<CharacterMessage>,
     pub trade: Option<CharacterTrade>,
 }
 
 impl CharacterInteraction {
-    pub fn new(character_id: &str) -> Self {
-        Self {
-            character_id: character_id.to_string(),
-            messages: vec![],
-            trade: None,
-        }
+    pub fn builder() -> CharacterInteractionBuilder {
+        CharacterInteractionBuilder::new()
     }
 
     pub fn add_message(&mut self, message: &str) {

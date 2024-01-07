@@ -31,7 +31,7 @@ use self::{
 
 mod character_context;
 mod character_give_item;
-mod character_profile;
+pub mod character_profile;
 mod character_save_data;
 mod character_trade_items;
 

@@ -1,5 +1,7 @@
 pub mod character_interaction;
+pub mod character_interaction_builder;
 pub mod character_message;
+pub mod character_save_data;
 pub mod character_trade;
 
 use std::collections::HashMap;
@@ -8,7 +10,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::game::Game;
 
-use self::character_interaction::CharacterInteraction;
+use self::{character_interaction::CharacterInteraction, character_save_data::CharacterSaveData};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GameState {
@@ -17,7 +19,7 @@ pub struct GameState {
     pub messages: Vec<String>,
     pub inventory: Vec<String>,
     pub character_interaction: Option<CharacterInteraction>,
-    pub character_inventories: HashMap<String, Vec<String>>,
+    pub character_save_data: HashMap<String, CharacterSaveData>,
     pub scene_inventories: HashMap<String, Vec<String>>,
     pub assistant_id: String,
     pub thread_id: String,
@@ -46,7 +48,7 @@ impl GameState {
             messages: vec![],
             inventory: vec![],
             character_interaction: None,
-            character_inventories,
+            character_save_data: HashMap::new(),
             scene_inventories,
             assistant_id: assistant_id.to_string(),
             thread_id: thread_id.to_string(),
@@ -82,8 +84,8 @@ impl GameState {
         Ok(())
     }
 
-    pub fn character_interact(&mut self, character_id: &str) {
-        self.character_interaction = Some(CharacterInteraction::new(character_id));
+    pub fn character_interact(&mut self, character_interaction: CharacterInteraction) {
+        self.character_interaction = Some(character_interaction);
     }
 
     pub fn end_character_interaction(&mut self) {

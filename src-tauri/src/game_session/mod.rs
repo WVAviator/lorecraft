@@ -4,9 +4,7 @@ pub mod game_session_error;
 
 use anyhow::{anyhow, bail, Context};
 use log::{error, info};
-use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use tokio::sync::{mpsc::Sender, Mutex};
 
 use crate::{
     commands::character_prompt::character_prompt_request::CharacterPromptRequest,
@@ -19,14 +17,13 @@ use crate::{
         chat_completion::chat_completion_model::ChatCompletionModel,
         create_message::create_message_request::CreateMessageRequest,
         create_run::create_run_request::CreateRunRequest,
-        list_messages::list_messages_query::{ListMessagesQuery, ListMessagesQueryBuilder},
+        list_messages::list_messages_query::ListMessagesQueryBuilder,
         retrieve_run::retrieve_run_response::ToolCall,
         submit_tool_outputs::submit_tool_outputs_request::SubmitToolOutputsRequest,
         OpenAIClient,
     },
     prompt_builder::PromptBuilder,
     session_context::SessionContext,
-    utils::random::Random,
 };
 
 use self::{
@@ -114,44 +111,35 @@ impl<'a> GameSession<'a> {
             openai_client,
         };
 
-        game_session.save(file_manager)?;
-
-        let narrator_response = game_session
-            .process_run(openai_client, game, file_manager)
-            .await?;
-        game_session
-            .game_state
-            .add_narrator_message(&narrator_response);
-
         Ok(game_session)
     }
 
-    pub fn save(&self, file_manager: &FileManager) -> Result<(), anyhow::Error> {
-        let filepath = format!("save_data/{}/{}.json", self.game_id, self.id);
-        let json =
-            serde_json::to_string(&self).context("Error serializing game session to json.")?;
-        file_manager
-            .write_to_file(&filepath, &json)
-            .context("Error writing game session to file.")?;
+    // pub fn save(&self, file_manager: &FileManager) -> Result<(), anyhow::Error> {
+    //     let filepath = format!("save_data/{}/{}.json", self.game_id, self.id);
+    //     let json =
+    //         serde_json::to_string(&self).context("Error serializing game session to json.")?;
+    //     file_manager
+    //         .write_to_file(&filepath, &json)
+    //         .context("Error writing game session to file.")?;
 
-        Ok(())
-    }
+    //     Ok(())
+    // }
 
-    pub fn add_state_tx(&mut self, game_state_update_tx: Sender<GameState>) {
-        self.game_state_update_tx = Some(game_state_update_tx);
-    }
+    // pub fn add_state_tx(&mut self, game_state_update_tx: Sender<GameState>) {
+    //     self.game_state_update_tx = Some(game_state_update_tx);
+    // }
 
-    async fn send_state_update(&self) -> Result<(), anyhow::Error> {
-        if let Some(game_state_update_tx) = &self.game_state_update_tx {
-            let game_state = self.game_state.clone();
-            game_state_update_tx
-                .send(game_state)
-                .await
-                .context("Error sending game state update.")?;
-        }
+    // async fn send_state_update(&self) -> Result<(), anyhow::Error> {
+    //     if let Some(game_state_update_tx) = &self.game_state_update_tx {
+    //         let game_state = self.game_state.clone();
+    //         game_state_update_tx
+    //             .send(game_state)
+    //             .await
+    //             .context("Error sending game state update.")?;
+    //     }
 
-        Ok(())
-    }
+    //     Ok(())
+    // }
 
     pub async fn process_game_prompt(
         &mut self,

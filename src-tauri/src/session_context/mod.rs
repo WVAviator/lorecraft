@@ -42,15 +42,6 @@ impl<'a> SessionContext<'a> {
                 None => break,
             }
         }
-
-        // while self
-        //     .state
-        //     .unwrap_or(SessionState::IdleState)
-        //     .should_continue_processing()
-        // {
-        //     self.process_state_change(SessionRequest::ContinueProcessing, game_state)
-        //         .await;
-        // }
     }
 
     async fn process_state_change(
@@ -62,7 +53,7 @@ impl<'a> SessionContext<'a> {
             .state
             .take()
             .unwrap_or(SessionState::IdleState)
-            .process(session_request, self.openai_client, game_state)
+            .process(session_request, self.openai_client, game_state, &self.game)
             .await
             .unwrap_or_else(|e| {
                 error!(

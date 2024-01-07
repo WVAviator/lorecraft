@@ -1,6 +1,7 @@
 use anyhow::Context;
 
 use crate::{
+    game::Game,
     game_state::GameState,
     openai_client::{retrieve_run::retrieve_run_response::ToolCall, OpenAIClient},
 };
@@ -15,6 +16,11 @@ use super::session_request::SessionRequest;
 mod idle_state;
 mod pending_run_state;
 mod polling_run_state;
+mod process_add_item_state;
+mod process_character_interact_state;
+mod process_end_game;
+mod process_new_scene_state;
+mod process_remove_item_state;
 mod read_message_state;
 mod requires_action_state;
 
@@ -55,6 +61,12 @@ pub enum SessionState {
         tool_call_id: String,
         arguments: serde_json::Value,
     },
+    SubmitToolOutputsState {
+        run_id: String,
+        tool_call_id: String,
+        output: String,
+    },
+    CharacterRunRequestState,
 }
 
 impl SessionState {
@@ -63,6 +75,7 @@ impl SessionState {
         request: SessionRequest,
         openai_client: &OpenAIClient,
         game_state: &mut GameState,
+        game: &Game,
     ) -> Result<SessionState, anyhow::Error> {
         match self {
             SessionState::IdleState => IdleState::process(request, openai_client, game_state)
@@ -113,6 +126,12 @@ impl SessionState {
                 tool_call_id,
                 arguments,
             } => todo!(),
+            SessionState::SubmitToolOutputsState {
+                run_id,
+                tool_call_id,
+                output,
+            } => todo!(),
+            SessionState::CharacterRunRequestState => todo!(),
         }
     }
 
@@ -148,6 +167,12 @@ impl SessionState {
                 tool_call_id,
                 arguments,
             } => todo!(),
+            SessionState::SubmitToolOutputsState {
+                run_id,
+                tool_call_id,
+                output,
+            } => todo!(),
+            SessionState::CharacterRunRequestState => todo!(),
         }
     }
 }
