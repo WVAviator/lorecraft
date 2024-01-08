@@ -27,6 +27,12 @@ impl CharacterEndInteractionState {
                             "conversation_summary": summary,
                         }).to_string();
 
+                        let thread_id = game_state.character_interaction.as_ref().ok_or(anyhow!("Unable to access character interaction."))?.thread_id.clone();
+                        let assistant_id = game_state.character_interaction.as_ref().ok_or(anyhow!("Unable to access character interaction."))?.assistant_id.clone();
+
+                        openai_client.delete_thread(&thread_id).await.map_err(|e| anyhow!("Unable to delete thread: {:?}", e))?;
+                        openai_client.delete_assistant(&assistant_id).await.map_err(|e| anyhow!("Unable to delete character assistant: {:?}", e))?;
+
                         game_state.end_character_interaction();
 
                         Ok(SessionState::SubmitToolOutputsState { run_id, tool_call_id, output })

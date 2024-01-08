@@ -1,10 +1,8 @@
-use anyhow::Context;
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    file_manager::FileManager,
-    game::{character::Character, Game},
-};
+use crate::
+    game::character::Character
+;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CharacterProfile {

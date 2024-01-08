@@ -46,7 +46,6 @@ pub mod thread_create;
 #[derive(Debug, Clone)]
 pub struct OpenAIClient {
     client: Client,
-    is_mock: bool,
 }
 
 impl OpenAIClient {
@@ -63,11 +62,7 @@ impl OpenAIClient {
             .build()
             .expect("Failed to initialize OpenAI Client.");
 
-        let is_mock = match std::env::var("LC_DEV") {
-            Ok(val) => val.parse::<bool>().unwrap_or(false),
-            Err(_) => false,
-        };
-        Self { client, is_mock }
+        Self { client }
     }
 }
 
