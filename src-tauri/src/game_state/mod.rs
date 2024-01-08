@@ -1,6 +1,7 @@
 pub mod character_interaction;
 pub mod character_interaction_builder;
 pub mod character_message;
+pub mod character_profile;
 pub mod character_save_data;
 pub mod character_trade;
 

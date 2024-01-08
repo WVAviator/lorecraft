@@ -1,4 +1,7 @@
+use std::sync::Arc;
+
 use log::error;
+use tokio::sync::{mpsc::Sender, Mutex};
 
 use crate::{game::Game, game_state::GameState, openai_client::OpenAIClient};
 
@@ -12,16 +15,22 @@ pub struct SessionContext {
     state: Option<SessionState>,
     openai_client: OpenAIClient,
     game: Game,
+    state_update_tx: Arc<Mutex<Sender<GameState>>>,
 }
 
 impl SessionContext {
-    pub fn new(game: Game, openai_client: OpenAIClient) -> Self {
+    pub fn new(
+        game: Game,
+        openai_client: OpenAIClient,
+        state_update_tx: Arc<Mutex<Sender<GameState>>>,
+    ) -> Self {
         let state = SessionState::PendingRunState;
 
         SessionContext {
             state: Some(state),
             openai_client,
             game,
+            state_update_tx,
         }
     }
 
@@ -66,5 +75,10 @@ impl SessionContext {
             });
 
         self.state = Some(new_state);
+        let state_update_tx = self.state_update_tx.lock().await;
+        match state_update_tx.send(game_state.clone()).await {
+            Ok(_) => {}
+            Err(e) => error!("Error sending game state update: {:?}", e),
+        }
     }
 }

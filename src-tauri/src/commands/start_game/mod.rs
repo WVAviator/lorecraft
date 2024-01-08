@@ -36,15 +36,19 @@ pub async fn start_game(
         return Ok(StartGameResponse::new(game_state));
     }
 
-    let game_session = GameSession::start_new(request.game_id, openai_client, file_manager)
-        .await
-        .map_err(|e| {
-            error!("Unable to establish game session:\n{:?}", e);
-            GameSessionError::SetupFailure(format!(
-                "Error occurred while setting up game:\n{:?}",
-                e
-            ))
-        })?;
+    let game_state_update_tx = session_state.get_state_update_tx();
+
+    let game_session = GameSession::start_new(
+        request.game_id,
+        openai_client,
+        file_manager,
+        game_state_update_tx,
+    )
+    .await
+    .map_err(|e| {
+        error!("Unable to establish game session:\n{:?}", e);
+        GameSessionError::SetupFailure(format!("Error occurred while setting up game:\n{:?}", e))
+    })?;
 
     let game_state = game_session.game_state.clone();
     session_state.set_game_session(game_session).await;

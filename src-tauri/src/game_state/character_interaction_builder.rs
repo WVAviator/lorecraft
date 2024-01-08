@@ -1,9 +1,6 @@
 use anyhow::anyhow;
 
-use super::{
-    character_interaction::CharacterInteraction, character_message::CharacterMessage,
-    character_trade::CharacterTrade,
-};
+use super::character_interaction::CharacterInteraction;
 
 pub struct CharacterInteractionBuilder {
     pub character_id: Option<String>,
@@ -11,8 +8,6 @@ pub struct CharacterInteractionBuilder {
     pub thread_id: Option<String>,
     pub initiating_run_id: Option<String>,
     pub initiating_tool_call_id: Option<String>,
-    pub messages: Vec<CharacterMessage>,
-    pub trade: Option<CharacterTrade>,
 }
 
 impl CharacterInteractionBuilder {
@@ -23,8 +18,6 @@ impl CharacterInteractionBuilder {
             thread_id: None,
             initiating_run_id: None,
             initiating_tool_call_id: None,
-            messages: Vec::new(),
-            trade: None,
         }
     }
 
@@ -53,16 +46,6 @@ impl CharacterInteractionBuilder {
         self
     }
 
-    pub fn messages(mut self, messages: Vec<CharacterMessage>) -> Self {
-        self.messages = messages;
-        self
-    }
-
-    pub fn trade(mut self, trade: Option<CharacterTrade>) -> Self {
-        self.trade = trade;
-        self
-    }
-
     pub fn build(self) -> Result<CharacterInteraction, anyhow::Error> {
         Ok(CharacterInteraction {
             character_id: self.character_id.ok_or(anyhow!(
@@ -80,8 +63,8 @@ impl CharacterInteractionBuilder {
             initiating_tool_call_id: self.initiating_tool_call_id.ok_or(anyhow!(
                 "Cannot start character interaction without initiating tool call id."
             ))?,
-            messages: self.messages,
-            trade: self.trade,
+            messages: Vec::new(),
+            trade: None,
             closed: false,
         })
     }

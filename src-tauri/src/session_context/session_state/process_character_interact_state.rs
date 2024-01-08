@@ -2,7 +2,7 @@ use anyhow::{bail, anyhow};
 use log::{info, error, trace};
 use serde_json::json;
 
-use crate::{session_context::session_request::SessionRequest, game_state::{GameState, character_interaction::CharacterInteraction, character_save_data::CharacterSaveData}, game::Game, openai_client::{OpenAIClient, assistant_create::assistant_create_request::AssistantCreateRequest, chat_completion::chat_completion_model::ChatCompletionModel, assistant_tool::{AssistantTool, function::Function}}, prompt_builder::PromptBuilder, game_session::character_session::{character_profile::CharacterProfile}};
+use crate::{session_context::session_request::SessionRequest, game_state::{GameState, character_interaction::CharacterInteraction, character_save_data::CharacterSaveData, character_profile::CharacterProfile}, game::Game, openai_client::{OpenAIClient, assistant_create::assistant_create_request::AssistantCreateRequest, chat_completion::chat_completion_model::ChatCompletionModel, assistant_tool::{AssistantTool, function::Function}}, prompt_builder::PromptBuilder};
 
 use super::SessionState;
 
