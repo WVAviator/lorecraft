@@ -89,9 +89,11 @@ impl GameSession {
 
         let thread_id = thread_response.id;
 
-        let game_state = GameState::new(&game, &narrator_assistant_id, &thread_id);
+        let mut game_state = GameState::new(&game, &narrator_assistant_id, &thread_id);
         let openai_client = openai_client.clone();
-        let session_context = SessionContext::new(game.clone(), openai_client, state_update_tx);
+        let mut session_context = SessionContext::new(game.clone(), openai_client, state_update_tx);
+
+        session_context.process(SessionRequest::ContinueProcessing, &mut game_state).await;
 
         let game_session = GameSession {
             game,

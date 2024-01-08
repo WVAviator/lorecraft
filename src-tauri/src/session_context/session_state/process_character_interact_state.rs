@@ -29,6 +29,8 @@ impl ProcessCharacterInteractState {
                     .find(|c| c.name == character_name)
                     .ok_or(anyhow!("Unable to find character with provided name."))?;
 
+                // TODO: Make sure character is in the active scene.
+
                 info!(
                     "Found character information for {}. Generating profile and context for assistant.",
                     &character_name
