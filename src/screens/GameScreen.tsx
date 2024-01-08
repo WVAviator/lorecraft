@@ -13,6 +13,7 @@ import { TextField } from '@mui/material';
 import React from 'react';
 import useGameState from '../hooks/useGameState';
 import CharacterWindow from '../components/CharacterWindow/CharacterWindow';
+import PlayerEntry from '../components/PlayerEntry/PlayerEntry';
 
 const GameScreen = () => {
   const { navigateWithTransition, isTransitioning } =
@@ -21,7 +22,7 @@ const GameScreen = () => {
     redirect: '/mainmenu',
   });
   const [playerInput, setPlayerInput] = React.useState<string>('');
-  const { gameState, loading, sendNarrativeMessage } = useGameState();
+  const { gameState, sendNarrativeMessage } = useGameState();
 
   if (!gameState || !game) {
     navigateWithTransition('/gamemenu');
@@ -30,7 +31,13 @@ const GameScreen = () => {
 
   return (
     <BackgroundDiv fade={isTransitioning}>
-      <CharacterWindow characterInteraction={gameState.character_interaction} />
+      <CharacterWindow
+        characterInteraction={
+          gameState.character_interaction?.closed
+            ? null
+            : gameState.character_interaction
+        }
+      />
       <SplitLayout gridTemplateColumns="60% 40%">
         <SceneImage
           scene={game.scenes.find(
@@ -69,24 +76,15 @@ const GameScreen = () => {
             ]}
           />
           <NarrativeWindow messages={gameState.messages} />
-          <TextField
-            id="outlined-basic"
-            tabIndex={0}
-            variant="outlined"
+          <PlayerEntry
             value={playerInput}
             onChange={(e) => {
               if (playerInput.length >= 497) return;
               setPlayerInput(e.target.value);
             }}
-            multiline
-            rows={2}
-            fullWidth
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendNarrativeMessage(playerInput);
-                setPlayerInput('');
-              }
+            onSubmit={() => {
+              sendNarrativeMessage(playerInput);
+              setPlayerInput('');
             }}
             // disabled={loading}
           />

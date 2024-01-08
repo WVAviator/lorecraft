@@ -8,9 +8,7 @@ pub struct GamePromptResponse {
 }
 
 impl GamePromptResponse {
-    pub fn new(game_state: &GameState) -> Self {
-        GamePromptResponse {
-            game_state: game_state.clone(),
-        }
+    pub fn new(game_state: GameState) -> Self {
+        GamePromptResponse { game_state }
     }
 }

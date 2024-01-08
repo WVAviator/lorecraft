@@ -27,36 +27,64 @@ pub async fn character_prompt(
         &request
     );
 
-    let application_state = application_state.lock().await;
-
-    let openai_client = &application_state.openai_client.as_ref();
-    let openai_client =
-        openai_client.ok_or(CharacterPromptError::new("Unable to access OpenAI client."))?;
-
-    let file_manager = &application_state.file_manager.as_ref();
-    let file_manager =
-        file_manager.ok_or(CharacterPromptError::new("Unable to access file manager."))?;
-
-    let mut session_state = session_state.lock().await; // TODO: Getting stuck here, need main session thread to release lock.
+    let mut session_state = session_state.lock().await;
 
     let game_session = session_state
         .get_game_session()
         .ok_or(CharacterPromptError::new("Unable to access game session."))?;
 
-    info!("Loaded client, file manager, and game session for character prompt processing.");
+    match request {
+        CharacterPromptRequest {
+            message: Some(message),
+            ..
+        } => {
+            let updated_game_state =
+                game_session
+                    .receive_player_message(message)
+                    .await
+                    .map_err(|e| {
+                        error!("unable to update game state with new prompt:\n{:?}", e);
+                        CharacterPromptError::new("an error occurred processing the request.")
+                    })?;
 
-    let updated_game_state = game_session
-        .process_character_prompt(&request, &openai_client, &file_manager)
-        .await
-        .map_err(|e| {
-            error!(
-                "Error occurred attempting to process character prompt:\n{:?}",
-                e
-            );
-            CharacterPromptError::new("Error occurred attempting to process character prompt.")
-        })?;
+            let response = CharacterPromptResponse::new(updated_game_state);
+            Ok(response)
+        }
+        CharacterPromptRequest {
+            trade_accept: Some(accepted),
+            ..
+        } => {
+            let updated_game_state = game_session
+                .receive_trade_response(accepted)
+                .await
+                .map_err(|e| {
+                    error!("unable to update game state with new prompt:\n{:?}", e);
+                    CharacterPromptError::new("an error occurred processing the request.")
+                })?;
 
-    info!("Character prompt processed, returning updated state.");
+            let response = CharacterPromptResponse::new(updated_game_state);
+            Ok(response)
+        }
+        CharacterPromptRequest {
+            end_conversation: Some(_),
+            ..
+        } => {
+            let updated_game_state =
+                game_session
+                    .end_character_interaction()
+                    .await
+                    .map_err(|e| {
+                        error!("unable to update game state with new prompt:\n{:?}", e);
+                        CharacterPromptError::new("an error occurred processing the request.")
+                    })?;
 
-    Ok(CharacterPromptResponse::new(updated_game_state.clone()))
+            let response = CharacterPromptResponse::new(updated_game_state);
+            Ok(response)
+        }
+        _ => {
+            return Err(CharacterPromptError::new(
+                "Invalid character prompt request.",
+            ))
+        }
+    }
 }

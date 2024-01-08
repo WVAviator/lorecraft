@@ -26,17 +26,6 @@ pub async fn game_prompt(
         request.prompt
     );
 
-    let application_state = application_state.lock().await;
-    let openai_client = &application_state.openai_client.as_ref();
-    let openai_client = openai_client.ok_or(GamePromptError::new(
-        "Unable to submit prompt: No OpenAI client.",
-    ))?;
-
-    let file_manager = &application_state.file_manager.as_ref();
-    let file_manager = file_manager.ok_or(GamePromptError::new(
-        "Unable to submit prompt: No file manager.",
-    ))?;
-
     let mut session_state = session_state.lock().await;
 
     let game_session = session_state.get_game_session();
@@ -46,7 +35,7 @@ pub async fn game_prompt(
 
     info!("Loaded game session, processing new prompt.");
     let updated_game_state = game_session
-        .process_game_prompt(&request.prompt, &openai_client, &file_manager)
+        .receive_player_message(request.prompt)
         .await
         .map_err(|e| {
             error!("Unable to update game state with new prompt:\n{:?}", e);

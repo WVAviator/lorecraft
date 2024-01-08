@@ -43,6 +43,7 @@ pub mod retrieve_run;
 pub mod submit_tool_outputs;
 pub mod thread_create;
 
+#[derive(Debug, Clone)]
 pub struct OpenAIClient {
     client: Client,
     is_mock: bool,

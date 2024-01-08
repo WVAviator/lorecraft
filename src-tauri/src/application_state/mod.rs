@@ -13,7 +13,6 @@ pub struct ApplicationState {
     pub updates_tx: Mutex<mpsc::Sender<String>>,
     pub file_manager: Option<FileManager>,
     pub openai_client: Option<OpenAIClient>,
-    pub game_session: Option<GameSession>,
 }
 
 impl ApplicationState {
@@ -22,7 +21,6 @@ impl ApplicationState {
             updates_tx,
             file_manager: None,
             openai_client: None,
-            game_session: None,
         }
     }
 
