@@ -10,6 +10,7 @@ interface CharacterInteraction {
   character_id: string;
   messages: CharacterMessage[];
   trade: CharacterTrade | null;
+  closed: boolean;
 }
 
 interface CharacterMessage {

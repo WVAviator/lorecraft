@@ -6,20 +6,18 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
-  Grid,
   IconButton,
   LinearProgress,
-  Modal,
   TextField,
 } from '@mui/material';
 import useProcessImage from '../../hooks/useProcessImage';
 import useGameContext from '../../hooks/useGameContext';
 import styles from './CharacterWindow.module.css';
-import NarrativeWindow from '../NarrativeWindow/NarrativeWindow';
 import CharacterConversation from '../CharacterConversation/CharacterConversation';
 import React from 'react';
 import useGameState from '../../hooks/useGameState';
 import { IoClose } from 'react-icons/io5';
+import PlayerEntry from '../PlayerEntry/PlayerEntry';
 
 interface CharacterWindowProps {
   characterInteraction: CharacterInteraction | null;
@@ -102,24 +100,15 @@ const CharacterWindow: React.FC<CharacterWindowProps> = ({
               <CharacterConversation messages={characterInteraction.messages} />
             </Box>
             <Box>
-              <TextField
-                id="outlined-basic"
-                tabIndex={0}
-                variant="outlined"
+              <PlayerEntry
                 value={playerInput}
                 onChange={(e) => {
                   if (playerInput.length >= 120) return;
                   setPlayerInput(e.target.value);
                 }}
-                multiline
-                rows={2}
-                fullWidth
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendCharacterMessage(playerInput);
-                    setPlayerInput('');
-                  }
+                onSubmit={() => {
+                  sendCharacterMessage(playerInput);
+                  setPlayerInput('');
                 }}
                 // disabled={loading}
               />

@@ -12,4 +12,5 @@
   flex-direction: column;
   gap: 0.5rem;
   overflow: scroll;
+  scroll-behavior: smooth;
 }

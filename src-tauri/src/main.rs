@@ -60,7 +60,6 @@ fn main() -> Result<(), anyhow::Error> {
             tauri::async_runtime::spawn(async move {
                 loop {
                     if let Some(update) = updates_rx.recv().await {
-                        info!("Sending update to UI: {:?}", update);
                         if let Err(e) = app_handle.emit_all("updates", update) {
                             error!("Failed to emit update to UI:\n{:?}", e);
                         }
@@ -73,7 +72,6 @@ fn main() -> Result<(), anyhow::Error> {
             tauri::async_runtime::spawn(async move {
                 loop {
                     if let Some(update) = state_update_rx.recv().await {
-                        info!("Sending state update to UI: {:?}", update);
                         if let Err(e) = app_handle.emit_all("state", update) {
                             error!("Failed to emit update to UI:\n{:?}", e);
                         }
