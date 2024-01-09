@@ -4,12 +4,17 @@
 
 @layer base {
   body {
-    @apply text-sm font-roboto-slab text-gray-50 bg-blue-950 absolute top-0 left-0 bottom-0 right-0;
+    @apply text-sm font-overlock text-gray-50 bg-blue-950 absolute top-0 left-0 bottom-0 right-0;
   }
 
   #root {
     @apply w-full h-full relative;
   }
+}
+
+@font-face {
+  font-family: 'OverlockSC';
+  src: url('/fonts/OverlockSC-Regular.ttf') format('truetype');
 }
 
 @font-face {
@@ -35,4 +40,9 @@
 @font-face {
   font-family: 'Roboto Slab';
   src: url('/fonts/RobotoSlab-Variable_wght.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/Inter.ttf') format('truetype');
 }
