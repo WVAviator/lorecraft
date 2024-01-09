@@ -9,7 +9,6 @@ import { IoExitSharp } from 'react-icons/io5';
 import useTransitionNavigate from '../hooks/useTransitionNavigate';
 import BackgroundDiv from '../components/BackgroundDiv/BackgroundDiv';
 import NarrativeWindow from '../components/NarrativeWindow/NarrativeWindow';
-import { TextField } from '@mui/material';
 import React from 'react';
 import useGameState from '../hooks/useGameState';
 import CharacterWindow from '../components/CharacterWindow/CharacterWindow';
@@ -86,7 +85,7 @@ const GameScreen = () => {
               sendNarrativeMessage(playerInput);
               setPlayerInput('');
             }}
-            // disabled={loading}
+          // disabled={loading}
           />
         </FlexContainer>
       </SplitLayout>
