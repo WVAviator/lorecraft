@@ -30,14 +30,14 @@ impl Tool {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Function {
+struct Function {
     description: Option<String>,
     name: String,
     parameters: Option<FunctionParameters>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct FunctionParameters {
+struct FunctionParameters {
     #[serde(rename = "type")]
     type_: String,
     properties: HashMap<String, FunctionProperty>,
