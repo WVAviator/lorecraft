@@ -1,5 +1,6 @@
 use std::fmt::Display;
 
+#[allow(non_camel_case_types)]
 pub enum ChatModel {
     Gpt_4_1106_Preview,
     Gpt_4_Vision_Preview,
@@ -20,12 +21,12 @@ impl Display for ChatModel {
             ChatModel::Gpt_4_Vision_Preview => write!("{}", "gpt-4-vision-preview"),
             ChatModel::Gpt_4 => write!("{}", "gpt-4"),
             ChatModel::Gpt_4_32k => write!("{}", "gpt-4-32k"),
-            ChatModel::Gpt_4_0613 => todo!(),
-            ChatModel::Gpt_4_32k_0613 => todo!(),
-            ChatModel::Gpt_35_Turbo_1106 => todo!(),
-            ChatModel::Gpt_35_Turbo => todo!(),
-            ChatModel::Gpt_35_Turbo_16k => todo!(),
-            ChatModel::Gpt_35_Turbo_Instruct => todo!(),
+            ChatModel::Gpt_4_0613 => write!("{}", "gpt-4-0613"),
+            ChatModel::Gpt_4_32k_0613 => write!("{}", "gpt-4-32k-0613"),
+            ChatModel::Gpt_35_Turbo_1106 => write!("{}", "gpt-3.5-turbo-1106"),
+            ChatModel::Gpt_35_Turbo => write!("{}", "gpt-3.5-turbo"),
+            ChatModel::Gpt_35_Turbo_16k => write!("{}", "gpt-3.5-turbo-16k"),
+            ChatModel::Gpt_35_Turbo_Instruct => write!("{}", "gpt-3.5-turbo-instruct"),
         }
     }
 }

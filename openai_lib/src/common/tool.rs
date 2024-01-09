@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 use super::error::Error;
 
@@ -66,20 +67,19 @@ impl FunctionBuilder {
         }
     }
 
-    pub fn from_json(mut self, json: &str) -> Result<Self, Error::DeserializationFailure> {
-        self = serde_json
-            .from_str::<Function>(json)
-            .map_err(|e| Error::DeserializationFailure(e))?;
+    pub fn from_json(mut self, json: &str) -> Result<Self, Error> {
+        self =
+            serde_json::from_str::<Function>(json).map_err(|e| Error::DeserializationFailure(e))?;
 
         Ok(self)
     }
 
-    pub fn name(mut self, name: &str) -> self {
+    pub fn name(mut self, name: &str) -> Self {
         self.name = Some(name.to_string());
         self
     }
 
-    pub fn description(mut self, description: &str) -> self {
+    pub fn description(mut self, description: &str) -> Self {
         self.description = Some(description.to_string());
         self
     }
@@ -90,7 +90,7 @@ impl FunctionBuilder {
         description: &str,
         property_type: &str,
         required: bool,
-    ) -> self {
+    ) -> Self {
         if let None = self.parameters {
             self.parameters = Some(FunctionParameters {
                 type_: String::from("object"),
@@ -116,8 +116,10 @@ impl FunctionBuilder {
         self
     }
 
-    pub fn build(self) -> Result<Tool, Error::MissingRequiredProperty> {
-        let name = self.name.ok_or(Error::MissingRequiredProperty("name"))?;
+    pub fn build(self) -> Result<Tool, Error> {
+        let name = self
+            .name
+            .ok_or(Error::MissingRequiredProperty(String::from("name")))?;
 
         Ok(Tool {
             type_: String::from("function"),
