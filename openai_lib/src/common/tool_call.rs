@@ -1,22 +1,24 @@
-use serde::{Serialize, Deserialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ToolCall {
-    id: String,
+    pub id: String,
     #[serde(rename = "type")]
     type_: String,
-    function: Function,
+    function: FunctionOutput,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Function {
+struct FunctionOutput {
     name: String,
     arguments: String,
 }
 
 impl ToolCall {
-    pub fn extract_arguments<T = serde_json::Value>(&self) -> Result<T, serde::de::Error> 
-        where T: Deserialize {
+    pub fn get_name(&self) -> String {
+        self.function.name.clone()
+    }
+    pub fn extract_arguments<T: DeserializeOwned>(&self) -> Result<T, serde_json::Error> {
         serde_json::from_str::<T>(&self.function.arguments)
     }
 }
