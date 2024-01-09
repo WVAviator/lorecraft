@@ -29,7 +29,7 @@ const SplashLoadingScreen = () => {
 
       try {
         await Promise.all([setup, minWait]);
-        navigateWithTransition('/mainmenu');
+        // navigateWithTransition('/mainmenu');
       } catch (error) {
         console.error(error);
 
@@ -88,7 +88,7 @@ const SplashLoadingScreen = () => {
         ]}
       />
       <AlertDialog
-        open={fileSystemError}
+        open={true}
         title="File Error"
         message="Could not access your filesystem to save game files. Please verify your local app data directory exists and allows read and write permission for Lorecraft."
         actions={[
@@ -107,14 +107,11 @@ const SplashLoadingScreen = () => {
           },
         ]}
       />
-      <FlexContainer
-        alignItems="flex-end"
-        width="100%"
-        height="100%"
-        padding="0.5rem"
+      <div
+        className="flex items-end w-full h-full p-2"
       >
         <LoadingSpinner />
-      </FlexContainer>
+      </div>
     </BackgroundDiv>
   );
 };
