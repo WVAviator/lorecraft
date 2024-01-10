@@ -24,5 +24,11 @@ export default {
       },
     },
   },
+  safelist: [
+    'page-enter',
+    'page-enter-active',
+    'page-exit',
+    'page-exit-active',
+  ],
   plugins: [],
 };

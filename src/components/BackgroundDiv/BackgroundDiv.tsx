@@ -19,19 +19,10 @@ const BackgroundDiv: React.FC<BackgroundDivProps> = ({
   style,
   ...rest
 }) => {
-  const fadeClass = fade ? styles.fadeOut : styles.fadeIn;
-
   return (
-    <div
-      className={`${styles.container} ${onlyFadeImage ? '' : fadeClass}`}
-      {...rest}
-    >
+    <div className={`${styles.container}`} {...rest}>
       {image && (
-        <img
-          src={image}
-          alt={alt || ''}
-          className={`${styles.image} ${onlyFadeImage ? fadeClass : ''}`}
-        />
+        <img src={image} alt={alt || ''} className={`${styles.image}`} />
       )}
       {children}
     </div>

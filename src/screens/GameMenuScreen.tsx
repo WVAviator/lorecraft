@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import AbsoluteContainer from '../components/AbsoluteContainer/AbsoluteContainer';
 import BackgroundDiv from '../components/BackgroundDiv/BackgroundDiv';
 import GameMenu from '../components/GameMenu/GameMenu';
@@ -7,25 +8,23 @@ import MenuList from '../components/MenuList/MenuList';
 import MenuListItem from '../components/MenuListItem/MenuListItem';
 import useGameContext from '../hooks/useGameContext';
 import useProcessImage from '../hooks/useProcessImage';
-import useTransitionNavigate from '../hooks/useTransitionNavigate';
 
 const GameMenuScreen = () => {
   const { game, setGame } = useGameContext();
 
-  const { navigateWithTransition, isTransitioning } =
-    useTransitionNavigate(1000);
+  const navigate = useNavigate();
 
   const { src, alt } = useProcessImage(game?.cover_art);
 
   return (
-    <BackgroundDiv image={src} alt={alt} fade={isTransitioning}>
+    <BackgroundDiv image={src} alt={alt} fade={false}>
       <AbsoluteContainer top="3rem" left="3rem">
         <GameTitle>{game?.name || ''}</GameTitle>
       </AbsoluteContainer>
       <GameMenu>
         <GameMenuListItem
           onClick={() => {
-            navigateWithTransition('/narrative');
+            navigate('/narrative');
           }}
         >
           New Game
@@ -33,9 +32,8 @@ const GameMenuScreen = () => {
         <GameMenuListItem>Continue</GameMenuListItem>
         <GameMenuListItem
           onClick={() => {
-            navigateWithTransition('/mainmenu', () => {
-              setGame(null);
-            });
+            setTimeout(() => setGame(null), 500);
+            navigate('/mainmenu');
           }}
         >
           Back to Main Menu

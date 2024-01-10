@@ -6,17 +6,16 @@ import useGameContext from '../hooks/useGameContext';
 import { IoSettingsSharp } from 'react-icons/io5';
 import { IoMdSave } from 'react-icons/io';
 import { IoExitSharp } from 'react-icons/io5';
-import useTransitionNavigate from '../hooks/useTransitionNavigate';
 import BackgroundDiv from '../components/BackgroundDiv/BackgroundDiv';
 import NarrativeWindow from '../components/NarrativeWindow/NarrativeWindow';
 import React from 'react';
 import useGameState from '../hooks/useGameState';
 import CharacterWindow from '../components/CharacterWindow/CharacterWindow';
 import PlayerEntry from '../components/PlayerEntry/PlayerEntry';
+import { useNavigate } from 'react-router-dom';
 
 const GameScreen = () => {
-  const { navigateWithTransition, isTransitioning } =
-    useTransitionNavigate(1000);
+  const navigate = useNavigate();
   const { game } = useGameContext({
     redirect: '/mainmenu',
   });
@@ -24,12 +23,12 @@ const GameScreen = () => {
   const { gameState, sendNarrativeMessage } = useGameState();
 
   if (!gameState || !game) {
-    navigateWithTransition('/gamemenu');
+    navigate('/gamemenu');
     return null;
   }
 
   return (
-    <BackgroundDiv fade={isTransitioning}>
+    <BackgroundDiv fade={false}>
       <CharacterWindow
         characterInteraction={
           gameState.character_interaction?.closed
@@ -55,7 +54,7 @@ const GameScreen = () => {
                 icon: <IoExitSharp />,
                 tooltip: 'Quit Game',
                 onClick: () => {
-                  navigateWithTransition('/gamemenu');
+                  navigate('/gamemenu');
                 },
               },
               {
@@ -85,7 +84,7 @@ const GameScreen = () => {
               sendNarrativeMessage(playerInput);
               setPlayerInput('');
             }}
-          // disabled={loading}
+            // disabled={loading}
           />
         </FlexContainer>
       </SplitLayout>

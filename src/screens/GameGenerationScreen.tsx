@@ -7,19 +7,18 @@ import { LOADING_IMAGES } from '../data/LoadingImages';
 import FlexContainer from '../components/FlexContainer/FlexContainer';
 import LoadingSpinner from '../components/LoadingSpinner/LoadingSpinner';
 import useGameContext from '../hooks/useGameContext';
-import useTransitionNavigate from '../hooks/useTransitionNavigate';
 import {
   CreateNewGameRequest,
   CreateNewGameResponse,
 } from '../types/CreateNewGame';
+import { useNavigate } from 'react-router-dom';
 
 interface GameGenerationScreenProps {}
 
 const GameGenerationScreen: React.FC<GameGenerationScreenProps> = () => {
   const { setGame } = useGameContext();
   const { updates } = useUpdates();
-  const { navigateWithTransition, isTransitioning } =
-    useTransitionNavigate(1000);
+  const navigate = useNavigate();
 
   React.useEffect(() => {
     const createGame = async () => {
@@ -31,17 +30,17 @@ const GameGenerationScreen: React.FC<GameGenerationScreenProps> = () => {
       })) as CreateNewGameResponse;
       if (response.success === false || !response.game) {
         console.error('Failed to generate game.');
-        navigateWithTransition('/mainmenu');
+        navigate('/mainmenu');
         return;
       }
       setGame(response.game);
-      navigateWithTransition('/gamemenu');
+      navigate('/gamemenu');
     };
     createGame();
   }, []);
 
   return (
-    <CycledBackground images={LOADING_IMAGES} play={!isTransitioning}>
+    <CycledBackground images={LOADING_IMAGES} play={!false}>
       <FlexContainer
         alignItems="flex-end"
         width="100%"
