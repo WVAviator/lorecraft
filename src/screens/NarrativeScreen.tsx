@@ -52,14 +52,18 @@ const NarrativeScreen = () => {
   let { narrative } = currentPage;
 
   return (
-    <BackgroundDiv image={src} alt={alt} onClick={handleClick} fade={fade}>
-      <AbsoluteContainer bottom="0" left="0" right="0">
-        <p
-          style={{ backgroundColor: 'black', color: 'white', padding: '1rem' }}
-        >
-          {narrative}
-        </p>
-      </AbsoluteContainer>
+    <BackgroundDiv
+      image={src}
+      alt={alt}
+      onClick={handleClick}
+      fade={fade}
+      randomPan
+    >
+      <div className="absolute bottom-[10%] left-[10%] right-0">
+        <div className="rounded-l-md bg-black bg-opacity-80 px-4 py-6">
+          <p>{narrative}</p>
+        </div>
+      </div>
     </BackgroundDiv>
   );
 };

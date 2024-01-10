@@ -26,6 +26,12 @@ const useGameState = () => {
   }, [setGameState]);
 
   const startGame = async (gameId: string) => {
+    if (gameState) {
+      console.warn(
+        'Attempted to start a new game, despite a game already loaded.'
+      );
+      return;
+    }
     setLoading(true);
     try {
       const { game_state } = (await invoke('start_game', {

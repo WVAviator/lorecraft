@@ -1,4 +1,5 @@
 import React from 'react';
+import useRandomPan from '../../hooks/useRandomPan';
 
 interface BackgroundDivProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
@@ -7,6 +8,7 @@ interface BackgroundDivProps extends React.HTMLAttributes<HTMLDivElement> {
   fade?: boolean;
   fadeTime?: number;
   onlyFadeImage?: boolean;
+  randomPan?: boolean;
 }
 
 const BackgroundDiv: React.FC<BackgroundDivProps> = ({
@@ -15,22 +17,25 @@ const BackgroundDiv: React.FC<BackgroundDivProps> = ({
   alt,
   fade = false,
   onlyFadeImage = false,
-  style,
+  randomPan = false,
   ...rest
 }) => {
+  const randomPanStyle = useRandomPan(randomPan, 10000, [image]);
   return (
-    <div
-      className={`relative h-full w-full bg-black transition-opacity duration-300 ${
-        fade ? 'opacity-0' : 'opacity-100'
-      }`}
-      {...rest}
-    >
+    <div className={`relative h-full w-full bg-black `} {...rest}>
       {image && (
-        <img
-          src={image}
-          alt={alt || ''}
-          className="absolute left-0 top-0 h-full w-full object-cover"
-        />
+        <div
+          className="absolute bottom-0 left-0 right-0 top-0"
+          style={{ ...randomPanStyle }}
+        >
+          <img
+            src={image}
+            alt={alt || ''}
+            className={`  h-full w-full object-cover transition-opacity  duration-300 ${
+              fade ? 'opacity-0' : 'opacity-100'
+            }`}
+          />
+        </div>
       )}
       {children}
     </div>

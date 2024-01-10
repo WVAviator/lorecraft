@@ -21,7 +21,7 @@ const MenuListItem: React.FC<MenuListItemProps> = ({
   return (
     <a className="group">
       <li
-        className="w-full text-center flex flex-col items-center cursor-pointer"
+        className="flex w-full cursor-pointer flex-col items-center text-center"
         onClick={() => {
           onClick && onClick();
         }}
@@ -34,11 +34,11 @@ const MenuListItem: React.FC<MenuListItemProps> = ({
       >
         <p
           ref={textRef}
-          className="font-dancing-script text-3xl text-gray-800 drop-shadow-sm group-hover:drop-shadow-md group-focus:drop-shadow-md"
+          className="w-full font-dancing-script text-3xl text-gray-800 drop-shadow-sm group-hover:drop-shadow-md group-focus:drop-shadow-md"
         >
           {children}
         </p>
-        <div className="-mt-[0.35rem] overflow-hidden flex justify-center items-center ">
+        <div className="-mt-[0.35rem] flex items-center justify-center overflow-hidden ">
           <Underline visible={selected} />
         </div>
       </li>
