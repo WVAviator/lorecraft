@@ -66,7 +66,7 @@ const MainMenuScreen = () => {
 
   return (
     <BackgroundDiv image={background} alt={BG_ALT_DESC} fade={isTransitioning}>
-      <AbsoluteContainer left="32%" right="32%" top="36%" bottom="5%">
+      <div className="absolute left-[32%] right-[32%] top-[36%] bottom-[5%]">
         <MenuList>
           {menuOptions.map((option, index) => (
             <MenuListItem
@@ -79,7 +79,7 @@ const MainMenuScreen = () => {
             </MenuListItem>
           ))}
         </MenuList>
-      </AbsoluteContainer>
+      </div>
     </BackgroundDiv>
   );
 };

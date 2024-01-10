@@ -1,6 +1,5 @@
 import React from 'react';
 import Underline from '../Underline/Underline';
-import styles from './MenuListItem.module.css';
 
 interface MenuListItemProps {
   children: React.ReactNode;
@@ -20,32 +19,30 @@ const MenuListItem: React.FC<MenuListItemProps> = ({
   const textRef = React.useRef<HTMLParagraphElement>(null);
 
   return (
-    <li
-      className={styles.listitem}
-      onClick={() => {
-        onClick && onClick();
-      }}
-      onMouseEnter={() => {
-        onMouseEnter && onMouseEnter();
-      }}
-      onMouseLeave={() => {
-        onMouseLeave && onMouseLeave();
-      }}
-    >
-      <p ref={textRef} className={styles.listitemtext}>
-        {children}
-      </p>
-      <div
-        style={{
-          width: textRef.current
-            ? `${textRef.current?.offsetWidth + 16}px`
-            : 'auto',
+    <a className="group">
+      <li
+        className="w-full text-center flex flex-col items-center cursor-pointer"
+        onClick={() => {
+          onClick && onClick();
         }}
-        className={styles.underline}
+        onMouseEnter={() => {
+          onMouseEnter && onMouseEnter();
+        }}
+        onMouseLeave={() => {
+          onMouseLeave && onMouseLeave();
+        }}
       >
-        <Underline visible={selected} />
-      </div>
-    </li>
+        <p
+          ref={textRef}
+          className="font-dancing-script text-3xl text-gray-800 drop-shadow-sm group-hover:drop-shadow-md group-focus:drop-shadow-md"
+        >
+          {children}
+        </p>
+        <div className="-mt-[0.35rem] overflow-hidden flex justify-center items-center ">
+          <Underline visible={selected} />
+        </div>
+      </li>
+    </a>
   );
 };
 

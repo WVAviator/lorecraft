@@ -1,5 +1,3 @@
-import styles from './MenuList.module.css';
-
 interface MenuListProps {
   children: React.ReactNode;
   gap?: string;
@@ -12,7 +10,10 @@ const MenuList: React.FC<MenuListProps> = ({
   alignItems = 'center',
 }) => {
   return (
-    <ul className={styles.list} style={{ gap, alignItems }}>
+    <ul
+      className="list-none flex flex-col items-center px-4 w-full"
+      style={{ gap, alignItems }}
+    >
       {children}
     </ul>
   );
