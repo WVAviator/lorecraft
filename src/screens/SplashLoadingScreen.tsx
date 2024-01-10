@@ -8,6 +8,7 @@ import { invoke } from '@tauri-apps/api';
 import { isSetupResponse } from '../types/Setup';
 import ApiKeyEntry from '../components/ApiKeyEntry/ApiKeyEntry';
 import AlertDialog from '../components/AlertDialog/AlertDialog';
+import { exit } from '@tauri-apps/api/process';
 
 const BG_ALT_DESC =
   'A mystical leatherbound book embedded with a glowing blue gem surrounded by intricate patterns rests partially buried in sand in a desert valley surrounding by sharp mountain peaks with a glowing blue and pink aurora in the night sky';
@@ -29,7 +30,7 @@ const SplashLoadingScreen = () => {
 
       try {
         await Promise.all([setup, minWait]);
-        // navigateWithTransition('/mainmenu');
+        navigateWithTransition('/mainmenu');
       } catch (error) {
         console.error(error);
 
@@ -74,8 +75,8 @@ const SplashLoadingScreen = () => {
         actions={[
           {
             title: 'Quit',
-            onSelect: () => {
-              window.close();
+            onSelect: async () => {
+              await exit();
             },
           },
           {
@@ -88,14 +89,14 @@ const SplashLoadingScreen = () => {
         ]}
       />
       <AlertDialog
-        open={true}
+        open={fileSystemError}
         title="File Error"
         message="Could not access your filesystem to save game files. Please verify your local app data directory exists and allows read and write permission for Lorecraft."
         actions={[
           {
             title: 'Quit',
-            onSelect: () => {
-              window.close();
+            onSelect: async () => {
+              await exit();
             },
           },
           {
@@ -107,9 +108,7 @@ const SplashLoadingScreen = () => {
           },
         ]}
       />
-      <div
-        className="flex items-end w-full h-full p-2"
-      >
+      <div className="flex items-end w-full h-full p-2">
         <LoadingSpinner />
       </div>
     </BackgroundDiv>
