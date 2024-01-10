@@ -11,6 +11,28 @@
     @apply w-full h-full relative;
   }
 
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+
+  .backface-hidden {
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+
+  .shadow-inner-lg {
+      box-shadow: rgba(50, 50, 93, 0.25) 0px -13px 27px -5px inset,
+    rgba(0, 0, 0, 0.3) 0px -8px 16px -8px;
+  }
+
+  .rotate-y-180 {
+    transform: rotateY(180deg);
+  }
+
   .page-enter {
     opacity: 0;
   }

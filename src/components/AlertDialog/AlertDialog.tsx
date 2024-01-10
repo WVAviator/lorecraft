@@ -34,35 +34,15 @@ const AlertDialog: React.FC<AlertDialogProps> = ({
 
   return (
     <Modal open={open} setOpen={setOpen}>
-      <h2 className="text-xl mb-6">{title}</h2>
+     <h2 className="text-xl mb-6">{title}</h2>
       <p className="text-md">{message}</p>
       <div className="absolute bottom-4 right-4 flex justify-center items-center gap-4">
         {actions.map((action) => (
           <PromptButton>{action.title}</PromptButton>
         ))}
-      </div>
+      </div >
     </Modal>
   );
 };
-//   {/* <Dialog */ }
-//   {/*   open={open} */ }
-// {/*   onClose={handleClose} */ }
-// {/*   aria-labelledby="alert-dialog-title" */ }
-// {/*   aria-describedby="alert-dialog-description" */ }
-// {/* > */ }
-// {/*   <DialogTitle id="alert-dialog-title">{title}</DialogTitle> */ }
-// {/*   <DialogContent> */ }
-// {/*     <DialogContentText id="alert-dialog-description"> */ }
-// {/*       {message} */ }
-// {/*     </DialogContentText> */ }
-// {/*   </DialogContent> */ }
-// {/*   <DialogActions> */ }
-// {/*     {actions.map((action) => ( */ }
-// {/*       <Button onClick={() => action.onSelect && action.onSelect()}> */ }
-// {/*         {action.title} */ }
-// {/*       </Button> */ }
-// {/*     ))} */ }
-// {/*   </DialogActions> */ }
-// {/* </Dialog> */ }
 
 export default AlertDialog;

@@ -22,6 +22,9 @@ export default {
         inter: ['Inter, serif'],
         overlock: ['OverlockSC', 'serif'],
       },
+      backgroundImage: {
+        'stone': "url('/images/common/stone_pattern.png')"
+      }
     },
   },
   safelist: [
