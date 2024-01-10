@@ -33,6 +33,9 @@
     transform: rotateY(180deg);
   }
 
+  .debug {
+    border: 1px solid red;
+  }
   .page-enter {
     opacity: 0;
   }

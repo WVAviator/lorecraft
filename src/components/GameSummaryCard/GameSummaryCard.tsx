@@ -1,6 +1,5 @@
 import { convertFileSrc } from '@tauri-apps/api/tauri';
 import { Game } from '../../types/Game';
-import styles from './GameSummaryCard.module.css';
 import cardBack from '/images/common/square_card_back.png';
 import React from 'react';
 
@@ -17,6 +16,18 @@ const GameSummaryCard: React.FC<GameSummaryCardProps> = ({
 }) => {
   const yRotation = faceDown ? 180 : 0;
   const xRotation = faceDown ? 1 : -1;
+
+  React.useEffect(() => {
+    const enterListener = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && faceDown === false) {
+        onClick();
+      }
+    };
+    window.addEventListener('keydown', enterListener);
+    return () => {
+      window.removeEventListener('keydown', enterListener);
+    };
+  }, [onClick, faceDown]);
 
   return (
     <div className="flex h-full w-full items-center justify-center">

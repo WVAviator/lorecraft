@@ -20,9 +20,18 @@ const BackgroundDiv: React.FC<BackgroundDivProps> = ({
   ...rest
 }) => {
   return (
-    <div className={`${styles.container}`} {...rest}>
+    <div
+      className={`relative h-full w-full bg-black transition-opacity duration-300 ${
+        fade ? 'opacity-0' : 'opacity-100'
+      }`}
+      {...rest}
+    >
       {image && (
-        <img src={image} alt={alt || ''} className={`${styles.image}`} />
+        <img
+          src={image}
+          alt={alt || ''}
+          className="absolute left-0 top-0 h-full w-full object-cover"
+        />
       )}
       {children}
     </div>

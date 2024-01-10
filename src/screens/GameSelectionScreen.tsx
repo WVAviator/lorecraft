@@ -6,6 +6,7 @@ import useGameContext from '../hooks/useGameContext';
 import useSavedGames from '../hooks/useSavedGames';
 import { Game } from '../types/Game';
 import background from '/images/menu/stone_hall.png';
+import { TfiBackLeft } from 'react-icons/tfi';
 
 const BACKGROUND_ALT_DESC =
   'a stone wall with intricate arcane patterns carved into it';
@@ -38,6 +39,15 @@ const GameSelectionScreen = () => {
           );
         })}
       </ContainerCarousel>
+      <a
+        onClick={() => navigate('/mainmenu')}
+        className="absolute bottom-10 left-[50%] translate-x-[-50%] cursor-pointer hover:text-gray-200"
+      >
+        <span className="flex items-center gap-4">
+          <h2 className="text-lg drop-shadow-lg">Return to Main Menu</h2>
+          <TfiBackLeft />
+        </span>
+      </a>
     </BackgroundDiv>
   );
 };
