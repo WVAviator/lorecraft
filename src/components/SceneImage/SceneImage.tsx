@@ -1,6 +1,5 @@
 import useProcessImage from '../../hooks/useProcessImage';
 import { Scene } from '../../types/Game';
-import styles from './SceneImage.module.css';
 
 interface SceneImageProps {
   scene: Scene | undefined;
@@ -10,15 +9,21 @@ const SceneImage: React.FC<SceneImageProps> = ({ scene }) => {
   if (!scene) return null;
   const { src, alt } = useProcessImage(scene.image);
   return (
-    <div className={styles.container}>
-      <div className={styles.title_container}>
-        <h2 className={styles.title}>{scene.name}</h2>
+    <div className="flex h-[100vh] flex-col bg-blue-950 p-2">
+      <div className="h-12 pb-2">
+        <h2 className="flex-shrink-0 flex-grow-0 text-xl">{scene.name}</h2>
       </div>
-      <div className={styles.image_container}>
-        <img src={src} alt={alt} className={styles.image} />
+      <div className="w-full flex-1 overflow-hidden rounded-md shadow-md">
+        <img
+          src={src}
+          alt={alt}
+          className="h-full w-full object-cover [object-position:50%_85%]"
+        />
       </div>
-      <div className={styles.narrative_container}>
-        <p className={styles.narrative}>{scene.narrative}</p>
+      <div className="max-h-[30%] overflow-scroll pt-2">
+        <p className="flex-shrink-0 flex-grow-0 text-[12px]">
+          {scene.narrative}
+        </p>
       </div>
     </div>
   );

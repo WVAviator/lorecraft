@@ -36,6 +36,7 @@
   .debug {
     border: 1px solid red;
   }
+
   .page-enter {
     opacity: 0;
   }

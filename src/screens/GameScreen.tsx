@@ -36,18 +36,13 @@ const GameScreen = () => {
             : gameState.character_interaction
         }
       />
-      <SplitLayout gridTemplateColumns="60% 40%">
+      <div className="grid grid-cols-[60%_40%]">
         <SceneImage
           scene={game.scenes.find(
             (scene) => scene.id === gameState.current_scene_id
           )}
         />
-        <FlexContainer
-          flexDirection="column"
-          padding="0.5rem"
-          height="100vh"
-          gap="0.5rem"
-        >
+        <div className="flex h-full flex-col gap-2 p-2">
           <InGameMenu
             menuItems={[
               {
@@ -86,8 +81,8 @@ const GameScreen = () => {
             }}
             // disabled={loading}
           />
-        </FlexContainer>
-      </SplitLayout>
+        </div>
+      </div>
     </BackgroundDiv>
   );
 };
