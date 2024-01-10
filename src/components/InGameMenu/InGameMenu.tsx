@@ -17,6 +17,7 @@ const InGameMenu: React.FC<InGameMenuProps> = ({ menuItems }) => {
       {menuItems.map((menuItem, i) => {
         return (
           <div
+            key={menuItem.tooltip}
             className="flex h-8 w-8 cursor-pointer items-center justify-center"
             onMouseEnter={() => setHoverIndex(i)}
             onMouseLeave={() => setHoverIndex(-1)}

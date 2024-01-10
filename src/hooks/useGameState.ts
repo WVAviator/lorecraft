@@ -11,6 +11,7 @@ const useGameState = () => {
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
+    console.log('Initializing event listener for game state.');
     let unlisten: UnlistenFn;
     const subscribe = async () => {
       unlisten = await appWindow.listen('state', (event: Event<GameState>) => {
@@ -32,6 +33,9 @@ const useGameState = () => {
       );
       return;
     }
+
+    console.log('Starting a new game with ID: ', gameId);
+
     setLoading(true);
     try {
       const { game_state } = (await invoke('start_game', {
@@ -63,13 +67,6 @@ const useGameState = () => {
 
     console.log(`Player entered narrative message "${message}"`);
 
-    // Temporarily set the state with new message for immediate feedback
-    setGameState((state) => {
-      let newState = structuredClone(state);
-      newState?.messages.push(`> ${message}`);
-      return newState;
-    });
-
     try {
       const { game_state } = (await invoke('game_prompt', {
         request: { prompt: message },
@@ -98,16 +95,6 @@ const useGameState = () => {
 
     console.log(`Player entered character message "${message}"`);
 
-    // Temporarily set the state with new message for immediate feedback
-    setGameState((state) => {
-      let newState = structuredClone(state);
-      newState?.character_interaction?.messages.push({
-        text: `Player: ${message}`,
-        is_dialog: true,
-      });
-      return newState;
-    });
-
     try {
       const { game_state } = (await invoke('character_prompt', {
         request: { message },
@@ -130,6 +117,8 @@ const useGameState = () => {
       );
     }
     setLoading(true);
+
+    console.log(`Player entered character trade response "${accept}"`);
 
     try {
       const { game_state } = (await invoke('character_prompt', {
@@ -154,13 +143,7 @@ const useGameState = () => {
     }
     setLoading(true);
 
-    setGameState((state) => {
-      let newState = structuredClone(state);
-      if (newState) {
-        newState.character_interaction = null;
-      }
-      return newState;
-    });
+    console.log('Player ended character conversation.');
 
     try {
       const { game_state } = (await invoke('character_prompt', {
@@ -177,6 +160,24 @@ const useGameState = () => {
     }
   };
 
+  const endGame = async () => {
+    if (!gameState) {
+      console.error("Attempted to end a game session that doesn't exist.");
+    }
+    setLoading(true);
+
+    console.log('Player ended the game session.');
+
+    try {
+      // await invoke('end_game'); TODO: Implement this is Rust
+      setGameState(null);
+      setLoading(false);
+    } catch (error) {
+      console.error('Failed to end game: ', error);
+      navigate('/mainmenu');
+    }
+  };
+
   return {
     gameState,
     startGame,
@@ -185,6 +186,7 @@ const useGameState = () => {
     sendCharacterMessage,
     characterTradeResponse,
     endCharacterConversation,
+    endGame,
   };
 };
 

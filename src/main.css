@@ -59,6 +59,11 @@
 }
 
 @font-face {
+  font-family: 'Overlock';
+  src: url('/fonts/Overlock-Regular.ttf') format('truetype');
+}
+
+@font-face {
   font-family: 'Apple Chancery';
   src: url('/fonts/Apple\ Chancery\ Regular.ttf') format('truetype');
 }

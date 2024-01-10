@@ -34,13 +34,13 @@ const AlertDialog: React.FC<AlertDialogProps> = ({
 
   return (
     <Modal open={open} setOpen={setOpen}>
-     <h2 className="text-xl mb-6">{title}</h2>
+      <h2 className="mb-6 text-xl">{title}</h2>
       <p className="text-md">{message}</p>
-      <div className="absolute bottom-4 right-4 flex justify-center items-center gap-4">
+      <div className="absolute bottom-4 right-4 flex items-center justify-center gap-4">
         {actions.map((action) => (
-          <PromptButton>{action.title}</PromptButton>
+          <PromptButton key={action.title}>{action.title}</PromptButton>
         ))}
-      </div >
+      </div>
     </Modal>
   );
 };

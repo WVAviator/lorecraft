@@ -13,6 +13,7 @@ import useGameState from '../hooks/useGameState';
 import CharacterWindow from '../components/CharacterWindow/CharacterWindow';
 import PlayerEntry from '../components/PlayerEntry/PlayerEntry';
 import { useNavigate } from 'react-router-dom';
+import TextArea from '../components/TextArea/TextArea';
 
 const GameScreen = () => {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ const GameScreen = () => {
     redirect: '/mainmenu',
   });
   const [playerInput, setPlayerInput] = React.useState<string>('');
-  const { gameState, sendNarrativeMessage } = useGameState();
+  const { gameState, sendNarrativeMessage, endGame } = useGameState();
 
   if (!gameState || !game) {
     navigate('/gamemenu');
@@ -36,7 +37,7 @@ const GameScreen = () => {
             : gameState.character_interaction
         }
       />
-      <div className="grid grid-cols-[60%_40%]">
+      <div className="grid grid-cols-[60%_40%] bg-blue-950">
         <SceneImage
           scene={game.scenes.find(
             (scene) => scene.id === gameState.current_scene_id
@@ -49,6 +50,7 @@ const GameScreen = () => {
                 icon: <IoExitSharp />,
                 tooltip: 'Quit Game',
                 onClick: () => {
+                  setTimeout(() => endGame(), 0);
                   navigate('/gamemenu');
                 },
               },
@@ -79,6 +81,8 @@ const GameScreen = () => {
               sendNarrativeMessage(playerInput);
               setPlayerInput('');
             }}
+            placeholder="What do you want to do?"
+            rows={2}
             // disabled={loading}
           />
         </div>

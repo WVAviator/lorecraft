@@ -1,42 +1,40 @@
 import { TextField } from '@mui/material';
 import React from 'react';
+import TextArea from '../TextArea/TextArea';
 
-interface PlayerEntryProps {
-  value: string;
-  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+interface PlayerEntryProps
+  extends Omit<
+    React.DetailedHTMLProps<
+      React.TextareaHTMLAttributes<HTMLTextAreaElement>,
+      HTMLTextAreaElement
+    >,
+    'ref'
+  > {
   onSubmit?: () => void;
-  disabled?: boolean;
 }
 
 const PlayerEntry: React.FC<PlayerEntryProps> = ({
-  onChange,
-  value,
   onSubmit = () => {},
-  disabled = false,
+  onKeyDown = () => {},
+  ...rest
 }) => {
-  const inputRef = React.useRef<HTMLInputElement>();
+  const inputRef = React.useRef<HTMLTextAreaElement>(null);
 
   React.useEffect(() => {
     inputRef.current?.focus();
   }, []);
 
   return (
-    <TextField
-      id="outlined-basic"
-      inputRef={inputRef}
-      variant="outlined"
-      value={value}
-      onChange={onChange}
-      multiline
-      rows={2}
-      fullWidth
+    <TextArea
+      ref={inputRef}
       onKeyDown={(e) => {
+        if (onKeyDown) onKeyDown(e);
         if (e.key === 'Enter' && !e.shiftKey) {
           e.preventDefault();
           onSubmit();
         }
       }}
-      disabled={disabled}
+      {...rest}
     />
   );
 };

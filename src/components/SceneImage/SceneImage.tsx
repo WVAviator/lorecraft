@@ -11,7 +11,9 @@ const SceneImage: React.FC<SceneImageProps> = ({ scene }) => {
   return (
     <div className="flex h-[100vh] flex-col bg-blue-950 p-2">
       <div className="h-12 pb-2">
-        <h2 className="flex-shrink-0 flex-grow-0 text-xl">{scene.name}</h2>
+        <h2 className="flex-shrink-0 flex-grow-0 font-overlock-sc text-xl">
+          {scene.name}
+        </h2>
       </div>
       <div className="w-full flex-1 overflow-hidden rounded-md shadow-md">
         <img
@@ -21,7 +23,7 @@ const SceneImage: React.FC<SceneImageProps> = ({ scene }) => {
         />
       </div>
       <div className="max-h-[30%] overflow-scroll pt-2">
-        <p className="flex-shrink-0 flex-grow-0 text-[12px]">
+        <p className="flex-shrink-0 flex-grow-0 text-[14px]">
           {scene.narrative}
         </p>
       </div>

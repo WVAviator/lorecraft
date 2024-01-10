@@ -23,7 +23,7 @@ const theme = createTheme({
 
 export const routes = [
   {
-    path: '/splash',
+    path: '/',
     element: <SplashLoadingScreen />,
     nodeRef: createRef<HTMLDivElement>(),
   },

@@ -8,7 +8,6 @@ import {
   DialogTitle,
   IconButton,
   LinearProgress,
-  TextField,
 } from '@mui/material';
 import useProcessImage from '../../hooks/useProcessImage';
 import useGameContext from '../../hooks/useGameContext';
@@ -18,6 +17,7 @@ import React from 'react';
 import useGameState from '../../hooks/useGameState';
 import { IoClose } from 'react-icons/io5';
 import PlayerEntry from '../PlayerEntry/PlayerEntry';
+import Modal from '../Modal/Modal';
 
 interface CharacterWindowProps {
   characterInteraction: CharacterInteraction | null;
@@ -75,24 +75,18 @@ const CharacterWindow: React.FC<CharacterWindowProps> = ({
         </DialogActions>
         {loading && <LinearProgress />}
       </Dialog>
-      <Dialog open={true} fullWidth maxWidth={'md'}>
-        <IconButton
-          aria-label="close"
-          onClick={() => {
+      <Modal
+        open={true}
+        setOpen={(open: boolean) => {
+          if (!open) {
             endCharacterConversation();
-          }}
-          sx={{
-            position: 'absolute',
-            right: 8,
-            top: 8,
-            color: (theme) => theme.palette.grey[500],
-          }}
-        >
-          <IoClose />
-        </IconButton>
-        <Box display={'grid'} gridTemplateColumns={'1fr 1fr'}>
+          }
+        }}
+        clickOut
+      >
+        <div className="grid grid-cols-2 gap-2">
           <div>
-            <h3>{character.name}</h3>
+            <h3 className="font-overlock-sc text-lg">{character.name}</h3>
             <img src={src} alt={alt} className={styles.image} />
           </div>
           <Box display={'flex'} flexDirection={'column'}>
@@ -114,8 +108,8 @@ const CharacterWindow: React.FC<CharacterWindowProps> = ({
               />
             </Box>
           </Box>
-        </Box>
-      </Dialog>
+        </div>
+      </Modal>
     </>
   );
 };

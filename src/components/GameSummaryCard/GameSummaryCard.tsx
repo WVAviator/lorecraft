@@ -51,7 +51,7 @@ const GameSummaryCard: React.FC<GameSummaryCardProps> = ({
             />
             <div className="shadow-inner-lg [*]:pointer-events-none [*]:select-none absolute bottom-0 left-0 w-full bg-stone text-left text-[14px] drop-shadow-sm before:absolute before:bottom-0 before:left-0 before:right-0 before:top-0 before:bg-black before:bg-opacity-25">
               <div className="relative h-full w-full p-3">
-                <h2 className="text-lg">{game.name}</h2>
+                <h2 className="font-overlock-sc text-lg">{game.name}</h2>
                 <p>{game.summary.description}</p>
               </div>
             </div>

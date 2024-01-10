@@ -20,7 +20,8 @@ export default {
         'apple-chancery': ['Apple Chancery, cursive'],
         'roboto-slab': ['Roboto Slab, serif'],
         inter: ['Inter, serif'],
-        overlock: ['OverlockSC', 'serif'],
+        'overlock-sc': ['OverlockSC', 'serif'],
+        overlock: ['Overlock', 'serif']
       },
       backgroundImage: {
         'stone': "url('/images/common/stone_pattern.png')"
