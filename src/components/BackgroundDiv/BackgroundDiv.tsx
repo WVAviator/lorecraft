@@ -1,5 +1,4 @@
 import React from 'react';
-import styles from './BackgroundDiv.module.css';
 
 interface BackgroundDivProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
