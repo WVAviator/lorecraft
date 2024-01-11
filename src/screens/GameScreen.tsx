@@ -1,4 +1,5 @@
 import InGameMenu from '../components/InGameMenu/InGameMenu';
+import { BsBackpack } from 'react-icons/bs';
 import SceneImage from '../components/SceneImage/SceneImage';
 import useGameContext from '../hooks/useGameContext';
 import { IoSettingsSharp } from 'react-icons/io5';
@@ -12,6 +13,7 @@ import CharacterWindow from '../components/CharacterWindow/CharacterWindow';
 import PlayerEntry from '../components/PlayerEntry/PlayerEntry';
 import { useNavigate } from 'react-router-dom';
 import SlideoutPanel from '../components/SlideoutPanel/SlideoutPanel';
+import InventoryList from '../components/InventoryList/InventoryList';
 
 const GameScreen = () => {
   const navigate = useNavigate();
@@ -35,7 +37,8 @@ const GameScreen = () => {
             : gameState.character_interaction
         }
       />
-      <div className="grid grid-cols-[60%_40%] bg-blue-950">
+      <div className="grid grid-cols-[2rem_1fr_35%] bg-blue-950">
+        <div></div>
         <SceneImage
           scene={game.scenes.find(
             (scene) => scene.id === gameState.current_scene_id
@@ -85,7 +88,9 @@ const GameScreen = () => {
           />
         </div>
       </div>
-      <SlideoutPanel>Inventory List</SlideoutPanel>
+      <SlideoutPanel tabContentClosed={<BsBackpack />}>
+        <InventoryList inventory={gameState.inventory} />
+      </SlideoutPanel>
     </BackgroundDiv>
   );
 };

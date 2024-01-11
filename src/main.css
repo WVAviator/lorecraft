@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply text-sm font-overlock text-gray-50 bg-black absolute top-0 left-0 bottom-0 right-0;
+    @apply overflow-hidden text-sm font-overlock text-gray-50 bg-black absolute top-0 left-0 bottom-0 right-0;
   }
 
   #root {
@@ -22,6 +22,16 @@
   .backface-hidden {
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+      display: none;
+  }
+
+  .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+        
   }
 
   .shadow-inner-lg {
