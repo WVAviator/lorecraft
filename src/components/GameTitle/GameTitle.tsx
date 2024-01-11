@@ -11,7 +11,7 @@ const GameTitle: React.FC<GameTitleProps> = ({ children }) => {
   }, []);
   return (
     <h1
-      className={`font-almendra text-3xl drop-shadow-md ${
+      className={`font-overlock-sc text-3xl drop-shadow-md ${
         load ? '-translate-x-6 opacity-0' : 'translate-x-0 opacity-100'
       } transition-all duration-1000`}
     >

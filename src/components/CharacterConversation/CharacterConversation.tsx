@@ -1,5 +1,4 @@
 import React from 'react';
-import styles from './CharacterConversation.module.css';
 
 interface CharacterConversationProps {
   messages: CharacterMessage[];
