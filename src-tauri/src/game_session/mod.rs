@@ -1,27 +1,30 @@
 pub mod game_session_error;
 
-use anyhow::{anyhow, Context};
+use std::sync::Arc;
+
+use anyhow::anyhow;
 use log::{error, info};
-use serde::{Deserialize, Serialize};
+use tokio::sync::{mpsc::Sender, Mutex};
 
 use crate::{
-    file_manager::{self, FileManager},
+    file_manager::FileManager,
     game::Game,
-    game_session::game_session_error::GameSessionError,
+    game_state::GameState,
     openai_client::{
-        assisstant_api::assisstant_create_request::AssisstantCreateRequest,
-        chat_completion::chat_completion_model::ChatCompletionModel, OpenAIClient,
+        assistant_create::assistant_create_request::AssistantCreateRequest,
+        assistant_tool::{function::Function, AssistantTool},
+        chat_completion::chat_completion_model::ChatCompletionModel,
+        OpenAIClient,
     },
     prompt_builder::PromptBuilder,
-    utils::random::Random,
+    session_context::{session_request::SessionRequest, SessionContext},
 };
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug)]
 pub struct GameSession {
-    pub id: String,
     pub game: Game,
-    pub narrator_assisstant_id: String,
-    pub thread_id: String,
+    pub game_state: GameState,
+    session_context: SessionContext,
 }
 
 impl GameSession {
@@ -29,14 +32,10 @@ impl GameSession {
         game_id: String,
         openai_client: &OpenAIClient,
         file_manager: &FileManager,
+        state_update_tx: Arc<Mutex<Sender<GameState>>>,
     ) -> Result<Self, anyhow::Error> {
         info!("Starting new game session for game id {}.", &game_id);
-        let filepath = format!("{}/game.json", game_id);
-        let game_json = file_manager
-            .read_from_file(&filepath)
-            .with_context(|| format!("Unable to read from file at '{}'.", &filepath))?;
-        let game = serde_json::from_str::<Game>(&game_json)
-            .context("Unable to parse game from json file.")?;
+        let game = Game::load(&game_id, file_manager)?;
 
         let summary_text = format!("Game Summary:\n{}", &game.summary.summary);
         let scene_list_text = format!(
@@ -53,46 +52,97 @@ impl GameSession {
             .add_plain_text(&scene_list_text)
             .build();
 
-        let assisstant_response = openai_client
-            .create_assisstant(AssisstantCreateRequest::new(
+        let tools = vec![
+            AssistantTool::new_function(Function::from_file(
+                "./prompts/narrator/add_item_function.json",
+            )?),
+            AssistantTool::new_function(Function::from_file(
+                "./prompts/narrator/remove_item_function.json",
+            )?),
+            AssistantTool::new_function(Function::from_file(
+                "./prompts/narrator/new_scene_function.json",
+            )?),
+            AssistantTool::new_function(Function::from_file(
+                "./prompts/narrator/character_interact_function.json",
+            )?),
+            AssistantTool::new_function(Function::from_file(
+                "./prompts/narrator/end_game_function.json",
+            )?),
+        ];
+
+        let assistant_response = openai_client
+            .create_assistant(AssistantCreateRequest::new(
                 instructions,
                 game_id.to_string(),
                 ChatCompletionModel::Gpt3_5Turbo1106,
+                tools,
             ))
             .await
-            .expect("Failed to create assisstant.");
+            .expect("Failed to create assistant.");
 
-        let narrator_assisstant_id = assisstant_response.id;
+        let narrator_assistant_id = assistant_response.id;
 
         let thread_response = openai_client.create_thread().await.map_err(|e| {
-            error!("Failed to create thread for Assisstant API:\n{:?}", e);
+            error!("Failed to create thread for Assistant API:\n{:?}", e);
             anyhow!("Failed to start thread.")
         })?;
 
         let thread_id = thread_response.id;
 
-        let id = Random::generate_id();
+        let mut game_state = GameState::new(&game, &narrator_assistant_id, &thread_id);
+        let openai_client = openai_client.clone();
+        let mut session_context = SessionContext::new(game.clone(), openai_client, state_update_tx);
+
+        session_context.process(SessionRequest::ContinueProcessing, &mut game_state).await;
 
         let game_session = GameSession {
-            id,
             game,
-            narrator_assisstant_id,
-            thread_id,
+            game_state,
+            session_context,
         };
-
-        game_session.save(file_manager)?;
 
         Ok(game_session)
     }
 
-    pub fn save(&self, file_manager: &FileManager) -> Result<(), anyhow::Error> {
-        let filepath = format!("save_data/{}/{}.json", self.game.id, self.id);
-        let json =
-            serde_json::to_string(&self).context("Error serializing game session to json.")?;
-        file_manager
-            .write_to_file(&filepath, &json)
-            .context("Error writing game session to file.")?;
+    pub async fn receive_player_message(
+        &mut self,
+        message: String,
+    ) -> Result<GameState, anyhow::Error> {
+        info!("Received player message: {}", &message);
 
-        Ok(())
+        self.session_context
+            .process(SessionRequest::PlayerEntry(message), &mut self.game_state)
+            .await;
+
+        Ok(self.game_state.clone())
+    }
+
+    pub async fn receive_trade_response(
+        &mut self,
+        accepted: bool,
+    ) -> Result<GameState, anyhow::Error> {
+        info!("Received trade response: {}", &accepted);
+
+        self.session_context
+            .process(
+                SessionRequest::CharacterTradeResponse(accepted),
+                &mut self.game_state,
+            )
+            .await;
+
+        Ok(self.game_state.clone())
+    }
+
+    pub async fn end_character_interaction(&mut self) -> Result<GameState, anyhow::Error> {
+        info!("Ending character interaction.");
+
+        self.session_context
+            .process(
+                SessionRequest::CharacterEndInteraction,
+                &mut self.game_state,
+            )
+            .await;
+
+        Ok(self.game_state.clone())
     }
 }

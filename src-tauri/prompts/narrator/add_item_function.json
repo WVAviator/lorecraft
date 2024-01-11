@@ -1,0 +1,14 @@
+{
+  "name": "add_item",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "item": {
+        "type": "string",
+        "description": "The item should usually be from the scene item list, but it can also be any other random keepsake the player wants, within reason."
+      }
+    },
+    "required": ["item"]
+  },
+  "description": "Add an item to the player's inventory. This should be invoked when the player directly requests to retrieve an item from the scene."
+}

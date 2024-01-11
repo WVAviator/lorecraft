@@ -1,82 +1,71 @@
 import { RouterProvider, createHashRouter } from 'react-router-dom';
 import SplashLoadingScreen from './screens/SplashLoadingScreen';
-import SetupScreen from './screens/SetupScreen';
 import MainMenuScreen from './screens/MainMenuScreen';
-import SettingsScreen from './screens/SettingsScreen';
 import GameScreen from './screens/GameScreen';
 import GameGenerationScreen from './screens/GameGenerationScreen';
 import GameSelectionScreen from './screens/GameSelectionScreen';
 import NarrativeScreen from './screens/NarrativeScreen';
 import GameProvider from './context/GameProvider';
 import GameMenuScreen from './screens/GameMenuScreen';
-import { ThemeProvider, createTheme } from '@mui/material';
+import GameStateProvider from './context/GameStateProvider';
+import ScreenContainer from './screens/ScreenContainer';
+import { createRef } from 'react';
 
-const theme = createTheme({
-  palette: {
-    mode: 'dark',
-    // primary: {
-    //   main: '#FFFFFF',
-    // },
-    // text: {
-    //   primary: '#FFFFFF',
-    //   secondary: '#FFFFFF',
-    //   disabled: '#c9c9c9',
-    // },
-    // background: {
-    //   default: '#000000',
-    //   paper: '#010101',
-    // },
-  },
-  typography: {
-    fontFamily: 'Amarante, serif',
-  },
-});
-
-const router = createHashRouter([
+export const routes = [
   {
     path: '/',
     element: <SplashLoadingScreen />,
-  },
-  {
-    path: '/setup',
-    element: <SetupScreen />,
+    nodeRef: createRef<HTMLDivElement>(),
   },
   {
     path: '/mainmenu',
     element: <MainMenuScreen />,
+    nodeRef: createRef<HTMLDivElement>(),
   },
   {
     path: '/select-game',
     element: <GameSelectionScreen />,
-  },
-  {
-    path: '/settings',
-    element: <SettingsScreen />,
+    nodeRef: createRef<HTMLDivElement>(),
   },
   {
     path: '/generate-game',
     element: <GameGenerationScreen />,
+    nodeRef: createRef<HTMLDivElement>(),
   },
   {
     path: '/game',
     element: <GameScreen />,
+    nodeRef: createRef<HTMLDivElement>(),
   },
   {
     path: '/narrative',
     element: <NarrativeScreen />,
+    nodeRef: createRef<HTMLDivElement>(),
   },
   {
     path: '/gamemenu',
     element: <GameMenuScreen />,
+    nodeRef: createRef<HTMLDivElement>(),
+  },
+];
+
+const router = createHashRouter([
+  {
+    path: '/',
+    element: <ScreenContainer />,
+    children: routes.map(({ path, element }) => ({
+      path,
+      element,
+    })),
   },
 ]);
 
 function App() {
   return (
     <GameProvider>
-      <ThemeProvider theme={theme}>
+      <GameStateProvider>
         <RouterProvider router={router} />
-      </ThemeProvider>
+      </GameStateProvider>
     </GameProvider>
   );
 }

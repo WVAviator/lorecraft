@@ -1,0 +1,15 @@
+{
+  "game_summary": "\"Echoes of the Ancients\" is a game set in a forgotten world where the player is tasked with exploring ancient ruins and uncovering lost secrets to save their world from an impending disaster. The journey begins in a small village on the outskirts of the Whispering Wood, a mystical forest filled with ancient ruins and artifacts. With assistance from the villagers, the player embarks on a quest into the Whispering Wood to learn about the ancients and their lost civilization, as well as how to halt the encroaching darkness. Survival skills such as hunting, gathering, and building fires are essential as they traverse the forest.\nThe player's adventure leads them to the Temple of Shadows, an ancient temple rumored to harbor dark power. However, navigating the temple's labyrinthine corridors is impossible without a map. Arin, the Keeper of Lore, residing in the Valley of Shadows where the temple is located, possesses an incomplete map. Arin agrees to provide the map only once the player has demonstrated proficient survival skills.\nArmed with the map, the player explores the Temple of Shadows, evading traps and solving puzzles to unravel the temple's mysteries. They discover hidden knowledge in ancient tomes and murals, gaining insight into the temple's former inhabitants and their powerful magical connection to the land. Runes and magical artifacts found throughout the temple grant the player mystical abilities, aiding in avoiding traps and solving complex puzzles.\nUltimately, the player's journey of knowledge and mysticism leads them to the Echo Crystal, hidden deep beneath the temple in a cave. The final task is to restore the crystal to its rightful place atop the Altar of Ancients within the temple. Activating the crystal brings balance back to the world, culminating the player's quest in \"Echoes of the Ancients.\"",
+  "scene_list": [
+    "Murmur's Edge",
+    "Whispering Wood Entrance",
+    "Whispering Wood Path",
+    "Shadow Valley",
+    "Shadow Temple Entrance",
+    "Forgotten Corridors",
+    "Hall of Echoes",
+    "Sanctum of Wisdom",
+    "The Veiled Depths",
+    "Altar of Ancients"
+  ]
+}

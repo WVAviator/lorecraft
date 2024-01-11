@@ -1,14 +1,21 @@
-import styles from './NarrativeWindow.module.css';
+import React from 'react';
 
 interface NarrativeWindowProps {
   messages: string[];
 }
 
 const NarrativeWindow: React.FC<NarrativeWindowProps> = ({ messages }) => {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    containerRef.current?.scrollTo(0, containerRef.current?.scrollHeight);
+  }, [messages.length]);
   return (
-    <div className={styles.container}>
-      {messages.map((message) => {
-        return <p>{message}</p>;
+    <div
+      ref={containerRef}
+      className="flex h-full max-h-[78vh] w-full flex-grow-0 flex-col gap-2 overflow-scroll scroll-smooth rounded-md border-2 border-gray-50 p-2 text-[14px]"
+    >
+      {messages.map((message, id) => {
+        return <p key={id}>{message}</p>;
       })}
     </div>
   );

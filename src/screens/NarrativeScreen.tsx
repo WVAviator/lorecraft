@@ -3,30 +3,21 @@ import useGameContext from '../hooks/useGameContext';
 import React from 'react';
 import BackgroundDiv from '../components/BackgroundDiv/BackgroundDiv';
 import { convertFileSrc } from '@tauri-apps/api/tauri';
-import AbsoluteContainer from '../components/AbsoluteContainer/AbsoluteContainer';
-import { invoke } from '@tauri-apps/api';
+import useGameState from '../hooks/useGameState';
 
 const NarrativeScreen = () => {
   const { game } = useGameContext();
   const navigate = useNavigate();
 
-  React.useEffect(() => {
-    const initializeGameSession = async () => {
-      try {
-        await invoke('start_game');
-      } catch {
-        console.error('Unable to start game session.');
-        navigate('/gamemenu');
-      }
-    };
-    initializeGameSession();
-  }, []);
+  const { startGame } = useGameState();
 
   React.useEffect(() => {
     if (!game) {
       navigate('/mainmenu');
+      return;
     }
-  }, [game]);
+    startGame(game.id);
+  }, [game, startGame]);
 
   const [pageIndex, setPageIndex] = React.useState(0);
   const [fade, setFade] = React.useState(false);
@@ -60,14 +51,18 @@ const NarrativeScreen = () => {
   let { narrative } = currentPage;
 
   return (
-    <BackgroundDiv image={src} alt={alt} onClick={handleClick} fade={fade}>
-      <AbsoluteContainer bottom="0" left="0" right="0">
-        <p
-          style={{ backgroundColor: 'black', color: 'white', padding: '1rem' }}
-        >
-          {narrative}
-        </p>
-      </AbsoluteContainer>
+    <BackgroundDiv
+      image={src}
+      alt={alt}
+      onClick={handleClick}
+      fade={fade}
+      randomPan
+    >
+      <div className="absolute bottom-[10%] left-[10%] right-0">
+        <div className="rounded-l-md bg-black bg-opacity-80 px-4 py-6">
+          <p>{narrative}</p>
+        </div>
+      </div>
     </BackgroundDiv>
   );
 };

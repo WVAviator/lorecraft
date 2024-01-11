@@ -1,6 +1,4 @@
 import React from 'react';
-import styles from './InGameMenu.module.css';
-import { IconButton, Tooltip } from '@mui/material';
 
 interface MenuItem {
   icon: React.ReactElement;
@@ -13,21 +11,26 @@ interface InGameMenuProps {
 }
 
 const InGameMenu: React.FC<InGameMenuProps> = ({ menuItems }) => {
+  const [hoverIndex, setHoverIndex] = React.useState<number>(-1);
   return (
-    <div className={styles.container}>
-      {menuItems.map((menuItem) => {
+    <div className="flex h-12 w-full flex-row-reverse items-center gap-4">
+      {menuItems.map((menuItem, i) => {
         return (
-          <div className={styles.icon_container} onClick={menuItem.onClick}>
-            <Tooltip title={menuItem.tooltip}>
-              <IconButton>
-                {React.cloneElement(menuItem.icon, {
-                  className: styles.icon,
-                })}
-              </IconButton>
-            </Tooltip>
+          <div
+            key={menuItem.tooltip}
+            className="flex h-8 w-8 cursor-pointer items-center justify-center"
+            onMouseEnter={() => setHoverIndex(i)}
+            onMouseLeave={() => setHoverIndex(-1)}
+          >
+            <button onClick={menuItem.onClick}>
+              {React.cloneElement(menuItem.icon, {
+                className: 'text-lg hover:text-gray-400',
+              })}
+            </button>
           </div>
         );
       })}
+      {hoverIndex !== -1 && <p>{menuItems[hoverIndex].tooltip}</p>}
     </div>
   );
 };

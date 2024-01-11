@@ -1,11 +1,12 @@
+import { useNavigate } from 'react-router-dom';
 import BackgroundDiv from '../components/BackgroundDiv/BackgroundDiv';
 import ContainerCarousel from '../components/ContainerCarousel/ContainerCarousel';
 import GameSummaryCard from '../components/GameSummaryCard/GameSummaryCard';
 import useGameContext from '../hooks/useGameContext';
 import useSavedGames from '../hooks/useSavedGames';
-import useTransitionNavigate from '../hooks/useTransitionNavigate';
 import { Game } from '../types/Game';
 import background from '/images/menu/stone_hall.png';
+import { TfiBackLeft } from 'react-icons/tfi';
 
 const BACKGROUND_ALT_DESC =
   'a stone wall with intricate arcane patterns carved into it';
@@ -13,20 +14,15 @@ const BACKGROUND_ALT_DESC =
 const GameSelectionScreen = () => {
   const { games } = useSavedGames();
   const { setGame } = useGameContext();
-  const { navigateWithTransition, isTransitioning } =
-    useTransitionNavigate(1000);
+  const navigate = useNavigate();
 
   const handleClick = (game: Game) => {
     setGame(game);
-    navigateWithTransition('/gamemenu');
+    navigate('/gamemenu');
   };
 
   return (
-    <BackgroundDiv
-      image={background}
-      alt={BACKGROUND_ALT_DESC}
-      fade={isTransitioning}
-    >
+    <BackgroundDiv image={background} alt={BACKGROUND_ALT_DESC} fade={false}>
       <ContainerCarousel
         inactiveItemProps={{ faceDown: true }}
         activeItemProps={{ faceDown: false }}
@@ -43,6 +39,15 @@ const GameSelectionScreen = () => {
           );
         })}
       </ContainerCarousel>
+      <a
+        onClick={() => navigate('/mainmenu')}
+        className="absolute bottom-10 left-[50%] translate-x-[-50%] cursor-pointer hover:text-gray-200"
+      >
+        <span className="flex items-center gap-4">
+          <h2 className="text-lg drop-shadow-lg">Return to Main Menu</h2>
+          <TfiBackLeft />
+        </span>
+      </a>
     </BackgroundDiv>
   );
 };

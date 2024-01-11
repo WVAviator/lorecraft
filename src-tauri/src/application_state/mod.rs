@@ -4,14 +4,14 @@ use tokio::sync::mpsc;
 use tokio::sync::Mutex;
 
 use crate::file_manager::FileManager;
-use crate::game_session::GameSession;
 use crate::openai_client::OpenAIClient;
+
+pub mod session_state;
 
 pub struct ApplicationState {
     pub updates_tx: Mutex<mpsc::Sender<String>>,
     pub file_manager: Option<FileManager>,
     pub openai_client: Option<OpenAIClient>,
-    pub current_game_session: Option<GameSession>,
 }
 
 impl ApplicationState {
@@ -20,7 +20,6 @@ impl ApplicationState {
             updates_tx,
             file_manager: None,
             openai_client: None,
-            current_game_session: None,
         }
     }
 

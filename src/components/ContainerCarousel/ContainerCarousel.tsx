@@ -1,5 +1,4 @@
 import React, { Attributes } from 'react';
-import styles from './ContainerCarousel.module.css';
 
 interface ContainerCarouselProps<T> {
   children: React.ReactElement<T>[];
@@ -56,16 +55,19 @@ const ContainerCarousel = <T,>({
   };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.left_arrow} onClick={handleLeftArrowClick}></div>
-      <div className={styles.carousel}>
+    <div className="relative flex h-full w-full items-center justify-center overflow-hidden">
+      <div
+        className=" absolute left-0 top-[50%] z-10 h-full min-w-[22vw] translate-y-[-50%] cursor-pointer"
+        onClick={handleLeftArrowClick}
+      ></div>
+      <div className="perspective-1000 relative h-full w-full">
         {React.Children.map(children, (child, index) => {
           const isActive = index === selected;
           const childProps = isActive ? activeItemProps : inactiveItemProps;
 
           return (
             <div
-              className={styles.carousel_item}
+              className="preserve-3d absolute h-full w-full text-center transition-transform duration-700"
               style={{
                 transform: `translateX(${
                   (index - selected) * (100 * spacing)
@@ -80,7 +82,10 @@ const ContainerCarousel = <T,>({
           );
         })}
       </div>
-      <div className={styles.right_arrow} onClick={handleRightArrowClick}></div>
+      <div
+        className="absolute right-0 top-[50%] z-10 h-full min-w-[22vw] translate-y-[-50%] cursor-pointer"
+        onClick={handleRightArrowClick}
+      ></div>
     </div>
   );
 };

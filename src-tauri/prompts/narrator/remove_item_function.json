@@ -1,0 +1,14 @@
+{
+  "name": "remove_item",
+  "description": "Removes an item from the player's inventory.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "item": {
+        "type": "string",
+        "description": "The item to remove. It should be currently listed in the player's inventory."
+      }
+    },
+    "required": ["item"]
+  }
+}

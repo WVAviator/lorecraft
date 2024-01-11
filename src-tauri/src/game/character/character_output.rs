@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CharacterOutput {
     pub name: String,
+    pub short_description: String,
     pub physical_description: String,
     pub speech: String,
     pub personality: String,
