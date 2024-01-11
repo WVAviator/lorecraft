@@ -1,10 +1,9 @@
 import pattern01 from '/images/common/spinners/ancient-pattern.png';
-import styles from './LoadingSpinner.module.css';
 
 const LoadingSpinner = () => {
   return (
     <div>
-      <img className={styles.spinner} src={pattern01} alt="Loading..." />
+      <img className="animate-pulse drop-shadow-sm" src={pattern01} alt="Loading..." />
     </div>
   );
 };
