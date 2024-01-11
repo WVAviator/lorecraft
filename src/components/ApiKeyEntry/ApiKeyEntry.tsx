@@ -1,12 +1,3 @@
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  TextField,
-} from '@mui/material';
 import React from 'react';
 import Modal from '../Modal/Modal';
 import PromptButton from '../PromptButton/PromptButton';
@@ -33,12 +24,10 @@ const ApiKeyEntry: React.FC<ApiKeyEntryProps> = ({
   const handleHelp = () => {
     console.log('Help');
   };
-  const handleClose = () => {
-    window.close();
-  };
+
   return (
     <Modal open={open} setOpen={setOpen}>
-      <h2 className="text-xl mb-6">API Key</h2>
+      <h2 className="mb-6 text-xl">API Key</h2>
       <p className="text-md mb-6">
         Lorecraft uses OpenAI to generate games and gameplay. Please provide
         your OpenAI API key to play.
@@ -49,7 +38,7 @@ const ApiKeyEntry: React.FC<ApiKeyEntryProps> = ({
         value={value}
         onChange={(e) => setValue(e.target.value)}
       />
-      <div className="absolute bottom-4 right-4 flex justify-center items-center gap-4">
+      <div className="absolute bottom-4 right-4 flex items-center justify-center gap-4">
         <PromptButton onClick={handleHelp}>Help</PromptButton>
         <PromptButton onClick={handleSubmit} disabled={!value}>
           Submit

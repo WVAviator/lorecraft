@@ -1,11 +1,8 @@
 import { useNavigate } from 'react-router-dom';
-import AbsoluteContainer from '../components/AbsoluteContainer/AbsoluteContainer';
 import BackgroundDiv from '../components/BackgroundDiv/BackgroundDiv';
 import GameMenu from '../components/GameMenu/GameMenu';
 import GameMenuListItem from '../components/GameMenuListItem/GameMenuListItem';
 import GameTitle from '../components/GameTitle/GameTitle';
-import MenuList from '../components/MenuList/MenuList';
-import MenuListItem from '../components/MenuListItem/MenuListItem';
 import useGameContext from '../hooks/useGameContext';
 import useProcessImage from '../hooks/useProcessImage';
 
@@ -18,9 +15,9 @@ const GameMenuScreen = () => {
 
   return (
     <BackgroundDiv image={src} alt={alt} fade={false}>
-      <AbsoluteContainer top="3rem" left="3rem">
+      <div className="absolute left-12 top-12">
         <GameTitle>{game?.name || ''}</GameTitle>
-      </AbsoluteContainer>
+      </div>
       <GameMenu>
         <GameMenuListItem
           onClick={() => {

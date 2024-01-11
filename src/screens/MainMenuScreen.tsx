@@ -1,10 +1,10 @@
 import React from 'react';
-import AbsoluteContainer from '../components/AbsoluteContainer/AbsoluteContainer';
 import BackgroundDiv from '../components/BackgroundDiv/BackgroundDiv';
 import MenuList from '../components/MenuList/MenuList';
 import MenuListItem from '../components/MenuListItem/MenuListItem';
 import background from '/images/menu/scroll.png';
 import { useNavigate } from 'react-router-dom';
+import { exit } from '@tauri-apps/api/process';
 
 interface MenuOption {
   label: string;
@@ -37,7 +37,9 @@ const MainMenuScreen = () => {
       },
       {
         label: 'Quit',
-        onSelect: () => console.log('quit'),
+        onSelect: () => {
+          exit(0);
+        },
       },
     ],
     []
@@ -65,7 +67,7 @@ const MainMenuScreen = () => {
 
   return (
     <BackgroundDiv image={background} alt={BG_ALT_DESC} fade={false}>
-      <div className="absolute left-[32%] right-[32%] top-[36%] bottom-[5%]">
+      <div className="absolute bottom-[5%] left-[32%] right-[32%] top-[36%]">
         <MenuList>
           {menuOptions.map((option, index) => (
             <MenuListItem

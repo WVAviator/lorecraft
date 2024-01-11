@@ -7,19 +7,9 @@ import GameSelectionScreen from './screens/GameSelectionScreen';
 import NarrativeScreen from './screens/NarrativeScreen';
 import GameProvider from './context/GameProvider';
 import GameMenuScreen from './screens/GameMenuScreen';
-import { ThemeProvider, createTheme } from '@mui/material';
 import GameStateProvider from './context/GameStateProvider';
 import ScreenContainer from './screens/ScreenContainer';
 import { createRef } from 'react';
-
-const theme = createTheme({
-  palette: {
-    mode: 'dark',
-  },
-  typography: {
-    fontFamily: 'Amarante, serif',
-  },
-});
 
 export const routes = [
   {
@@ -74,9 +64,7 @@ function App() {
   return (
     <GameProvider>
       <GameStateProvider>
-        <ThemeProvider theme={theme}>
-          <RouterProvider router={router} />
-        </ThemeProvider>
+        <RouterProvider router={router} />
       </GameStateProvider>
     </GameProvider>
   );

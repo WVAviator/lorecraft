@@ -1,10 +1,8 @@
 import { invoke } from '@tauri-apps/api';
 import React from 'react';
-import { Game } from '../types/Game';
 import useUpdates from '../hooks/useUpdates';
 import CycledBackground from '../components/CycledBackground/CycledBackground';
 import { LOADING_IMAGES } from '../data/LoadingImages';
-import FlexContainer from '../components/FlexContainer/FlexContainer';
 import LoadingSpinner from '../components/LoadingSpinner/LoadingSpinner';
 import useGameContext from '../hooks/useGameContext';
 import {
@@ -41,19 +39,14 @@ const GameGenerationScreen: React.FC<GameGenerationScreenProps> = () => {
 
   return (
     <CycledBackground images={LOADING_IMAGES} play={!false}>
-      <FlexContainer
-        alignItems="flex-end"
-        width="100%"
-        height="100%"
-        padding="0.5rem"
-      >
-        <FlexContainer height="5rem" gap="1rem" backgroundColor="black">
+      <div className="flex h-full w-full items-end p-2">
+        <div className="flex h-20 gap-4 bg-black">
           <LoadingSpinner />
           <p style={{ color: 'white' }}>
             {updates.length > 0 ? updates[updates.length - 1] : ''}
           </p>
-        </FlexContainer>
-      </FlexContainer>
+        </div>
+      </div>
     </CycledBackground>
   );
 };
