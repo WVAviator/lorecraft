@@ -1,6 +1,5 @@
 import BackgroundDiv from '../components/BackgroundDiv/BackgroundDiv';
 import background from '/images/splash/background.png';
-import FlexContainer from '../components/FlexContainer/FlexContainer';
 import LoadingSpinner from '../components/LoadingSpinner/LoadingSpinner';
 import React from 'react';
 import { invoke } from '@tauri-apps/api';
@@ -109,7 +108,7 @@ const SplashLoadingScreen = () => {
           },
         ]}
       />
-      <div className="flex items-end w-full h-full p-2">
+      <div className="flex h-full w-full items-end p-2">
         <LoadingSpinner />
       </div>
     </BackgroundDiv>

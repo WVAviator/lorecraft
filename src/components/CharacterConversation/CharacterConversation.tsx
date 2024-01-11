@@ -8,7 +8,7 @@ const CharacterConversation: React.FC<CharacterConversationProps> = ({
   messages,
 }) => {
   return (
-    <div className={styles.container}>
+    <div className="flex h-full w-full flex-col gap-2 overflow-scroll rounded-md border-2 border-gray-50 p-2 text-sm">
       {messages.map((message, id) => {
         if (message.is_dialog) return <p key={id}>{message.text}</p>;
         return (

@@ -20,12 +20,16 @@ const Modal: React.FC<ModalProps> = ({
       }`}
       onClick={() => {
         if (clickOut && setOpen) {
+          console.log('Clickout');
           setOpen(false);
         }
       }}
     >
       <div className="relative h-full w-full">
-        <div className="absolute left-[50%] top-[50%] min-h-80 min-w-96 translate-x-[-50%] translate-y-[-50%] rounded-md bg-blue-950 p-1 shadow-xl">
+        <div
+          className="absolute left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] rounded-md bg-blue-950 p-1 shadow-xl"
+          onClick={(e) => e.stopPropagation()}
+        >
           <IntricateFrame>{children}</IntricateFrame>
         </div>
       </div>

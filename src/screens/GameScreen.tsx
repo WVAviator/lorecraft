@@ -1,7 +1,5 @@
-import FlexContainer from '../components/FlexContainer/FlexContainer';
 import InGameMenu from '../components/InGameMenu/InGameMenu';
 import SceneImage from '../components/SceneImage/SceneImage';
-import SplitLayout from '../components/SplitLayout/SplitLayout';
 import useGameContext from '../hooks/useGameContext';
 import { IoSettingsSharp } from 'react-icons/io5';
 import { IoMdSave } from 'react-icons/io';
@@ -13,7 +11,7 @@ import useGameState from '../hooks/useGameState';
 import CharacterWindow from '../components/CharacterWindow/CharacterWindow';
 import PlayerEntry from '../components/PlayerEntry/PlayerEntry';
 import { useNavigate } from 'react-router-dom';
-import TextArea from '../components/TextArea/TextArea';
+import SlideoutPanel from '../components/SlideoutPanel/SlideoutPanel';
 
 const GameScreen = () => {
   const navigate = useNavigate();
@@ -87,6 +85,7 @@ const GameScreen = () => {
           />
         </div>
       </div>
+      <SlideoutPanel>Inventory List</SlideoutPanel>
     </BackgroundDiv>
   );
 };
