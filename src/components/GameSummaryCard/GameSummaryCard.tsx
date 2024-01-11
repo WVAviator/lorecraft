@@ -1,6 +1,5 @@
 import { convertFileSrc } from '@tauri-apps/api/tauri';
 import { Game } from '../../types/Game';
-import styles from './GameSummaryCard.module.css';
 import cardBack from '/images/common/square_card_back.png';
 import React from 'react';
 
@@ -15,49 +14,26 @@ const GameSummaryCard: React.FC<GameSummaryCardProps> = ({
   faceDown = false,
   onClick = () => {},
 }) => {
-  const pivotDisabled = faceDown;
-  const [xPivot, setXPivot] = React.useState(0);
-  const [yPivot, setYPivot] = React.useState(0);
+  const yRotation = faceDown ? 180 : 0;
+  const xRotation = faceDown ? 1 : -1;
 
-  let animationFrame: number | null = null;
-
-  const handlePointerMove = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (pivotDisabled) return;
-
-    if (animationFrame) {
-      cancelAnimationFrame(animationFrame);
-    }
-
-    const { clientX, clientY, currentTarget } = event;
-
-    animationFrame = requestAnimationFrame(() => {
-      const { left, top, width, height } =
-        currentTarget.getBoundingClientRect();
-
-      const offsetX = clientX - left;
-      const offsetY = clientY - top;
-
-      const rY = 10 * (offsetX / width - 0.5);
-      const rX = 10 * (offsetY / height - 0.5);
-
-      setXPivot(rX);
-      setYPivot(rY);
-    });
-  };
-
-  const handlePointerLeave = () => {
-    setXPivot(0);
-    setYPivot(0);
-  };
-
-  const yRotation = yPivot + (faceDown ? 180 : 0);
-  const xRotation = xPivot * (faceDown ? 1 : -1);
+  React.useEffect(() => {
+    const enterListener = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && faceDown === false) {
+        onClick();
+      }
+    };
+    window.addEventListener('keydown', enterListener);
+    return () => {
+      window.removeEventListener('keydown', enterListener);
+    };
+  }, [onClick, faceDown]);
 
   return (
-    <div className={styles.container}>
-      <div className={styles.card}>
+    <div className="flex h-full w-full items-center justify-center">
+      <div className="perspective-1000 h-[400px] w-[400px]">
         <div
-          className={styles.card_inner}
+          className="preserve-3d relative h-full w-full cursor-pointer text-center transition-all duration-300 ease-linear"
           style={{
             transform: `rotateY(${yRotation}deg) rotateX(${xRotation}deg)`,
           }}
@@ -66,22 +42,21 @@ const GameSummaryCard: React.FC<GameSummaryCardProps> = ({
               onClick();
             }
           }}
-          onPointerMove={handlePointerMove}
-          onPointerLeave={handlePointerLeave}
         >
-          <div className={styles.front}>
+          <div className="backface-hidden shadow-inner-lg absolute h-full w-full overflow-hidden rounded-md bg-[#b1835b]">
             <img
+              className="pointer-events-none h-full w-full select-none object-cover"
               src={convertFileSrc(game.cover_art.src)}
               alt={game.cover_art.alt}
             />
-            <div className={styles.desc}>
-              <div className={styles.desc_inner}>
-                <h2>{game.name}</h2>
+            <div className="shadow-inner-lg [*]:pointer-events-none [*]:select-none absolute bottom-0 left-0 w-full bg-stone text-left text-[14px] drop-shadow-sm before:absolute before:bottom-0 before:left-0 before:right-0 before:top-0 before:bg-black before:bg-opacity-25">
+              <div className="relative h-full w-full p-3">
+                <h2 className="font-overlock-sc text-lg">{game.name}</h2>
                 <p>{game.summary.description}</p>
               </div>
             </div>
           </div>
-          <div className={styles.back}>
+          <div className="rotate-y-180 backface-hidden shadow-inner-lg absolute h-full w-full overflow-hidden rounded-md bg-transparent">
             <img
               src={cardBack}
               alt="intricate arcane stone pattern card back"

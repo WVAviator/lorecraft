@@ -1,23 +1,11 @@
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  IconButton,
-  LinearProgress,
-  TextField,
-} from '@mui/material';
 import useProcessImage from '../../hooks/useProcessImage';
 import useGameContext from '../../hooks/useGameContext';
-import styles from './CharacterWindow.module.css';
 import CharacterConversation from '../CharacterConversation/CharacterConversation';
 import React from 'react';
 import useGameState from '../../hooks/useGameState';
-import { IoClose } from 'react-icons/io5';
 import PlayerEntry from '../PlayerEntry/PlayerEntry';
+import Modal from '../Modal/Modal';
+import AlertDialog from '../AlertDialog/AlertDialog';
 
 interface CharacterWindowProps {
   characterInteraction: CharacterInteraction | null;
@@ -49,57 +37,25 @@ const CharacterWindow: React.FC<CharacterWindowProps> = ({
 
   return (
     <>
-      <Dialog open={!!characterInteraction.trade}>
-        <DialogTitle>Trade Request</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            {characterInteraction.trade?.from_player
-              ? `${character.name} wishes to trade their ${characterInteraction.trade?.to_player} for your ${characterInteraction.trade?.from_player}. Do you accept?`
-              : `${character.name} wishes to give you their ${characterInteraction.trade?.to_player}. Do you accept?`}
-          </DialogContentText>
-        </DialogContent>
-
-        <DialogActions>
-          <Button
-            disabled={loading}
-            onClick={() => characterTradeResponse(true)}
-          >
-            Accept
-          </Button>
-          <Button
-            disabled={loading}
-            onClick={() => characterTradeResponse(false)}
-          >
-            Decline
-          </Button>
-        </DialogActions>
-        {loading && <LinearProgress />}
-      </Dialog>
-      <Dialog open={true} fullWidth maxWidth={'md'}>
-        <IconButton
-          aria-label="close"
-          onClick={() => {
+      <Modal
+        open={true}
+        setOpen={(open: boolean) => {
+          if (!open) {
             endCharacterConversation();
-          }}
-          sx={{
-            position: 'absolute',
-            right: 8,
-            top: 8,
-            color: (theme) => theme.palette.grey[500],
-          }}
-        >
-          <IoClose />
-        </IconButton>
-        <Box display={'grid'} gridTemplateColumns={'1fr 1fr'}>
+          }
+        }}
+        clickOut
+      >
+        <div className="grid w-[70vw] grid-cols-2 gap-4">
           <div>
-            <h3>{character.name}</h3>
-            <img src={src} alt={alt} className={styles.image} />
+            <h3 className="font-overlock-sc text-lg">{character.name}</h3>
+            <img src={src} alt={alt} className="object-cover shadow-inner" />
           </div>
-          <Box display={'flex'} flexDirection={'column'}>
-            <Box flex={1} flexGrow={1} height={'100%'}>
+          <div className="flex flex-col gap-2">
+            <div className="flex h-full flex-grow">
               <CharacterConversation messages={characterInteraction.messages} />
-            </Box>
-            <Box>
+            </div>
+            <div>
               <PlayerEntry
                 value={playerInput}
                 onChange={(e) => {
@@ -110,12 +66,38 @@ const CharacterWindow: React.FC<CharacterWindowProps> = ({
                   sendCharacterMessage(playerInput);
                   setPlayerInput('');
                 }}
+                placeholder="What do you want to say?"
                 // disabled={loading}
               />
-            </Box>
-          </Box>
-        </Box>
-      </Dialog>
+            </div>
+          </div>
+        </div>
+      </Modal>
+
+      <AlertDialog
+        open={!!characterInteraction.trade}
+        setOpen={(open: boolean) => {
+          if (!open) {
+            characterTradeResponse(false);
+          }
+        }}
+        title="Trade Request"
+        message={
+          characterInteraction.trade?.from_player
+            ? `${character.name} wishes to trade their ${characterInteraction.trade?.to_player} for your ${characterInteraction.trade?.from_player}. Do you accept?`
+            : `${character.name} wishes to give you their ${characterInteraction.trade?.to_player}. Do you accept?`
+        }
+        actions={[
+          {
+            title: 'Accept',
+            onSelect: () => characterTradeResponse(true),
+          },
+          {
+            title: 'Decline',
+            onSelect: () => characterTradeResponse(false),
+          },
+        ]}
+      />
     </>
   );
 };

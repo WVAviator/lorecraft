@@ -1,20 +1,21 @@
 import BackgroundDiv from '../components/BackgroundDiv/BackgroundDiv';
 import background from '/images/splash/background.png';
-import FlexContainer from '../components/FlexContainer/FlexContainer';
 import LoadingSpinner from '../components/LoadingSpinner/LoadingSpinner';
 import React from 'react';
-import useTransitionNavigate from '../hooks/useTransitionNavigate';
 import { invoke } from '@tauri-apps/api';
 import { isSetupResponse } from '../types/Setup';
 import ApiKeyEntry from '../components/ApiKeyEntry/ApiKeyEntry';
 import AlertDialog from '../components/AlertDialog/AlertDialog';
+import { exit } from '@tauri-apps/api/process';
+import { useNavigate } from 'react-router-dom';
 
 const BG_ALT_DESC =
   'A mystical leatherbound book embedded with a glowing blue gem surrounded by intricate patterns rests partially buried in sand in a desert valley surrounding by sharp mountain peaks with a glowing blue and pink aurora in the night sky';
 
 const SplashLoadingScreen = () => {
-  const { navigateWithTransition, isTransitioning } =
-    useTransitionNavigate(1000);
+  // const { navigateWithTransition, isTransitioning } =
+  //   useTransitionNavigate(1000);
+  const navigate = useNavigate();
 
   const [setupRetries, setSetupRetries] = React.useState(0);
   const [request, setRequest] = React.useState<Partial<Request>>({});
@@ -29,7 +30,7 @@ const SplashLoadingScreen = () => {
 
       try {
         await Promise.all([setup, minWait]);
-        navigateWithTransition('/mainmenu');
+        navigate('/mainmenu');
       } catch (error) {
         console.error(error);
 
@@ -61,7 +62,7 @@ const SplashLoadingScreen = () => {
   };
 
   return (
-    <BackgroundDiv image={background} alt={BG_ALT_DESC} fade={isTransitioning}>
+    <BackgroundDiv image={background} alt={BG_ALT_DESC} fade={false}>
       <ApiKeyEntry
         open={apiKeyError}
         setOpen={setApiKeyError}
@@ -74,8 +75,8 @@ const SplashLoadingScreen = () => {
         actions={[
           {
             title: 'Quit',
-            onSelect: () => {
-              window.close();
+            onSelect: async () => {
+              await exit();
             },
           },
           {
@@ -94,8 +95,8 @@ const SplashLoadingScreen = () => {
         actions={[
           {
             title: 'Quit',
-            onSelect: () => {
-              window.close();
+            onSelect: async () => {
+              await exit();
             },
           },
           {
@@ -107,14 +108,9 @@ const SplashLoadingScreen = () => {
           },
         ]}
       />
-      <FlexContainer
-        alignItems="flex-end"
-        width="100%"
-        height="100%"
-        padding="0.5rem"
-      >
+      <div className="flex h-full w-full items-end p-2">
         <LoadingSpinner />
-      </FlexContainer>
+      </div>
     </BackgroundDiv>
   );
 };

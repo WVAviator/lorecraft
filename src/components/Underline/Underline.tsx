@@ -1,5 +1,3 @@
-import styles from './Underline.module.css';
-
 interface UnderlineProps {
   visible: boolean;
 }
@@ -7,8 +5,8 @@ interface UnderlineProps {
 const Underline: React.FC<UnderlineProps> = ({ visible }) => {
   return (
     <div
-      className={`${styles.container} ${
-        visible ? styles.visible : styles.hidden
+      className={`w-[238px] flex justify-center items-center transition-opacity duration-200 ease-in-out ${
+        visible ? 'opacity-65' : 'opacity-0'
       }`}
     >
       <svg
