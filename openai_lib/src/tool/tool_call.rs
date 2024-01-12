@@ -1,6 +1,6 @@
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
-use super::error::Error;
+use crate::Error;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct ToolCall {
@@ -22,7 +22,7 @@ impl ToolCall {
     }
     pub fn extract_arguments<T: DeserializeOwned>(&self) -> Result<T, Error> {
         serde_json::from_str::<T>(&self.function.arguments)
-            .map_err(|e| Error::DeserializationFailure(e))
+            .map_err(|e| Error::DeserializationFailure(e.into()))
     }
 }
 

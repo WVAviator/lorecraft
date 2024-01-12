@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::common::tool_call::ToolCall;
+use crate::model::ChatModel;
 
 use super::{
     chat_completion_message::ChatCompletionMessage, log_probability::LogProbabilityInformation,
@@ -12,7 +12,7 @@ pub struct ChatCompletionObject {
     pub id: String,
     pub choices: Vec<ChatCompletionChoice>,
     pub created: i64,
-    pub model: String, //TODO: Map this to a model enum
+    pub model: ChatModel,
     pub system_fingerprint: String,
     pub object: String,
     pub usage: UsageStatistics,

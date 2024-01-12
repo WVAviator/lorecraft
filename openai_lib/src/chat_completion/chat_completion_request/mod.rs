@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-use crate::common::{error::Error, model::ChatModel, tool::Tool};
+use crate::{model::ChatModel, tool::Tool, Error};
 
 use self::tool_choice::ToolChoice;
 
@@ -30,6 +30,39 @@ pub struct ChatCompletionRequest {
     tools: Vec<Tool>,
     tool_choice: Option<ToolChoice>,
     user: Option<String>,
+}
+
+impl ChatCompletionRequest {
+    pub fn new(model: ChatModel, messages: Vec<ChatCompletionMessage>) -> Self {
+        ChatCompletionRequest {
+            model,
+            messages,
+            frequency_penalty: None,
+            logit_bias: None,
+            logprobs: None,
+            top_logprobs: None,
+            max_tokens: None,
+            n: None,
+            presence_penalty: None,
+            response_format: None,
+            seed: None,
+            stop: None,
+            stream: None,
+            temperature: None,
+            top_p: None,
+            tools: Vec::new(),
+            tool_choice: None,
+            user: None,
+        }
+    }
+
+    pub fn builder() -> ChatCompletionRequestBuilder {
+        ChatCompletionRequestBuilder::new()
+    }
+
+    pub fn to_json_body(self) -> Result<String, Error> {
+        serde_json::to_string(&self).map_err(|e| Error::SerializationFailure(e.into()))
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

@@ -1,6 +1,6 @@
-use crate::common::error::Error;
+use crate::Error;
 
-use self::{
+pub use self::{
     chat_completion_object::ChatCompletionObject, chat_completion_request::ChatCompletionRequest,
 };
 
@@ -10,7 +10,8 @@ pub mod chat_completion_request;
 pub mod log_probability;
 pub mod usage_statistics;
 
-pub trait ChatCompletionClient {
+#[trait_variant::make(ChatCompletionClient: Send)]
+pub trait LocalChatCompletionClient {
     async fn create_chat_completion(
         &self,
         chat_completion_request: ChatCompletionRequest,

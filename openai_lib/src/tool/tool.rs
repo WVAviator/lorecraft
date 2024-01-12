@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use super::error::Error;
+use crate::Error;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Tool {
@@ -68,8 +68,8 @@ impl FunctionBuilder {
     }
 
     pub fn from_json(self, json: &str) -> Result<Tool, Error> {
-        let function =
-            serde_json::from_str::<Function>(json).map_err(|e| Error::DeserializationFailure(e))?;
+        let function = serde_json::from_str::<Function>(json)
+            .map_err(|e| Error::DeserializationFailure(e.into()))?;
 
         Ok(Tool {
             type_: String::from("function"),
