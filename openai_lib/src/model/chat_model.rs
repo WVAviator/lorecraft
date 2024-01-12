@@ -29,16 +29,16 @@ pub enum ChatModel {
 impl Display for ChatModel {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ChatModel::Gpt_4_1106_Preview => write!(f, "{}", "gpt-4-1106-preview"),
-            ChatModel::Gpt_4_Vision_Preview => write!(f, "{}", "gpt-4-vision-preview"),
-            ChatModel::Gpt_4 => write!(f, "{}", "gpt-4"),
-            ChatModel::Gpt_4_32k => write!(f, "{}", "gpt-4-32k"),
-            ChatModel::Gpt_4_0613 => write!(f, "{}", "gpt-4-0613"),
-            ChatModel::Gpt_4_32k_0613 => write!(f, "{}", "gpt-4-32k-0613"),
-            ChatModel::Gpt_35_Turbo_1106 => write!(f, "{}", "gpt-3.5-turbo-1106"),
-            ChatModel::Gpt_35_Turbo => write!(f, "{}", "gpt-3.5-turbo"),
-            ChatModel::Gpt_35_Turbo_16k => write!(f, "{}", "gpt-3.5-turbo-16k"),
-            ChatModel::Gpt_35_Turbo_Instruct => write!(f, "{}", "gpt-3.5-turbo-instruct"),
+            ChatModel::Gpt_4_1106_Preview => write!(f, "gpt-4-1106-preview"),
+            ChatModel::Gpt_4_Vision_Preview => write!(f, "gpt-4-vision-preview"),
+            ChatModel::Gpt_4 => write!(f, "gpt-4"),
+            ChatModel::Gpt_4_32k => write!(f, "gpt-4-32k"),
+            ChatModel::Gpt_4_0613 => write!(f, "gpt-4-0613"),
+            ChatModel::Gpt_4_32k_0613 => write!(f, "gpt-4-32k-0613"),
+            ChatModel::Gpt_35_Turbo_1106 => write!(f, "gpt-3.5-turbo-1106"),
+            ChatModel::Gpt_35_Turbo => write!(f, "gpt-3.5-turbo"),
+            ChatModel::Gpt_35_Turbo_16k => write!(f, "gpt-3.5-turbo-16k"),
+            ChatModel::Gpt_35_Turbo_Instruct => write!(f, "gpt-3.5-turbo-instruct"),
         }
     }
 }

@@ -6,8 +6,11 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+anyhow = "1.0.79"
 assert-json-diff = "2.0.2"
-reqwest = "0.11.23"
+reqwest = { version = "0.11.23", features = ["json"] }
 serde = {version = "1.0.195", features = ["derive"]}
 serde_json = "1.0.111"
 thiserror = "1.0.56"
+trait-variant = "0.1.1"
+typed-builder = "0.18.0"

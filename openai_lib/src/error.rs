@@ -12,4 +12,6 @@ pub enum Error {
     RequestFailure(#[source] anyhow::Error),
     #[error("Received bad status from OpenAI API: {0:?}")]
     ResponseFailure(reqwest::StatusCode),
+    #[error("Request violates API restrictions: {0:?}")]
+    InvalidRequestField(String),
 }

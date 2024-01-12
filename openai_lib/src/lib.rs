@@ -2,6 +2,7 @@ pub mod chat_completion;
 pub mod client;
 pub mod client_config;
 pub mod error;
+pub mod image;
 pub mod model;
 pub mod tool;
 
