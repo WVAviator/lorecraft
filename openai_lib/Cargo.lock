@@ -453,6 +453,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "assert-json-diff",
+ "log",
  "reqwest",
  "serde",
  "serde_json",

@@ -36,9 +36,9 @@ impl ChatCompletionMessage {
         ChatCompletionMessage::User { content, name }
     }
 
-    pub fn assistant(content: Option<String>, name: Option<String>) -> Self {
+    pub fn assistant(content: String, name: Option<String>) -> Self {
         ChatCompletionMessage::Assistant {
-            content,
+            content: Some(content),
             tool_calls: None,
             name,
         }
