@@ -1,5 +1,9 @@
 use crate::chat_completion::{ChatCompletionClient, ChatCompletionObject, ChatCompletionRequest};
 use crate::client_config::ClientConfig;
+use crate::image::create_image_client::CreateImageClient;
+use crate::image::create_image_request::CreateImageRequest;
+use crate::image::create_image_response::CreateImageResponse;
+use crate::image::image_object::ImageObject;
 use crate::Error;
 use reqwest::{
     header::{HeaderMap, HeaderValue},
@@ -54,12 +58,29 @@ impl ChatCompletionClient for OpenAIClient {
         let body = chat_completion_request.to_json_body();
         let response = self
             .client
-            .post("https://api.openai.com/v1/engines/davinci/completions")
+            .post("https://api.openai.com/v1/chat/completions")
             .body(body?)
             .send()
             .await
             .map_err(|e| Error::RequestFailure(e.into()))?;
 
         self.handle_response::<ChatCompletionObject>(response).await
+    }
+}
+
+impl CreateImageClient for OpenAIClient {
+    async fn create_image(
+        &self,
+        request: CreateImageRequest,
+    ) -> Result<CreateImageResponse, Error> {
+        let body = request.to_json_body()?;
+        let response = self
+            .client
+            .post("https://api.openai.com/v1/images/generations")
+            .body(body)
+            .send()
+            .await
+            .map_err(|e| Error::RequestFailure(e.into()))?;
+        self.handle_response::<CreateImageResponse>(response).await
     }
 }

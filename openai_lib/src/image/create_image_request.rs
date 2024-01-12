@@ -28,7 +28,7 @@ pub struct CreateImageRequest {
 }
 
 impl CreateImageRequest {
-    pub fn to_body_json(self) -> Result<String, Error> {
+    pub fn to_json_body(self) -> Result<String, Error> {
         self.validate()?;
 
         let json =
