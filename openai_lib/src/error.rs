@@ -14,4 +14,6 @@ pub enum Error {
     ResponseFailure(reqwest::StatusCode),
     #[error("Request violates API restrictions: {0:?}")]
     InvalidRequestField(String),
+    #[error("An error occurred attempting to rate limit requests: {0:?}")]
+    RateLimitFailure(#[source] anyhow::Error),
 }

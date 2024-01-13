@@ -3,7 +3,7 @@ use crate::client_config::ClientConfig;
 use crate::image::create_image_client::CreateImageClient;
 use crate::image::create_image_request::CreateImageRequest;
 use crate::image::create_image_response::CreateImageResponse;
-use crate::image::image_object::ImageObject;
+use crate::rate_limit::RateLimiter;
 use crate::Error;
 use reqwest::{
     header::{HeaderMap, HeaderValue},
@@ -13,6 +13,7 @@ use serde::de::DeserializeOwned;
 
 pub struct OpenAIClient {
     client: reqwest::Client,
+    image_rate_limiter: RateLimiter,
 }
 
 impl OpenAIClient {
@@ -30,7 +31,12 @@ impl OpenAIClient {
             .build()
             .map_err(|e| Error::ConfigurationFailure(e.into()))?;
 
-        Ok(Self { client })
+        let image_rate_limiter = RateLimiter::new(std::time::Duration::from_secs(60), 5);
+
+        Ok(Self {
+            client,
+            image_rate_limiter,
+        })
     }
 
     async fn handle_response<T: DeserializeOwned>(
@@ -74,6 +80,12 @@ impl CreateImageClient for OpenAIClient {
         request: CreateImageRequest,
     ) -> Result<CreateImageResponse, Error> {
         let body = request.to_json_body()?;
+
+        self.image_rate_limiter
+            .permit()
+            .await
+            .map_err(|e| Error::RateLimitFailure(e.into()))?;
+
         let response = self
             .client
             .post("https://api.openai.com/v1/images/generations")
@@ -81,6 +93,7 @@ impl CreateImageClient for OpenAIClient {
             .send()
             .await
             .map_err(|e| Error::RequestFailure(e.into()))?;
+
         self.handle_response::<CreateImageResponse>(response).await
     }
 }
