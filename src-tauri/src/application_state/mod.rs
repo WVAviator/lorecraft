@@ -4,7 +4,7 @@ use tokio::sync::mpsc;
 use tokio::sync::Mutex;
 
 use crate::file_manager::FileManager;
-use crate::openai_client::OpenAIClient;
+use openai_lib::OpenAIClient;
 
 pub mod session_state;
 

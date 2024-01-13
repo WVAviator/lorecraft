@@ -2,10 +2,10 @@ use log::{error, info};
 use tauri::State;
 
 use crate::config::Config;
-use crate::openai_client::openai_client_error::OpenAIClientError;
-use crate::openai_client::OpenAIClient;
 use crate::utils::string_utilities::StringUtilities;
 use crate::{application_state::ApplicationState, file_manager::FileManager};
+
+use openai_lib::{ClientConfig, OpenAIClient};
 
 use self::setup_error::SetupError;
 use self::setup_request::SetupRequest;
@@ -75,12 +75,16 @@ pub async fn setup(
     };
 
     info!("Initializing OpenAI client.");
-    let openai_client = OpenAIClient::new(&api_key);
+    let openai_client = OpenAIClient::new(ClientConfig { api_key }).map_err(|_| {
+        SetupFailureResponse::new(SetupError::BadOpenAIKey(String::from(
+            "An error occurred in setting up OpenAI client.",
+        )))
+    })?;
 
     info!("Verifying connection and authorization with OpenAI.");
     if let Err(error) = openai_client.verify_connection().await {
         match error {
-            OpenAIClientError::NotAuthorized => {
+            openai_lib::Error::ResponseFailure(_) => {
                 error!("OpenAI rejected authorization:\n{:?}", error);
                 return Err(SetupFailureResponse::new(SetupError::BadOpenAIKey(
                     String::from("OpenAI API key is expired or incorrect."),

@@ -1,9 +1,10 @@
 use std::sync::Arc;
 
 use log::error;
+use openai_lib::OpenAIClient;
 use tokio::sync::{mpsc::Sender, Mutex};
 
-use crate::{game::Game, game_state::GameState, openai_client::OpenAIClient};
+use crate::{game::Game, game_state::GameState};
 
 use self::{session_request::SessionRequest, session_state::SessionState};
 

@@ -1,21 +1,15 @@
 use crate::{
-    game::image::image_factory::ImageFactory,
-    openai_client::{
-        chat_completion::chat_completion_model::ChatCompletionModel,
-        chat_completion::chat_completion_request::ChatCompletionRequest,
-        image_generation::{
-            image_generation_model::ImageGenerationModel,
-            image_generation_request::ImageGenerationRequest,
-            image_generation_size::ImageGenerationSize,
-        },
-        openai_client_error::OpenAIClientError,
-        OpenAIClient,
-    },
-    prompt_builder::PromptBuilder,
-    utils::random::Random,
+    game::image::image_factory::ImageFactory, prompt_builder::PromptBuilder, utils::random::Random,
 };
 
+use anyhow::anyhow;
 use futures::StreamExt;
+use openai_lib::{
+    chat_completion::{ChatCompletionClient, ChatCompletionRequest},
+    image::{CreateImageRequest, ImageSize},
+    model::{image_model::ImageModel, ChatModel},
+    OpenAIClient,
+};
 
 use super::{item_input::ItemInput, item_output::ItemOutput, Item};
 
@@ -38,10 +32,7 @@ impl<'a> ItemFactory<'a> {
         }
     }
 
-    pub async fn create_items(
-        &self,
-        item_list: Vec<String>,
-    ) -> Result<Vec<Item>, OpenAIClientError> {
+    pub async fn create_items(&self, item_list: Vec<String>) -> Result<Vec<Item>, anyhow::Error> {
         let items_input = ItemInput::new(self.game_summary, item_list);
         let system_prompt = PromptBuilder::new()
             .add_prompt("./prompts/item_detail/main.txt")
@@ -54,17 +45,19 @@ impl<'a> ItemFactory<'a> {
 
         let text_response = self
             .openai_client
-            .chat_completion_request(ChatCompletionRequest::new(
-                system_prompt,
-                user_prompt,
-                ChatCompletionModel::Gpt3_5Turbo1106,
-            ))
+            .create_chat_completion(
+                ChatCompletionRequest::builder()
+                    .add_system_message(system_prompt)
+                    .add_user_message(user_prompt)
+                    .model(ChatModel::Gpt_35_Turbo_1106)
+                    .build(),
+            )
             .await
-            .expect("Failed to retrieve response from OpenAI")
+            .map_err(|e| anyhow!("Failed to create chat completion request: {:?}", e))?
             .get_content();
 
         let item_output = serde_json::from_str::<ItemOutput>(&text_response)
-            .expect("Unable to deserialize output.");
+            .map_err(|e| anyhow!("API provided an invalid format for response: {:?}", e))?;
 
         let items = async {
             let mut item_futures = Vec::new();
@@ -75,11 +68,11 @@ impl<'a> ItemFactory<'a> {
                     let image = self
                         .image_factory
                         .try_generate_image(
-                            ImageGenerationRequest::new(
-                                item.image,
-                                ImageGenerationModel::DallE2,
-                                ImageGenerationSize::Size256x256,
-                            ),
+                            CreateImageRequest::builder()
+                                .prompt(&item.image)
+                                .model(ImageModel::DallE2)
+                                .size(ImageSize::Size256x256)
+                                .build(),
                             &filepath,
                             3,
                         )

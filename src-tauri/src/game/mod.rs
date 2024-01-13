@@ -1,6 +1,10 @@
 use anyhow::{anyhow, Context};
-use futures::StreamExt;
+use futures::{StreamExt, TryStreamExt};
 use log::{info, trace};
+use openai_lib::{
+    image::{CreateImageRequest, ImageQuality, ImageSize},
+    model::image_model::ImageModel,
+};
 use serde::{Deserialize, Serialize};
 use tokio::{join, sync::MutexGuard};
 
@@ -16,11 +20,6 @@ use crate::{
         scene_detail::SceneDetail,
         scene_summary::SceneSummary,
         summary::Summary,
-    },
-    openai_client::image_generation::{
-        image_generation_model::ImageGenerationModel,
-        image_generation_request::ImageGenerationRequest,
-        image_generation_size::ImageGenerationSize,
     },
     utils::random::Random,
 };
@@ -82,7 +81,7 @@ impl Game {
             Summary::generate(&openai_client, &user_prompt).await
         };
 
-        let summary = summary.await.expect("Failed to generate summary.");
+        let summary = summary.await.context("Failed to generate summary.")?;
 
         let style_string = format!(
             "Use a style of {}. Use themes of {}.",
@@ -105,15 +104,19 @@ impl Game {
             state
                 .send_update(String::from("Generating game cover art."))
                 .await;
-            let image_generation_request = ImageGenerationRequest::new(
-                summary.cover_art.clone(),
-                ImageGenerationModel::DallE3,
-                ImageGenerationSize::Size1792x1024,
-            );
+
             image_factory
-                .try_generate_image(image_generation_request, "cover_art.png", 3)
+                .try_generate_image(
+                    CreateImageRequest::builder()
+                        .prompt(&summary.cover_art)
+                        .model(ImageModel::DallE3)
+                        .size(ImageSize::Size1792x1024)
+                        .quality(ImageQuality::HD)
+                        .build(),
+                    "cover_art.png",
+                    3,
+                )
                 .await
-                .expect("Unable to generate cover art.")
         };
 
         let narrative = async {
@@ -121,10 +124,7 @@ impl Game {
             state
                 .send_update(String::from("Generating story narrative pages."))
                 .await;
-            let narrative = narrative_factory
-                .create()
-                .await
-                .expect("Unable to create narrative.");
+            let narrative = narrative_factory.create().await;
 
             trace!("Generated narrative: {:#?}", narrative);
             narrative
@@ -138,7 +138,7 @@ impl Game {
             let scene_summary =
                 SceneSummary::generate(&summary.summary, &summary.win_condition, &openai_client)
                     .await
-                    .expect("Unable to create scene summary.");
+                    .map_err(|e| anyhow!("Failed to generate scene summary: {}", e))?;
 
             trace!("Generated scene summary: {:#?}", scene_summary);
 
@@ -151,18 +151,13 @@ impl Game {
                     let future = async move {
                         SceneDetail::generate(&summary_ref.summary, &summarized_scene, openai_ref)
                             .await
-                            .expect("Failed to generate scene detail.")
                     };
 
                     futures.push(future);
                 }
 
-                state
-                    .send_update(String::from("Generating scene details."))
-                    .await;
-
                 let stream = futures::stream::iter(futures).buffered(5);
-                stream.collect::<Vec<_>>().await
+                stream.try_collect::<Vec<_>>().await
             }
             .await
         };
@@ -170,18 +165,19 @@ impl Game {
         let (cover_art, narrative, scene_details) =
             tokio::join!(cover_art, narrative, scene_details);
 
+        let cover_art = cover_art?;
+        let narrative = narrative?;
+        let scene_details = scene_details?;
+
         let scenes = async {
             let mut futures = Vec::new();
             for scene_detail in &scene_details {
                 let image_factory_ref = &image_factory;
 
                 let future = async move {
-                    let scene = Scene::from_scene_detail(scene_detail, image_factory_ref)
+                    Scene::from_scene_detail(scene_detail, image_factory_ref)
                         .await
-                        .expect("Failed to generate scene.");
-
-                    trace!("Generated scene: {:#?}", &scene);
-                    scene
+                        .map_err(|e| anyhow!("Failed to create scene: {}", e))
                 };
 
                 futures.push(future);
@@ -190,32 +186,21 @@ impl Game {
             state.send_update(String::from("Generating scenes.")).await;
 
             let stream = futures::stream::iter(futures).buffered(3);
-            stream.collect::<Vec<_>>().await
+            stream.try_collect::<Vec<_>>().await
         };
 
         let characters = async {
             let mut futures = Vec::new();
             let character_factory_ref = &character_factory;
             for scene_detail in &scene_details {
-                let future = async move {
-                    let characters = character_factory_ref
-                        .from_scene_detail(scene_detail)
-                        .await
-                        .expect("Failed to create characters.");
-
-                    characters
-                };
+                let future =
+                    async move { character_factory_ref.from_scene_detail(scene_detail).await };
 
                 futures.push(future);
             }
 
             let stream = futures::stream::iter(futures).buffered(3);
-            stream
-                .collect::<Vec<_>>()
-                .await
-                .into_iter()
-                .flatten()
-                .collect::<Vec<Character>>()
+            stream.try_collect::<Vec<_>>().await
         };
 
         let scene_items = async {
@@ -224,13 +209,19 @@ impl Game {
                 .map(|scene_detail| scene_detail.items.clone())
                 .flatten()
                 .collect();
-            item_factory
-                .create_items(item_list)
-                .await
-                .expect("Unable to create scene items.")
+            item_factory.create_items(item_list).await
         };
 
         let (scenes, characters, scene_items) = join!(scenes, characters, scene_items);
+
+        let scenes = scenes?;
+
+        let characters = characters?
+            .into_iter()
+            .flatten()
+            .collect::<Vec<Character>>();
+
+        let scene_items = scene_items?;
 
         let character_items = async {
             let item_list: Vec<String> = characters
@@ -238,13 +229,10 @@ impl Game {
                 .map(|character| character.inventory.clone())
                 .flatten()
                 .collect();
-            item_factory
-                .create_items(item_list)
-                .await
-                .expect("Unable to create character inventory items")
+            item_factory.create_items(item_list).await
         };
 
-        let character_items = character_items.await;
+        let character_items = character_items.await?;
 
         let items = [&scene_items[..], &character_items[..]].concat();
 

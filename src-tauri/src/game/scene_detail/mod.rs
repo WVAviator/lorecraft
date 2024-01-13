@@ -1,13 +1,12 @@
+use anyhow::anyhow;
+use openai_lib::{
+    chat_completion::{ChatCompletionClient, ChatCompletionRequest},
+    model::ChatModel,
+    OpenAIClient,
+};
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    openai_client::{
-        chat_completion::chat_completion_model::ChatCompletionModel,
-        chat_completion::chat_completion_request::ChatCompletionRequest,
-        openai_client_error::OpenAIClientError, OpenAIClient,
-    },
-    prompt_builder::PromptBuilder,
-};
+use crate::prompt_builder::PromptBuilder;
 
 use self::scene_detail_input::SceneDetailInput;
 
@@ -30,7 +29,7 @@ impl SceneDetail {
         summary: &str,
         summarized_scene: &SummarizedScene,
         openai_client: &OpenAIClient,
-    ) -> Result<Self, OpenAIClientError> {
+    ) -> Result<Self, anyhow::Error> {
         let scene_detail_input = SceneDetailInput::new(summary, summarized_scene);
         let system_prompt = PromptBuilder::new()
             .add_prompt("./prompts/scene_detail/main.txt")
@@ -42,13 +41,15 @@ impl SceneDetail {
         let user_prompt = serde_json::to_string(&scene_detail_input).unwrap();
 
         let response_text = openai_client
-            .chat_completion_request(ChatCompletionRequest::new(
-                system_prompt,
-                user_prompt,
-                ChatCompletionModel::Gpt3_5Turbo1106,
-            ))
+            .create_chat_completion(
+                ChatCompletionRequest::builder()
+                    .add_system_message(system_prompt)
+                    .add_user_message(user_prompt)
+                    .model(ChatModel::Gpt_35_Turbo_1106)
+                    .build(),
+            )
             .await
-            .expect("Failed to get response from OpenAI API.")
+            .map_err(|e| anyhow!("Failed to create chat completion request: {}", e))?
             .get_content();
 
         let scene_detail = serde_json::from_str::<SceneDetail>(&response_text)

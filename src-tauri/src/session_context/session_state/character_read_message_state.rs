@@ -1,12 +1,11 @@
 use anyhow::{anyhow, bail};
 use log::{debug, info, trace};
-
-use crate::{
-    game::Game,
-    game_state::GameState,
-    openai_client::{list_messages::list_messages_query::ListMessagesQuery, OpenAIClient},
-    session_context::session_request::SessionRequest,
+use openai_lib::{
+    message::{ListMessagesRequest, MessageClient, MessageSortOrder},
+    OpenAIClient,
 };
+
+use crate::{game::Game, game_state::GameState, session_context::session_request::SessionRequest};
 
 use super::SessionState;
 
@@ -43,10 +42,11 @@ impl CharacterReadMessageState {
                 info!("Fetching latest message in thread.");
                 let message_list_response = openai_client
                     .list_messages(
-                        ListMessagesQuery::builder(&thread_id)
+                        ListMessagesRequest::builder()
                             .limit(1)
-                            .order("desc")
+                            .order(MessageSortOrder::Descending)
                             .build(),
+                        &thread_id,
                     )
                     .await
                     .map_err(|e| {
@@ -58,7 +58,11 @@ impl CharacterReadMessageState {
                 );
 
                 info!("Processing message meta-commands");
-                let character_message = message_list_response.data[0].content[0].text.value.clone();
+                let character_message = message_list_response
+                    .data
+                    .get(0)
+                    .ok_or(anyhow!("No messages returned."))?
+                    .get_text_content();
 
                 let closed = game_state
                     .character_interaction

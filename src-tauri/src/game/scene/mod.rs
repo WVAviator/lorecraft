@@ -1,20 +1,14 @@
-use crate::{
-    openai_client::{
-        image_generation::{
-            image_generation_model::ImageGenerationModel,
-            image_generation_request::ImageGenerationRequest,
-            image_generation_size::ImageGenerationSize,
-        },
-        openai_client_error::OpenAIClientError,
-    },
-    utils::random::Random,
-};
+use crate::utils::random::Random;
 
 use super::{
     image::{image_factory::ImageFactory, Image},
     scene_detail::SceneDetail,
 };
 
+use openai_lib::{
+    image::{CreateImageRequest, ImageSize},
+    model::image_model::ImageModel,
+};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -32,23 +26,25 @@ impl Scene {
     pub async fn from_scene_detail(
         scene_detail: &SceneDetail,
         image_factory: &ImageFactory<'_>,
-    ) -> Result<Self, OpenAIClientError> {
+    ) -> Result<Self, anyhow::Error> {
         let id = Random::generate_id();
 
         let name = scene_detail.name.clone();
         let narrative = scene_detail.narrative.clone();
         let metadata = scene_detail.metadata.clone();
 
-        let image_generation_request = ImageGenerationRequest::new(
-            scene_detail.image.clone(),
-            ImageGenerationModel::DallE2,
-            ImageGenerationSize::Size1024x1024,
-        );
-
         let filepath = format!("scenes/{}.png", id);
 
         let image = image_factory
-            .try_generate_image(image_generation_request, &filepath, 3)
+            .try_generate_image(
+                CreateImageRequest::builder()
+                    .prompt(&scene_detail.image)
+                    .model(ImageModel::DallE3)
+                    .size(ImageSize::Size1024x1024)
+                    .build(),
+                &filepath,
+                3,
+            )
             .await?;
 
         Ok(Scene {
