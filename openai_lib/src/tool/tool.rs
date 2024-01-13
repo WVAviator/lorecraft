@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 use crate::Error;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Tool {
     #[serde(rename = "type")]
     type_: String,
@@ -30,14 +30,14 @@ impl Tool {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Function {
     description: Option<String>,
     name: String,
     parameters: Option<FunctionParameters>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 struct FunctionParameters {
     #[serde(rename = "type")]
     type_: String,
@@ -45,7 +45,7 @@ struct FunctionParameters {
     required: Vec<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 struct FunctionProperty {
     #[serde(rename = "type")]
     type_: String,

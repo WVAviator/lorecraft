@@ -1,3 +1,4 @@
+pub mod assistant;
 pub mod chat_completion;
 pub mod client;
 pub mod client_config;
