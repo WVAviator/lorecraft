@@ -461,6 +461,7 @@ dependencies = [
  "tokio",
  "trait-variant",
  "typed-builder",
+ "url",
 ]
 
 [[package]]

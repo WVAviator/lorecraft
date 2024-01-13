@@ -1,6 +1,9 @@
 use crate::Error;
 
-use super::{CreateMessageRequest, MessageObject};
+use super::{
+    list_messages_response::ListMessagesResponse, CreateMessageRequest, ListMessagesRequest,
+    MessageObject,
+};
 
 #[trait_variant::make(MessageClient: Send)]
 pub trait LocalMessageClient {
@@ -9,4 +12,10 @@ pub trait LocalMessageClient {
         request: CreateMessageRequest,
         thread_id: &str,
     ) -> Result<MessageObject, Error>;
+
+    async fn list_messages(
+        &self,
+        request: ListMessagesRequest,
+        thread_id: &str,
+    ) -> Result<ListMessagesResponse, Error>;
 }
