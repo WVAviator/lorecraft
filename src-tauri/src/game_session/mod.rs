@@ -2,20 +2,21 @@ pub mod game_session_error;
 
 use std::sync::Arc;
 
-use anyhow::anyhow;
-use log::{error, info};
+use anyhow::Context;
+use log::info;
+use openai_lib::{
+    assistant::{AssistantClient, CreateAssistantRequest},
+    model::ChatModel,
+    thread::{CreateThreadRequest, ThreadClient},
+    tool::Tool,
+    OpenAIClient,
+};
 use tokio::sync::{mpsc::Sender, Mutex};
 
 use crate::{
     file_manager::FileManager,
     game::Game,
     game_state::GameState,
-    openai_client::{
-        assistant_create::assistant_create_request::AssistantCreateRequest,
-        assistant_tool::{function::Function, AssistantTool},
-        chat_completion::chat_completion_model::ChatCompletionModel,
-        OpenAIClient,
-    },
     prompt_builder::PromptBuilder,
     session_context::{session_request::SessionRequest, SessionContext},
 };
@@ -52,40 +53,40 @@ impl GameSession {
             .add_plain_text(&scene_list_text)
             .build();
 
-        let tools = vec![
-            AssistantTool::new_function(Function::from_file(
-                "./prompts/narrator/add_item_function.json",
-            )?),
-            AssistantTool::new_function(Function::from_file(
-                "./prompts/narrator/remove_item_function.json",
-            )?),
-            AssistantTool::new_function(Function::from_file(
-                "./prompts/narrator/new_scene_function.json",
-            )?),
-            AssistantTool::new_function(Function::from_file(
-                "./prompts/narrator/character_interact_function.json",
-            )?),
-            AssistantTool::new_function(Function::from_file(
-                "./prompts/narrator/end_game_function.json",
-            )?),
-        ];
-
         let assistant_response = openai_client
-            .create_assistant(AssistantCreateRequest::new(
-                instructions,
-                game_id.to_string(),
-                ChatCompletionModel::Gpt3_5Turbo1106,
-                tools,
-            ))
+            .create_assistant(
+                CreateAssistantRequest::builder()
+                    .instructions(instructions)
+                    .model(ChatModel::Gpt_35_Turbo_1106)
+                    .name(&game_id)
+                    .add_tool(
+                        Tool::function().from_file("./prompts/narrator/add_item_function.json")?,
+                    )
+                    .add_tool(
+                        Tool::function()
+                            .from_file("./prompts/narrator/remove_item_function.json")?,
+                    )
+                    .add_tool(
+                        Tool::function().from_file("./prompts/narrator/new_scene_function.json")?,
+                    )
+                    .add_tool(
+                        Tool::function()
+                            .from_file("./prompts/narrator/character_interact_function.json")?,
+                    )
+                    .add_tool(
+                        Tool::function().from_file("./prompts/narrator/end_game_function.json")?,
+                    )
+                    .build(),
+            )
             .await
-            .expect("Failed to create assistant.");
+            .context("Failed to generate assistant for game narrator.")?;
 
         let narrator_assistant_id = assistant_response.id;
 
-        let thread_response = openai_client.create_thread().await.map_err(|e| {
-            error!("Failed to create thread for Assistant API:\n{:?}", e);
-            anyhow!("Failed to start thread.")
-        })?;
+        let thread_response = openai_client
+            .create_thread(CreateThreadRequest::builder().build())
+            .await
+            .context("Failed to generate thread for narrator assistant.")?;
 
         let thread_id = thread_response.id;
 
@@ -93,7 +94,9 @@ impl GameSession {
         let openai_client = openai_client.clone();
         let mut session_context = SessionContext::new(game.clone(), openai_client, state_update_tx);
 
-        session_context.process(SessionRequest::ContinueProcessing, &mut game_state).await;
+        session_context
+            .process(SessionRequest::ContinueProcessing, &mut game_state)
+            .await;
 
         let game_session = GameSession {
             game,

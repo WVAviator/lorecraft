@@ -6,10 +6,11 @@ use crate::{thread::ToolOutput, Error};
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, TypedBuilder)]
 pub struct SubmitToolOutputsRequest {
     #[builder(default = Vec::new(), mutators(
-        fn add_tool_output(&mut self, tool_output: ToolOutput) {
+        pub fn add_tool_output(&mut self, tool_call_id: impl Into<String>, output: impl Into<String>) {
+            let tool_output = ToolOutput::new(tool_call_id.into(), output.into());
             self.tool_outputs.push(tool_output);
         }
-    ))]
+    ), via_mutators)]
     tool_outputs: Vec<ToolOutput>,
 }
 

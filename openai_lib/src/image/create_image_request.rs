@@ -14,20 +14,26 @@ pub struct CreateImageRequest {
     #[builder(default = ImageModel::DallE2)]
     model: ImageModel,
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     n: Option<u8>,
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     quality: Option<ImageQuality>,
     #[builder(default, setter(strip_option), mutators(
         pub fn b64_json(&mut self) {
             self.response_format = Some(ResponseFormat::B64Json);
         }
     ), via_mutators)]
+    #[serde(skip_serializing_if = "Option::is_none")]
     response_format: Option<ResponseFormat>,
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     size: Option<ImageSize>,
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     style: Option<ImageStyle>,
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     user: Option<String>,
 }
 

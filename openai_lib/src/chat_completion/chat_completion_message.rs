@@ -7,17 +7,22 @@ pub enum ChatCompletionMessage {
     #[serde(rename = "system")]
     System {
         content: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
         name: Option<String>,
     },
     #[serde(rename = "user")]
     User {
         content: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
         name: Option<String>,
     },
     #[serde(rename = "assistant")]
     Assistant {
+        #[serde(skip_serializing_if = "Option::is_none")]
         content: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
         tool_calls: Option<Vec<ToolCall>>,
+        #[serde(skip_serializing_if = "Option::is_none")]
         name: Option<String>,
     },
     #[serde(rename = "tool")]

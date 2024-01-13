@@ -1,14 +1,12 @@
 use anyhow::{anyhow, bail};
 use log::{info, trace};
+use openai_lib::{
+    run::{RunClient, SubmitToolOutputsRequest},
+    OpenAIClient,
+};
 use serde_json::json;
 
-use crate::{
-    game_state::GameState,
-    openai_client::{
-        submit_tool_outputs::submit_tool_outputs_request::SubmitToolOutputsRequest, OpenAIClient,
-    },
-    session_context::session_request::SessionRequest,
-};
+use crate::{game_state::GameState, session_context::session_request::SessionRequest};
 
 use super::SessionState;
 
@@ -69,8 +67,9 @@ impl AwaitingPlayerGiftResponseState {
 
                 info!("Submitting trade function tool outputs response.");
 
-                let mut submit_tool_outputs_request = SubmitToolOutputsRequest::new();
-                submit_tool_outputs_request.add_output(&tool_call_id, &output);
+                let submit_tool_outputs_request = SubmitToolOutputsRequest::builder()
+                    .add_tool_output(&tool_call_id, &output)
+                    .build();
 
                 let thread_id = &game_state
                     .character_interaction

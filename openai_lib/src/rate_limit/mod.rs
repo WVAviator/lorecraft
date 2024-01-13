@@ -2,10 +2,21 @@ use std::{collections::VecDeque, sync::RwLock};
 
 use anyhow::anyhow;
 
+#[derive(Debug)]
 pub struct RateLimiter {
     ts_deque: RwLock<VecDeque<std::time::Instant>>,
-    time_period: std::time::Duration,
-    max_requests: usize,
+    pub time_period: std::time::Duration,
+    pub max_requests: usize,
+}
+
+impl Clone for RateLimiter {
+    fn clone(&self) -> Self {
+        Self {
+            ts_deque: RwLock::new(VecDeque::new()),
+            time_period: self.time_period,
+            max_requests: self.max_requests,
+        }
+    }
 }
 
 impl RateLimiter {

@@ -1,8 +1,9 @@
 use anyhow::{anyhow, bail};
 use log::{info, trace};
+use openai_lib::{OpenAIClient, thread::ThreadClient, assistant::AssistantClient, message::{MessageClient, CreateMessageRequest}};
 use serde_json::json;
 
-use crate::{session_context::{session_request::SessionRequest, session_state::SessionState}, openai_client::{OpenAIClient, create_message::create_message_request::CreateMessageRequest}, game_state::GameState};
+use crate::{session_context::{session_request::SessionRequest, session_state::SessionState}, game_state::GameState};
 
 pub struct CharacterEndInteractionState {}
 
@@ -49,7 +50,7 @@ impl CharacterEndInteractionState {
                             .thread_id
                             .clone();
                         let create_message_response = openai_client
-                            .create_message(CreateMessageRequest::new(&prompt), &thread_id)
+                            .create_message(CreateMessageRequest::builder().content(&prompt).build(), &thread_id)
                             .await
                             .map_err(|e| {
                                 anyhow!(

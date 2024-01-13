@@ -1,11 +1,11 @@
 use anyhow::{anyhow, bail};
-use log::{error, info, trace};
-
-use crate::{
-    game_state::GameState,
-    openai_client::{create_message::create_message_request::CreateMessageRequest, OpenAIClient},
-    session_context::session_request::SessionRequest,
+use log::{info, trace};
+use openai_lib::{
+    message::{CreateMessageRequest, MessageClient},
+    OpenAIClient,
 };
+
+use crate::{game_state::GameState, session_context::session_request::SessionRequest};
 
 use super::SessionState;
 
@@ -20,17 +20,20 @@ impl IdleState {
         match session_request {
             SessionRequest::PlayerEntry(prompt) => {
                 info!("Appending message to game thread.");
-                let create_message_response = openai_client
-                    .create_message(CreateMessageRequest::new(&prompt), &game_state.thread_id)
+                let message = openai_client
+                    .create_message(
+                        CreateMessageRequest::builder().content(&prompt).build(),
+                        &game_state.thread_id,
+                    )
                     .await
                     .map_err(|e| {
                         anyhow!("Failed to create new message and add to thread: {:?}", e)
                     })?;
 
                 info!("New message appended to game thread. Adding to UI state.");
-                trace!("{:#?}", create_message_response);
+                trace!("{:#?}", message);
 
-                game_state.add_player_message(&create_message_response.content[0].text.value);
+                game_state.add_player_message(message.get_text_content().as_str());
 
                 info!("Transitioning to pending run state.");
                 Ok(SessionState::PendingRunState)

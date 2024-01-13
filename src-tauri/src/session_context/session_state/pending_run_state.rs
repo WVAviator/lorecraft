@@ -1,9 +1,10 @@
 use anyhow::{anyhow, bail};
-use log::{error, info};
+use log::info;
+use openai_lib::{OpenAIClient, run::{CreateRunRequest, RunClient}};
 
 use crate::{
-    game_state::GameState, openai_client::{OpenAIClient, create_run::create_run_request::CreateRunRequest},
-    session_context::{session_request::SessionRequest, session_state::polling_run_state::PollingRunState},
+    game_state::GameState, 
+    session_context::session_request::SessionRequest,
 };
 
 use super::SessionState;

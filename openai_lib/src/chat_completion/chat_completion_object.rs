@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{model::ChatModel, Error};
+use crate::model::ChatModel;
 
 use super::{
     chat_completion_message::ChatCompletionMessage, log_probability::LogProbabilityInformation,

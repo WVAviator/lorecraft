@@ -12,6 +12,7 @@ use crate::rate_limit::RateLimiter;
 use crate::run::{CreateRunRequest, RunClient, RunObject, SubmitToolOutputsRequest};
 use crate::thread::{CreateThreadRequest, DeleteThreadResponse, ThreadClient, ThreadObject};
 use crate::Error;
+use log::error;
 use reqwest::{
     header::{HeaderMap, HeaderValue},
     ClientBuilder,
@@ -19,6 +20,7 @@ use reqwest::{
 use serde::de::DeserializeOwned;
 use serde_json::Value;
 
+#[derive(Debug, Clone)]
 pub struct OpenAIClient {
     client: reqwest::Client,
     image_rate_limiter: RateLimiter,
@@ -72,7 +74,15 @@ impl OpenAIClient {
 
             return Ok(response);
         } else {
-            return Err(Error::ResponseFailure(response.status()));
+            let status_code = response.status();
+
+            error!(
+                "Bad response from OpenAI:\n{}\n\n{}",
+                response.status(),
+                response.text().await.unwrap()
+            );
+
+            return Err(Error::ResponseFailure(status_code));
         }
     }
 }
@@ -82,11 +92,11 @@ impl ChatCompletionClient for OpenAIClient {
         &self,
         chat_completion_request: ChatCompletionRequest,
     ) -> Result<ChatCompletionObject, Error> {
-        let body = chat_completion_request.to_json_body();
+        let body = chat_completion_request.to_json_body()?;
         let response = self
             .client
             .post("https://api.openai.com/v1/chat/completions")
-            .body(body?)
+            .body(body)
             .send()
             .await
             .map_err(|e| Error::RequestFailure(e.into()))?;

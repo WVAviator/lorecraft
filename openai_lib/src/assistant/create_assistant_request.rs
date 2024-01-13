@@ -12,13 +12,17 @@ use crate::{common::Metadata, model::ChatModel, tool::Tool, Error};
 ))]
 pub struct CreateAssistantRequest {
     model: ChatModel,
-    #[builder(default, setter(strip_option))]
+    #[builder(default, setter(strip_option, into))]
     name: Option<String>,
-    #[builder(default, setter(strip_option))]
+    #[builder(default, setter(strip_option, into))]
     description: Option<String>,
-    #[builder(default, setter(strip_option))]
+    #[builder(default, setter(strip_option, into))]
     instructions: Option<String>,
-    #[builder(default = Vec::new())]
+    #[builder(default = Vec::new(), mutators(
+        pub fn add_tool(&mut self, tool: Tool) {
+            self.tools.push(tool);
+        }
+    ), via_mutators)]
     tools: Vec<Tool>,
     #[builder(default = Vec::new())]
     file_ids: Vec<String>,

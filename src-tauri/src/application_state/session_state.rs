@@ -24,7 +24,7 @@ impl SessionState {
         self.game_session.as_mut()
     }
 
-    pub async fn set_game_session(&mut self, mut game_session: GameSession) {
+    pub async fn set_game_session(&mut self, game_session: GameSession) {
         self.game_session = Some(game_session);
     }
 }

@@ -8,24 +8,24 @@ use crate::{
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct RunObject {
-    id: String,
-    object: String,
-    created_at: u64,
-    thread_id: String,
-    assistant_id: String,
-    status: RunStatus,
-    required_action: Option<RunRequiredAction>,
-    last_error: Option<RunError>,
-    expires_at: u64,
-    started_at: Option<u64>,
-    cancelled_at: Option<u64>,
-    failed_at: Option<u64>,
-    completed_at: Option<u64>,
-    model: ChatModel,
-    instructions: String,
-    tools: Vec<Tool>,
-    file_ids: Vec<String>,
-    metadata: Metadata,
+    pub id: String,
+    pub object: String,
+    pub created_at: Option<u64>,
+    pub thread_id: String,
+    pub assistant_id: String,
+    pub status: RunStatus,
+    pub required_action: Option<RunRequiredAction>,
+    pub last_error: Option<RunError>,
+    pub expires_at: Option<u64>,
+    pub started_at: Option<u64>,
+    pub cancelled_at: Option<u64>,
+    pub failed_at: Option<u64>,
+    pub completed_at: Option<u64>,
+    pub model: ChatModel,
+    pub instructions: String,
+    pub tools: Vec<Tool>,
+    pub file_ids: Vec<String>,
+    pub metadata: Metadata,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -50,8 +50,8 @@ pub enum RunStatus {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct RunError {
-    code: RunErrorCode,
-    message: String,
+    pub code: RunErrorCode,
+    pub message: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -65,11 +65,11 @@ pub enum RunErrorCode {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct RunRequiredAction {
     #[serde(rename = "type")]
-    type_: String,
-    submit_tool_outputs: SubmitToolOutputs,
+    pub type_: String,
+    pub submit_tool_outputs: SubmitToolOutputs,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct SubmitToolOutputs {
-    tool_calls: Vec<ToolCall>,
+    pub tool_calls: Vec<ToolCall>,
 }

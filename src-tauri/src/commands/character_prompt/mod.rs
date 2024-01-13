@@ -2,10 +2,7 @@ use log::{error, info};
 use tauri::State;
 use tokio::sync::Mutex;
 
-use crate::{
-    application_state::{session_state::SessionState, ApplicationState},
-    file_manager, 
-};
+use crate::application_state::session_state::SessionState;
 
 use self::{
     character_prompt_error::CharacterPromptError, character_prompt_request::CharacterPromptRequest,
@@ -19,7 +16,6 @@ pub mod character_prompt_response;
 #[tauri::command]
 pub async fn character_prompt(
     request: CharacterPromptRequest,
-    application_state: State<'_, Mutex<ApplicationState>>,
     session_state: State<'_, Mutex<SessionState>>,
 ) -> Result<CharacterPromptResponse, CharacterPromptError> {
     info!(

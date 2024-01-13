@@ -4,8 +4,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ThreadObject {
-    id: String,
-    object: String,
-    created_at: u64,
-    metadata: HashMap<String, String>,
+    pub id: String,
+    pub object: String,
+    pub created_at: u64,
+    pub metadata: HashMap<String, String>,
 }

@@ -67,6 +67,18 @@ impl FunctionBuilder {
         }
     }
 
+    pub fn from_file(self, filepath: impl Into<String>) -> Result<Tool, Error> {
+        let function = serde_json::from_str::<Function>(
+            &std::fs::read_to_string(filepath.into())
+                .map_err(|e| Error::FileReadFailure(e.into()))?,
+        )
+        .map_err(|e| Error::DeserializationFailure(e.into()))?;
+        Ok(Tool {
+            type_: String::from("function"),
+            function: Some(function),
+        })
+    }
+
     pub fn from_json(self, json: &str) -> Result<Tool, Error> {
         let function = serde_json::from_str::<Function>(json)
             .map_err(|e| Error::DeserializationFailure(e.into()))?;

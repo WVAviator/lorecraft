@@ -16,4 +16,6 @@ pub enum Error {
     InvalidRequestField(String),
     #[error("An error occurred attempting to rate limit requests: {0:?}")]
     RateLimitFailure(#[source] anyhow::Error),
+    #[error("An error occurred attempting to read a file: {0:?}")]
+    FileReadFailure(#[source] anyhow::Error),
 }

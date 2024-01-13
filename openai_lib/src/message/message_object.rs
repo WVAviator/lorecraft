@@ -16,6 +16,18 @@ pub struct MessageObject {
     metadata: HashMap<String, String>,
 }
 
+impl MessageObject {
+    pub fn get_text_content(&self) -> String {
+        if let Some(message_content) = self.content.get(0) {
+            return match message_content {
+                MessageContent::Text { text } => text.value.clone(),
+                _ => "".to_string(),
+            };
+        }
+        String::new()
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum MessageRole {

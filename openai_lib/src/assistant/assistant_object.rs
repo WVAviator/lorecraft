@@ -6,14 +6,14 @@ use crate::{model::ChatModel, tool::Tool};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct AssistantObject {
-    id: String,
-    object: String,
-    created_at: u64,
-    name: Option<String>,
-    description: Option<String>,
-    model: ChatModel,
-    instructions: Option<String>,
-    tools: Vec<Tool>,
-    file_ids: Vec<String>,
-    metadata: HashMap<String, String>,
+    pub id: String,
+    pub object: String,
+    pub created_at: u64,
+    pub name: Option<String>,
+    pub description: Option<String>,
+    pub model: ChatModel,
+    pub instructions: Option<String>,
+    pub tools: Vec<Tool>,
+    pub file_ids: Vec<String>,
+    pub metadata: HashMap<String, String>,
 }

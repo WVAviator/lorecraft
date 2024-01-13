@@ -81,7 +81,7 @@ impl Game {
             Summary::generate(&openai_client, &user_prompt).await
         };
 
-        let summary = summary.await.expect("Failed to generate summary.");
+        let summary = summary.await.context("Failed to generate summary.")?;
 
         let style_string = format!(
             "Use a style of {}. Use themes of {}.",

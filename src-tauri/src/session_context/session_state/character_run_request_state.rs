@@ -1,11 +1,11 @@
 use anyhow::{anyhow, bail};
 use log::{info, trace};
-
-use crate::{
-    game_state::GameState,
-    openai_client::{create_run::create_run_request::CreateRunRequest, OpenAIClient},
-    session_context::session_request::SessionRequest,
+use openai_lib::{
+    run::{CreateRunRequest, RunClient},
+    OpenAIClient,
 };
+
+use crate::{game_state::GameState, session_context::session_request::SessionRequest};
 
 use super::SessionState;
 

@@ -41,36 +41,52 @@ pub struct ChatCompletionRequest {
     ))]
     messages: Vec<ChatCompletionMessage>,
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     frequency_penalty: Option<f32>,
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     logit_bias: Option<HashMap<String, f32>>,
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     logprobs: Option<bool>,
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     top_logprobs: Option<u8>,
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     max_tokens: Option<u32>,
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     n: Option<u32>,
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     presence_penalty: Option<f32>,
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     response_format: Option<ResponseFormat>,
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     seed: Option<u32>,
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     stop: Option<Vec<String>>,
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     stream: Option<bool>,
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     temperature: Option<f32>,
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     top_p: Option<f32>,
     #[builder(default)]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     tools: Vec<Tool>,
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     tool_choice: Option<ToolChoice>,
     #[builder(default, setter(strip_option))]
+    #[serde(skip_serializing_if = "Option::is_none")]
     user: Option<String>,
 }
 
@@ -135,5 +151,40 @@ impl ChatCompletionRequest {
         }
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use assert_json_diff::assert_json_include;
+    use serde_json::json;
+
+    use super::*;
+
+    #[test]
+    fn generates_correct_json_format() {
+        let request = ChatCompletionRequest::builder()
+            .add_system_message("foo")
+            .add_user_message("bar")
+            .model(ChatModel::Gpt_4)
+            .build();
+
+        let actual = serde_json::to_value(&request).unwrap();
+
+        let expected = json!({
+            "model": "gpt-4",
+            "messages": [
+              {
+                "role": "system",
+                "content": "foo"
+              },
+              {
+                "role": "user",
+                "content": "bar"
+              }
+            ]
+        });
+
+        assert_json_include!(actual: actual, expected: expected);
     }
 }

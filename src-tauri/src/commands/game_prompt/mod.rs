@@ -1,4 +1,4 @@
-use crate::application_state::{session_state::SessionState, ApplicationState};
+use crate::application_state::session_state::SessionState;
 
 use self::{
     game_prompt_error::GamePromptError, game_prompt_request::GamePromptRequest,
@@ -16,7 +16,6 @@ mod game_prompt_response;
 #[tauri::command]
 pub async fn game_prompt(
     request: GamePromptRequest,
-    application_state: State<'_, Mutex<ApplicationState>>,
     session_state: State<'_, Mutex<SessionState>>,
 ) -> Result<GamePromptResponse, GamePromptError> {
     // TODO: Moderation on request prompt
