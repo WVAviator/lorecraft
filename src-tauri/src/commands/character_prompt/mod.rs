@@ -4,7 +4,7 @@ use tokio::sync::Mutex;
 
 use crate::{
     application_state::{session_state::SessionState, ApplicationState},
-    file_manager, openai_client,
+    file_manager, 
 };
 
 use self::{
