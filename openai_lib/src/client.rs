@@ -7,6 +7,7 @@ use crate::image::create_image_client::CreateImageClient;
 use crate::image::create_image_request::CreateImageRequest;
 use crate::image::create_image_response::CreateImageResponse;
 use crate::rate_limit::RateLimiter;
+use crate::thread::{CreateThreadRequest, DeleteThreadResponse, ThreadClient, ThreadObject};
 use crate::Error;
 use reqwest::{
     header::{HeaderMap, HeaderValue},
@@ -133,5 +134,36 @@ impl AssistantClient for OpenAIClient {
 
         self.handle_response::<DeleteAssistantResponse>(response)
             .await
+    }
+}
+
+impl ThreadClient for OpenAIClient {
+    async fn create_thread(&self, request: CreateThreadRequest) -> Result<ThreadObject, Error> {
+        let body = request.to_json_body()?;
+
+        let response = self
+            .client
+            .post("https://api.openai.com/v1/threads")
+            .header("OpenAI-Beta", "assistants=v1")
+            .body(body)
+            .send()
+            .await
+            .map_err(|e| Error::RequestFailure(e.into()))?;
+
+        self.handle_response::<ThreadObject>(response).await
+    }
+
+    async fn delete_thread(&self, thread_id: &str) -> Result<DeleteThreadResponse, Error> {
+        let url = format!("https://api.openai.com/v1/threads/{}", thread_id);
+
+        let response = self
+            .client
+            .delete(url)
+            .header("OpenAI-Beta", "assistants=v1")
+            .send()
+            .await
+            .map_err(|e| Error::RequestFailure(e.into()))?;
+
+        self.handle_response::<DeleteThreadResponse>(response).await
     }
 }
