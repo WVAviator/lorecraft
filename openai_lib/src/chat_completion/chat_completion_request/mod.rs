@@ -18,34 +18,27 @@ use self::{response_format::ResponseFormat, tool_choice::ToolChoice};
 use super::chat_completion_message::ChatCompletionMessage;
 
 #[derive(Serialize, Deserialize, Debug, Clone, TypedBuilder)]
-#[builder(mutators(
-    #[mutator(requires = [messages])]
-    fn add_system_message(&mut self, content: impl Into<String>) {
-        self.messages.push(ChatCompletionMessage::system(content.into(), None));
-    }
-    #[mutator(requires = [messages])]
-    fn add_user_message(&mut self, content: impl Into<String>) {
-        self.messages.push(ChatCompletionMessage::user(content.into(), None));
-    }
-    #[mutator(requires = [messages])]
-    fn add_assistant_message(&mut self, content: impl Into<String>) {
-        self.messages.push(ChatCompletionMessage::assistant(content.into(), None));
-    }
-    #[mutator(requires = [messages])]
-    fn add_assistant_tool_call(&mut self, tool_calls: Vec<ToolCall>) {
-        self.messages
-            .push(ChatCompletionMessage::assistant_tool_call(tool_calls, None));
-    }
-    #[mutator(requires = [messages])]
-    fn add_tool_call_response(&mut self, content: impl Into<String>, tool_call_id: impl Into<String>) {
-        self.messages
-            .push(ChatCompletionMessage::tool(content.into(), tool_call_id.into()));
-    }
-
-))]
 pub struct ChatCompletionRequest {
     model: ChatModel,
-    #[builder(default = Vec::new())]
+    #[builder(default = Vec::new(), via_mutators, mutators(
+        pub fn add_system_message(&mut self, content: impl Into<String>) {
+            self.messages.push(ChatCompletionMessage::system(content.into(), None));
+        }
+        pub fn add_user_message(&mut self, content: impl Into<String>) {
+            self.messages.push(ChatCompletionMessage::user(content.into(), None));
+        }
+        pub fn add_assistant_message(&mut self, content: impl Into<String>) {
+            self.messages.push(ChatCompletionMessage::assistant(content.into(), None));
+        }
+        pub fn add_assistant_tool_call(&mut self, tool_calls: Vec<ToolCall>) {
+            self.messages
+                .push(ChatCompletionMessage::assistant_tool_call(tool_calls, None));
+        }
+        pub fn add_tool_call_response(&mut self, content: impl Into<String>, tool_call_id: impl Into<String>) {
+            self.messages
+                .push(ChatCompletionMessage::tool(content.into(), tool_call_id.into()));
+        }
+    ))]
     messages: Vec<ChatCompletionMessage>,
     #[builder(default, setter(strip_option))]
     frequency_penalty: Option<f32>,

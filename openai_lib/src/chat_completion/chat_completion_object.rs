@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::model::ChatModel;
+use crate::{model::ChatModel, Error};
 
 use super::{
     chat_completion_message::ChatCompletionMessage, log_probability::LogProbabilityInformation,
@@ -24,4 +24,13 @@ pub struct ChatCompletionChoice {
     index: usize,
     message: ChatCompletionMessage,
     logprobs: Option<LogProbabilityInformation>,
+}
+
+impl ChatCompletionObject {
+    pub fn get_content(&self) -> String {
+        if let Some(choice) = self.choices.get(0) {
+            return choice.message.text();
+        }
+        String::new()
+    }
 }

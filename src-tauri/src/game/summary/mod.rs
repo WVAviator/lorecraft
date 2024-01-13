@@ -1,13 +1,12 @@
+use anyhow::anyhow;
+use openai_lib::{
+    chat_completion::{ChatCompletionClient, ChatCompletionRequest},
+    model::ChatModel,
+    OpenAIClient,
+};
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    openai_client::{
-        chat_completion::chat_completion_model::ChatCompletionModel,
-        chat_completion::chat_completion_request::ChatCompletionRequest,
-        openai_client_error::OpenAIClientError, OpenAIClient,
-    },
-    prompt_builder::PromptBuilder,
-};
+use crate::prompt_builder::PromptBuilder;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Summary {
@@ -21,10 +20,7 @@ pub struct Summary {
 }
 
 impl Summary {
-    pub async fn generate(
-        client: &OpenAIClient,
-        user_prompt: &str,
-    ) -> Result<Self, OpenAIClientError> {
+    pub async fn generate(client: &OpenAIClient, user_prompt: &str) -> Result<Self, anyhow::Error> {
         let system_prompt = PromptBuilder::new()
             .add_prompt("./prompts/summary/main.txt")
             .add_plain_text("Example Input: make a game about mystical forests and ancient ruins")
@@ -36,17 +32,19 @@ impl Summary {
         let user_prompt = String::from(user_prompt);
 
         let response_text = client
-            .chat_completion_request(ChatCompletionRequest::new(
-                system_prompt,
-                user_prompt,
-                ChatCompletionModel::Gpt3_5Turbo1106,
-            ))
+            .create_chat_completion(
+                ChatCompletionRequest::builder()
+                    .add_system_message(system_prompt)
+                    .add_user_message(user_prompt)
+                    .model(ChatModel::Gpt_35_Turbo_1106)
+                    .build(),
+            )
             .await
-            .expect("Failed to get response from OpenAI API.")
+            .map_err(|e| anyhow!("Failed to create chat completion request: {}", e))?
             .get_content();
 
         let summary = serde_json::from_str::<Summary>(response_text.as_str())
-            .expect("Failed to deserialize summary.");
+            .map_err(|e| anyhow!("Failed to deserialize summary: {}", e))?;
 
         Ok(summary)
     }

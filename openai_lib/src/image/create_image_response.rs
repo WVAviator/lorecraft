@@ -7,3 +7,9 @@ pub struct CreateImageResponse {
     created: i64,
     data: Vec<ImageObject>,
 }
+
+impl Into<Vec<ImageObject>> for CreateImageResponse {
+    fn into(self) -> Vec<ImageObject> {
+        self.data
+    }
+}

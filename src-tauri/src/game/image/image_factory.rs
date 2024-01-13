@@ -1,15 +1,12 @@
-use std::{collections::VecDeque, sync::RwLock, time::SystemTime};
-
+use anyhow::{anyhow, bail};
 use base64::{engine::general_purpose, Engine as _};
-use log::{debug, error, info, trace};
-
-use crate::{
-    file_manager::FileManager,
-    openai_client::{
-        image_generation::image_generation_request::ImageGenerationRequest,
-        openai_client_error::OpenAIClientError, OpenAIClient,
-    },
+use log::{error, info, trace};
+use openai_lib::{
+    image::{CreateImageClient, CreateImageRequest, ImageObject, ResponseFormat},
+    OpenAIClient,
 };
+
+use crate::file_manager::FileManager;
 
 use super::Image;
 
@@ -17,7 +14,6 @@ pub struct ImageFactory<'a> {
     openai_client: &'a OpenAIClient,
     file_manager: &'a FileManager,
     game_id: &'a str,
-    ts_deque: RwLock<VecDeque<i64>>,
     style: String,
 }
 
@@ -32,99 +28,60 @@ impl<'a> ImageFactory<'a> {
             openai_client,
             file_manager,
             game_id,
-            ts_deque: RwLock::new(VecDeque::new()),
             style,
-        }
-    }
-
-    async fn rate_limit(&self) {
-        loop {
-            let is_limited = {
-                let mut ts_deque = self.ts_deque.write().unwrap();
-
-                let now = SystemTime::now()
-                    .duration_since(SystemTime::UNIX_EPOCH)
-                    .unwrap()
-                    .as_millis() as i64;
-
-                while let Some(front) = ts_deque.front() {
-                    if now - front > 60000 {
-                        ts_deque.pop_front();
-                    } else {
-                        break;
-                    }
-                }
-
-                ts_deque.len() >= 5
-            };
-
-            if !is_limited {
-                break;
-            }
-
-            info!("Throttling API requests for image generation.");
-            debug!("Sleeping for 15 seconds.");
-            tokio::time::sleep(tokio::time::Duration::from_secs(15)).await;
-        }
-
-        {
-            let mut ts_deque = self.ts_deque.write().unwrap();
-            let now = SystemTime::now()
-                .duration_since(SystemTime::UNIX_EPOCH)
-                .unwrap()
-                .as_millis() as i64;
-            ts_deque.push_back(now);
         }
     }
 
     pub async fn try_generate_image(
         &self,
-        image_generation_request: ImageGenerationRequest,
+        create_image_request: CreateImageRequest,
         filepath: &str,
         max_attempts: u32,
-    ) -> Result<Image, OpenAIClientError> {
+    ) -> Result<Image, anyhow::Error> {
         let mut attempts = 0;
         while attempts < max_attempts {
             match self
-                .generate_image(image_generation_request.clone(), filepath)
+                .generate_image(create_image_request.clone(), filepath)
                 .await
             {
                 Ok(image) => return Ok(image),
                 Err(e) => {
                     error!("Image API request failed with reason: {:?}", e);
-                    trace!("Request:\n{:?}", &image_generation_request);
+                    trace!("Request:\n{:?}", &create_image_request);
                     info!("Retrying...")
                 }
             }
             attempts += 1;
         }
 
-        Err(OpenAIClientError::MaxAttemptsExceeded(format!(
-            "Max attempts exceeded to generate image for request:\n{:?}",
-            &image_generation_request
-        )))
+        bail!("Max attempts exceeded.");
     }
 
     async fn generate_image(
         &self,
-        image_generation_request: ImageGenerationRequest,
+        mut create_image_request: CreateImageRequest,
         filepath: &str,
-    ) -> Result<Image, OpenAIClientError> {
-        self.rate_limit().await;
+    ) -> Result<Image, anyhow::Error> {
+        create_image_request.modify_prompt(|prompt| format!("{}\n{}", prompt, &self.style));
+        create_image_request.modify_response_format(ResponseFormat::B64Json);
+        let prompt = create_image_request.get_prompt();
 
-        let prompt = format!("{}\n{}", &image_generation_request.user_prompt, &self.style);
-        let response = self
+        let data: Vec<ImageObject> = self
             .openai_client
-            .image_generation_request(image_generation_request)
-            .await?;
+            .create_image(create_image_request)
+            .await?
+            .into();
 
-        let alt = response.data[0]
-            .revised_prompt
+        let alt = data[0].revised_prompt.as_ref().unwrap_or(&prompt).clone();
+
+        let base64_encoded = data[0]
+            .b64_json
             .as_ref()
-            .unwrap_or(&prompt)
-            .clone();
+            .ok_or(anyhow!("B64 json not available."))?
+            .split(",")
+            .last()
+            .ok_or(anyhow!("Failed to get base64 image."))?;
 
-        let base64_encoded = response.data[0].b64_json.split(",").last().unwrap();
         let image_data = general_purpose::STANDARD
             .decode(base64_encoded)
             .expect("Failed to decode base64 image.");

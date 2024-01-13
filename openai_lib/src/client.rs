@@ -17,6 +17,7 @@ use reqwest::{
     ClientBuilder,
 };
 use serde::de::DeserializeOwned;
+use serde_json::Value;
 
 pub struct OpenAIClient {
     client: reqwest::Client,
@@ -44,6 +45,19 @@ impl OpenAIClient {
             client,
             image_rate_limiter,
         })
+    }
+
+    pub async fn verify_connection(&self) -> Result<(), Error> {
+        let response = self
+            .client
+            .get("https://api.openai.com/v1/models")
+            .send()
+            .await
+            .map_err(|e| Error::RequestFailure(e.into()))?;
+
+        self.handle_response::<Value>(response).await?;
+
+        Ok(())
     }
 
     async fn handle_response<T: DeserializeOwned>(

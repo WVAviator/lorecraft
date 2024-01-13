@@ -26,7 +26,7 @@ base64 = "0.21.5"
 fern = "0.6.2"
 futures = "0.3.30"
 anyhow = "1.0.78"
-openai_client = { path = "../openai-client" }
+openai_lib = { path = "../openai_lib" }
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem

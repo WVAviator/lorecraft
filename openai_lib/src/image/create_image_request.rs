@@ -17,7 +17,11 @@ pub struct CreateImageRequest {
     n: Option<u8>,
     #[builder(default, setter(strip_option))]
     quality: Option<ImageQuality>,
-    #[builder(default, setter(strip_option))]
+    #[builder(default, setter(strip_option), mutators(
+        pub fn b64_json(&mut self) {
+            self.response_format = Some(ResponseFormat::B64Json);
+        }
+    ), via_mutators)]
     response_format: Option<ResponseFormat>,
     #[builder(default, setter(strip_option))]
     size: Option<ImageSize>,
@@ -35,6 +39,21 @@ impl CreateImageRequest {
             serde_json::to_string(&self).map_err(|e| Error::SerializationFailure(e.into()))?;
 
         Ok(json)
+    }
+
+    pub fn get_prompt(&self) -> String {
+        self.prompt.clone()
+    }
+
+    pub fn modify_prompt<T>(&mut self, transformer: T)
+    where
+        T: Fn(&str) -> String,
+    {
+        self.prompt = transformer(&self.prompt);
+    }
+
+    pub fn modify_response_format(&mut self, response_format: ResponseFormat) {
+        self.response_format = Some(response_format);
     }
 
     fn validate(&self) -> Result<(), Error> {

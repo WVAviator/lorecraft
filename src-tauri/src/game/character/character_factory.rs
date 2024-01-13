@@ -1,22 +1,17 @@
 use crate::{
     game::{image::image_factory::ImageFactory, scene_detail::SceneDetail},
-    openai_client::{
-        chat_completion::chat_completion_model::ChatCompletionModel,
-        chat_completion::chat_completion_request::ChatCompletionRequest,
-        image_generation::{
-            image_generation_model::ImageGenerationModel,
-            image_generation_request::ImageGenerationRequest,
-            image_generation_size::ImageGenerationSize,
-        },
-        openai_client_error::OpenAIClientError,
-        OpenAIClient,
-    },
     prompt_builder::PromptBuilder,
     utils::random::Random,
 };
 
 use futures::StreamExt;
 use log::info;
+use openai_lib::{
+    chat_completion::{ChatCompletionClient, ChatCompletionRequest},
+    image::{CreateImageRequest, ImageSize},
+    model::{image_model::ImageModel, ChatModel},
+    OpenAIClient,
+};
 
 use super::{character_input::CharacterInput, character_output::CharacterOutput, Character};
 
@@ -42,7 +37,7 @@ impl<'a> CharacterFactory<'a> {
     pub async fn from_scene_detail(
         &self,
         scene_detail: &SceneDetail,
-    ) -> Result<Vec<Character>, OpenAIClientError> {
+    ) -> Result<Vec<Character>, anyhow::Error> {
         let scene_description = scene_detail.narrative.clone();
         let characters = async {
             let mut character_futures = Vec::new();
@@ -65,13 +60,15 @@ impl<'a> CharacterFactory<'a> {
                 );
 
                 let character_future = async move {
+                    let request = ChatCompletionRequest::builder()
+                        .model(ChatModel::Gpt_35_Turbo_1106)
+                        .add_system_message(system_prompt)
+                        .add_user_message(user_prompt)
+                        .build();
+
                     let response_text = self
                         .openai_client
-                        .chat_completion_request(ChatCompletionRequest::new(
-                            system_prompt,
-                            user_prompt,
-                            ChatCompletionModel::Gpt3_5Turbo1106,
-                        ))
+                        .create_chat_completion(request)
                         .await
                         .expect("Failed to get response from OpenAI API")
                         .get_content();
@@ -86,11 +83,11 @@ impl<'a> CharacterFactory<'a> {
                     let image = self
                         .image_factory
                         .try_generate_image(
-                            ImageGenerationRequest::new(
-                                character_output.image.to_string(),
-                                ImageGenerationModel::DallE2,
-                                ImageGenerationSize::Size1024x1024,
-                            ),
+                            CreateImageRequest::builder()
+                                .prompt(&character_output.image)
+                                .model(ImageModel::DallE3)
+                                .size(ImageSize::Size1024x1024)
+                                .build(),
                             &filepath,
                             3,
                         )

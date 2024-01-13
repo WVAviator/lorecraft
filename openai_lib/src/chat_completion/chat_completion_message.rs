@@ -58,6 +58,17 @@ impl ChatCompletionMessage {
             tool_call_id,
         }
     }
+
+    pub fn text(&self) -> String {
+        match self {
+            ChatCompletionMessage::System { content, .. } => content.clone(),
+            ChatCompletionMessage::User { content, .. } => content.clone(),
+            ChatCompletionMessage::Assistant { content, .. } => {
+                content.clone().unwrap_or(String::new())
+            }
+            ChatCompletionMessage::Tool { content, .. } => content.clone(),
+        }
+    }
 }
 
 #[cfg(test)]

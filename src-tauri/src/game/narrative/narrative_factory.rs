@@ -1,20 +1,13 @@
+use anyhow::anyhow;
 use futures::StreamExt;
-
-use crate::{
-    game::image::image_factory::ImageFactory,
-    openai_client::{
-        chat_completion::chat_completion_model::ChatCompletionModel,
-        chat_completion::chat_completion_request::ChatCompletionRequest,
-        image_generation::{
-            image_generation_model::ImageGenerationModel,
-            image_generation_request::ImageGenerationRequest,
-            image_generation_size::ImageGenerationSize,
-        },
-        openai_client_error::OpenAIClientError,
-        OpenAIClient,
-    },
-    prompt_builder::PromptBuilder,
+use openai_lib::{
+    chat_completion::{ChatCompletionClient, ChatCompletionRequest},
+    image::{CreateImageRequest, ImageQuality, ImageSize},
+    model::{image_model::ImageModel, ChatModel},
+    OpenAIClient,
 };
+
+use crate::{game::image::image_factory::ImageFactory, prompt_builder::PromptBuilder};
 
 use super::{narrative_output::NarrativeOutput, Narrative, Page};
 
@@ -37,7 +30,7 @@ impl<'a> NarrativeFactory<'a> {
         }
     }
 
-    pub async fn create(&self) -> Result<Narrative, OpenAIClientError> {
+    pub async fn create(&self) -> Result<Narrative, anyhow::Error> {
         let system_prompt = PromptBuilder::new()
             .add_prompt("./prompts/narrative/main.txt")
             .add_example_input("./prompts/narrative/example1_input.json")
@@ -50,17 +43,19 @@ impl<'a> NarrativeFactory<'a> {
 
         let response_text = self
             .openai_client
-            .chat_completion_request(ChatCompletionRequest::new(
-                system_prompt,
-                user_prompt,
-                ChatCompletionModel::Gpt3_5Turbo1106,
-            ))
+            .create_chat_completion(
+                ChatCompletionRequest::builder()
+                    .add_system_message(system_prompt)
+                    .add_user_message(user_prompt)
+                    .model(ChatModel::Gpt_35_Turbo_1106)
+                    .build(),
+            )
             .await
-            .expect("Failed to get response from OpenAI API.")
+            .map_err(|e| anyhow!("Failed to create chat completion: {}", e))?
             .get_content();
 
         let narrative = serde_json::from_str::<NarrativeOutput>(response_text.as_str())
-            .expect("Failed to deserialize narrative.");
+            .map_err(|e| anyhow!("Failed to deserialize narrative: {}", e))?;
 
         let pages = async {
             let mut page_futures = Vec::new();
@@ -70,11 +65,12 @@ impl<'a> NarrativeFactory<'a> {
                     let image = self
                         .image_factory
                         .try_generate_image(
-                            ImageGenerationRequest::new(
-                                page.image.clone(),
-                                ImageGenerationModel::DallE3,
-                                ImageGenerationSize::Size1792x1024,
-                            ),
+                            CreateImageRequest::builder()
+                                .prompt(&page.image)
+                                .model(ImageModel::DallE3)
+                                .size(ImageSize::Size1792x1024)
+                                .quality(ImageQuality::HD)
+                                .build(),
                             &filepath,
                             3,
                         )
