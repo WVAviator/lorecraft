@@ -1,3 +1,6 @@
+use crate::assistant::{
+    AssistantClient, AssistantObject, CreateAssistantRequest, DeleteAssistantResponse,
+};
 use crate::chat_completion::{ChatCompletionClient, ChatCompletionObject, ChatCompletionRequest};
 use crate::client_config::ClientConfig;
 use crate::image::create_image_client::CreateImageClient;
@@ -95,5 +98,40 @@ impl CreateImageClient for OpenAIClient {
             .map_err(|e| Error::RequestFailure(e.into()))?;
 
         self.handle_response::<CreateImageResponse>(response).await
+    }
+}
+
+impl AssistantClient for OpenAIClient {
+    async fn create_assistant(
+        &self,
+        request: CreateAssistantRequest,
+    ) -> Result<AssistantObject, Error> {
+        let body = request.to_json_body()?;
+
+        let response = self
+            .client
+            .post("https://api.openai.com/v1/assistants")
+            .body(body)
+            .header("OpenAI-Beta", "assistants=v1")
+            .send()
+            .await
+            .map_err(|e| Error::RequestFailure(e.into()))?;
+
+        self.handle_response::<AssistantObject>(response).await
+    }
+
+    async fn delete_assistant(&self, assistant_id: &str) -> Result<DeleteAssistantResponse, Error> {
+        let url = format!("https://api.openai.com/v1/assistants/{}", assistant_id);
+
+        let response = self
+            .client
+            .delete(url)
+            .header("OpenAI-Beta", "assistants=v1")
+            .send()
+            .await
+            .map_err(|e| Error::RequestFailure(e.into()))?;
+
+        self.handle_response::<DeleteAssistantResponse>(response)
+            .await
     }
 }
