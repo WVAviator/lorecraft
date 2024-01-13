@@ -9,6 +9,7 @@ use crate::image::create_image_response::CreateImageResponse;
 use crate::message::list_messages_response::ListMessagesResponse;
 use crate::message::{CreateMessageRequest, ListMessagesRequest, MessageClient, MessageObject};
 use crate::rate_limit::RateLimiter;
+use crate::run::{CreateRunRequest, RunClient, RunObject, SubmitToolOutputsRequest};
 use crate::thread::{CreateThreadRequest, DeleteThreadResponse, ThreadClient, ThreadObject};
 use crate::Error;
 use reqwest::{
@@ -210,5 +211,68 @@ impl MessageClient for OpenAIClient {
             .map_err(|e| Error::RequestFailure(e.into()))?;
 
         self.handle_response::<ListMessagesResponse>(response).await
+    }
+}
+
+impl RunClient for OpenAIClient {
+    async fn create_run(
+        &self,
+        request: CreateRunRequest,
+        thread_id: &str,
+    ) -> Result<RunObject, Error> {
+        let body = request.to_json_body()?;
+        let url = format!("https://api.openai.com/v1/threads/{}/runs", thread_id);
+
+        let response = self
+            .client
+            .post(url)
+            .header("OpenAI-Beta", "assistants=v1")
+            .body(body)
+            .send()
+            .await
+            .map_err(|e| Error::RequestFailure(e.into()))?;
+
+        self.handle_response::<RunObject>(response).await
+    }
+
+    async fn retrieve_run(&self, thread_id: &str, run_id: &str) -> Result<RunObject, Error> {
+        let url = format!(
+            "https://api.openai.com/v1/threads/{}/runs/{}",
+            thread_id, run_id
+        );
+
+        let response = self
+            .client
+            .get(url)
+            .header("OpenAI-Beta", "assistants=v1")
+            .send()
+            .await
+            .map_err(|e| Error::RequestFailure(e.into()))?;
+
+        self.handle_response::<RunObject>(response).await
+    }
+
+    async fn submit_tool_outputs(
+        &self,
+        request: SubmitToolOutputsRequest,
+        thread_id: &str,
+        run_id: &str,
+    ) -> Result<RunObject, Error> {
+        let body = request.to_json_body()?;
+        let url = format!(
+            "https://api.openai.com/v1/threads/{}/runs/{}/submit_tool_outputs",
+            thread_id, run_id
+        );
+
+        let response = self
+            .client
+            .post(url)
+            .header("OpenAI-Beta", "assistants=v1")
+            .body(body)
+            .send()
+            .await
+            .map_err(|e| Error::RequestFailure(e.into()))?;
+
+        self.handle_response::<RunObject>(response).await
     }
 }
