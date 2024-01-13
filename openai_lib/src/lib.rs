@@ -6,6 +6,7 @@ pub mod error;
 pub mod image;
 pub mod model;
 pub mod rate_limit;
+pub mod thread;
 pub mod tool;
 
 pub use self::client::OpenAIClient;
