@@ -6,6 +6,7 @@ use crate::client_config::ClientConfig;
 use crate::image::create_image_client::CreateImageClient;
 use crate::image::create_image_request::CreateImageRequest;
 use crate::image::create_image_response::CreateImageResponse;
+use crate::message::{CreateMessageRequest, MessageClient, MessageObject};
 use crate::rate_limit::RateLimiter;
 use crate::thread::{CreateThreadRequest, DeleteThreadResponse, ThreadClient, ThreadObject};
 use crate::Error;
@@ -165,5 +166,27 @@ impl ThreadClient for OpenAIClient {
             .map_err(|e| Error::RequestFailure(e.into()))?;
 
         self.handle_response::<DeleteThreadResponse>(response).await
+    }
+}
+
+impl MessageClient for OpenAIClient {
+    async fn create_message(
+        &self,
+        request: CreateMessageRequest,
+        thread_id: &str,
+    ) -> Result<MessageObject, Error> {
+        let body = request.to_json_body()?;
+        let url = format!("https://api.openai.com/v1/threads/{}/messages", thread_id);
+
+        let response = self
+            .client
+            .post(url)
+            .body(body)
+            .header("OpenAI-Beta", "assistants=v1")
+            .send()
+            .await
+            .map_err(|e| Error::RequestFailure(e.into()))?;
+
+        self.handle_response::<MessageObject>(response).await
     }
 }

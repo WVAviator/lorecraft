@@ -1,15 +1,13 @@
-use std::collections::HashMap;
-
 use serde::{Deserialize, Serialize};
 use typed_builder::TypedBuilder;
 
-use crate::{model::ChatModel, tool::Tool, Error};
+use crate::{common::Metadata, model::ChatModel, tool::Tool, Error};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, TypedBuilder)]
 #[builder(mutators(
     #[mutator(requires = [metadata])]
     fn add_metadata(&mut self, key: impl Into<String>, value: impl Into<String>) {
-        self.metadata.insert(key.into(), value.into());
+        self.metadata.insert(key, value);
     }
 ))]
 pub struct CreateAssistantRequest {
@@ -24,8 +22,8 @@ pub struct CreateAssistantRequest {
     tools: Vec<Tool>,
     #[builder(default = Vec::new())]
     file_ids: Vec<String>,
-    #[builder(default = HashMap::new())]
-    metadata: HashMap<String, String>,
+    #[builder(default)]
+    metadata: Metadata,
 }
 
 impl CreateAssistantRequest {
@@ -72,21 +70,7 @@ impl CreateAssistantRequest {
             )));
         }
 
-        if self
-            .metadata
-            .iter()
-            .any(|(key, value)| key.chars().count() > 64 || value.chars().count() > 512)
-        {
-            return Err(Error::InvalidRequestField(String::from(
-                "The field 'metadata' must have keys of 64 characters or less and values of 512 characters or less.",
-            )));
-        }
-
-        if self.metadata.len() > 16 {
-            return Err(Error::InvalidRequestField(String::from(
-                "The field 'metadata' must have 16 or fewer items.",
-            )));
-        }
+        self.metadata.validate()?;
 
         Ok(())
     }
