@@ -2,7 +2,12 @@ import { Game } from './Game';
 
 export interface CreateNewGameRequest {
   prompt: string;
+  text_content_setting?: ContentSetting;
+  image_content_setting?: ContentSetting;
+  temperature_setting?: string;
 }
+
+export type ContentSetting = 'minimum' | 'moderate' | 'high';
 
 export interface CreateNewGameResponse {
   success: boolean;

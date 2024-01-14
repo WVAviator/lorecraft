@@ -10,6 +10,7 @@ import GameMenuScreen from './screens/GameMenuScreen';
 import GameStateProvider from './context/GameStateProvider';
 import ScreenContainer from './screens/ScreenContainer';
 import { createRef } from 'react';
+import GenerateOptionsScreen from './screens/GenerateOptionsScreen';
 
 export const routes = [
   {
@@ -25,6 +26,11 @@ export const routes = [
   {
     path: '/select-game',
     element: <GameSelectionScreen />,
+    nodeRef: createRef<HTMLDivElement>(),
+  },
+  {
+    path: '/generate-options',
+    element: <GenerateOptionsScreen />,
     nodeRef: createRef<HTMLDivElement>(),
   },
   {
