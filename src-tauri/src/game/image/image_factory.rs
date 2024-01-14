@@ -84,14 +84,14 @@ impl<'a> ImageFactory<'a> {
 
         let image_data = general_purpose::STANDARD
             .decode(base64_encoded)
-            .expect("Failed to decode base64 image.");
+            .map_err(|e| anyhow!("Failed to decode base64 image: {:?}", e))?;
 
         let filepath = format!("{}/{}", self.game_id, filepath);
 
         let src = self
             .file_manager
             .write_bytes_to_file(&filepath, image_data)
-            .expect("Failed to write image to file.");
+            .map_err(|e| anyhow!("Failed to write image to file: {:?}", e))?;
 
         Ok(Image { src, alt })
     }

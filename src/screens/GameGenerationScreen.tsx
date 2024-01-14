@@ -9,7 +9,7 @@ import {
   CreateNewGameRequest,
   CreateNewGameResponse,
 } from '../types/CreateNewGame';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 interface GameGenerationScreenProps {}
 
@@ -17,14 +17,20 @@ const GameGenerationScreen: React.FC<GameGenerationScreenProps> = () => {
   const { setGame } = useGameContext();
   const { updates } = useUpdates();
   const navigate = useNavigate();
+  const location = useLocation();
 
   React.useEffect(() => {
     const createGame = async () => {
-      const request: CreateNewGameRequest = {
-        prompt: '',
-      };
+      if (!location.state.request) {
+        console.error('No request found in state.');
+        navigate('/mainmenu');
+      }
+      console.log(
+        "Calling 'create_new_game' with request: ",
+        location.state.request
+      );
       const response = (await invoke('create_new_game', {
-        request,
+        request: location.state.request,
       })) as CreateNewGameResponse;
       if (response.success === false || !response.game) {
         console.error('Failed to generate game.');

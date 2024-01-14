@@ -10,6 +10,8 @@ use tokio::{join, sync::MutexGuard};
 
 use crate::{
     application_state::ApplicationState,
+    commands::create_new_game::create_new_game_request::CreateNewGameRequest,
+    config::content_setting::ContentSetting,
     file_manager::FileManager,
     game::{
         character::{character_factory::CharacterFactory, Character},
@@ -49,7 +51,7 @@ pub struct Game {
 
 impl Game {
     pub async fn create_new(
-        user_prompt: String,
+        request: CreateNewGameRequest,
         state: &MutexGuard<'_, ApplicationState>,
     ) -> Result<Self, anyhow::Error> {
         let id = Random::generate_id();
@@ -78,7 +80,7 @@ impl Game {
             state
                 .send_update(String::from("Generating game summary information."))
                 .await;
-            Summary::generate(&openai_client, &user_prompt).await
+            Summary::generate(&openai_client, &request).await
         };
 
         let summary = summary.await.context("Failed to generate summary.")?;
@@ -90,10 +92,11 @@ impl Game {
 
         let image_factory = ImageFactory::new(&openai_client, &file_manager, &id, style_string);
         let narrative_factory =
-            NarrativeFactory::new(&openai_client, &summary.summary, &image_factory);
+            NarrativeFactory::new(&openai_client, &summary.summary, &image_factory, &request);
         let character_factory =
-            CharacterFactory::new(&openai_client, &summary.summary, &image_factory);
-        let item_factory = ItemFactory::new(&openai_client, &summary.summary, &image_factory);
+            CharacterFactory::new(&openai_client, &summary.summary, &image_factory, &request);
+        let item_factory =
+            ItemFactory::new(&openai_client, &summary.summary, &image_factory, &request);
 
         let name = summary.name.clone();
         info!("Generated game: {}.", name);
@@ -105,13 +108,18 @@ impl Game {
                 .send_update(String::from("Generating game cover art."))
                 .await;
 
+            let quality = match &request.image_content_setting {
+                Some(ContentSetting::Low) => ImageQuality::Standard,
+                _ => ImageQuality::HD,
+            };
+
             image_factory
                 .try_generate_image(
                     CreateImageRequest::builder()
                         .prompt(&summary.cover_art)
                         .model(ImageModel::DallE3)
                         .size(ImageSize::Size1792x1024)
-                        .quality(ImageQuality::HD)
+                        .quality(quality)
                         .build(),
                     "cover_art.png",
                     3,
@@ -135,10 +143,14 @@ impl Game {
             state
                 .send_update(String::from("Generating scene summary information."))
                 .await;
-            let scene_summary =
-                SceneSummary::generate(&summary.summary, &summary.win_condition, &openai_client)
-                    .await
-                    .map_err(|e| anyhow!("Failed to generate scene summary: {}", e))?;
+            let scene_summary = SceneSummary::generate(
+                &summary.summary,
+                &summary.win_condition,
+                &openai_client,
+                &request,
+            )
+            .await
+            .map_err(|e| anyhow!("Failed to generate scene summary: {}", e))?;
 
             trace!("Generated scene summary: {:#?}", scene_summary);
 
@@ -147,10 +159,16 @@ impl Game {
                 for summarized_scene in &scene_summary.scenes {
                     let openai_ref = &openai_client;
                     let summary_ref = &summary;
+                    let request_ref = &request;
 
                     let future = async move {
-                        SceneDetail::generate(&summary_ref.summary, &summarized_scene, openai_ref)
-                            .await
+                        SceneDetail::generate(
+                            &summary_ref.summary,
+                            &summarized_scene,
+                            openai_ref,
+                            request_ref,
+                        )
+                        .await
                     };
 
                     futures.push(future);
@@ -173,9 +191,10 @@ impl Game {
             let mut futures = Vec::new();
             for scene_detail in &scene_details {
                 let image_factory_ref = &image_factory;
+                let request_ref = &request;
 
                 let future = async move {
-                    Scene::from_scene_detail(scene_detail, image_factory_ref)
+                    Scene::from_scene_detail(scene_detail, image_factory_ref, request_ref)
                         .await
                         .map_err(|e| anyhow!("Failed to create scene: {}", e))
                 };

@@ -1,5 +1,6 @@
 use anyhow::anyhow;
-use futures::StreamExt;
+use futures::{StreamExt, TryStreamExt};
+use log::info;
 use openai_lib::{
     chat_completion::{ChatCompletionClient, ChatCompletionRequest},
     image::{CreateImageRequest, ImageQuality, ImageSize},
@@ -7,7 +8,11 @@ use openai_lib::{
     OpenAIClient,
 };
 
-use crate::{game::image::image_factory::ImageFactory, prompt_builder::PromptBuilder};
+use crate::{
+    commands::create_new_game::create_new_game_request::CreateNewGameRequest,
+    config::content_setting::ContentSetting, game::image::image_factory::ImageFactory,
+    prompt_builder::PromptBuilder,
+};
 
 use super::{narrative_output::NarrativeOutput, Narrative, Page};
 
@@ -15,6 +20,7 @@ pub struct NarrativeFactory<'a> {
     openai_client: &'a OpenAIClient,
     summary: &'a str,
     image_factory: &'a ImageFactory<'a>,
+    request: &'a CreateNewGameRequest,
 }
 
 impl<'a> NarrativeFactory<'a> {
@@ -22,11 +28,13 @@ impl<'a> NarrativeFactory<'a> {
         openai_client: &'a OpenAIClient,
         summary: &'a str,
         image_factory: &'a ImageFactory,
+        request: &'a CreateNewGameRequest,
     ) -> Self {
         Self {
             openai_client,
             summary,
             image_factory,
+            request,
         }
     }
 
@@ -41,13 +49,22 @@ impl<'a> NarrativeFactory<'a> {
 
         let user_prompt = self.summary.to_string();
 
+        let model = match self.request.text_content_setting {
+            Some(ContentSetting::Low) => ChatModel::Gpt_35_Turbo_1106,
+            _ => ChatModel::Gpt_4_1106_Preview,
+        };
+
+        info!("Generating opening narrative for game.");
+
         let response_text = self
             .openai_client
             .create_chat_completion(
                 ChatCompletionRequest::builder()
                     .add_system_message(system_prompt)
                     .add_user_message(user_prompt)
-                    .model(ChatModel::Gpt_35_Turbo_1106)
+                    .model(model)
+                    .temperature(self.request.get_temperature())
+                    .json()
                     .build(),
             )
             .await
@@ -62,6 +79,14 @@ impl<'a> NarrativeFactory<'a> {
             for (index, page) in narrative.pages.iter().enumerate() {
                 let page_future = async move {
                     let filepath = format!("narrative/page_{}.png", index);
+
+                    let quality = match self.request.image_content_setting {
+                        Some(ContentSetting::High) => ImageQuality::HD,
+                        _ => ImageQuality::Standard,
+                    };
+
+                    info!("Generating image for narrative page {}.", index);
+
                     let image = self
                         .image_factory
                         .try_generate_image(
@@ -69,22 +94,28 @@ impl<'a> NarrativeFactory<'a> {
                                 .prompt(&page.image)
                                 .model(ImageModel::DallE3)
                                 .size(ImageSize::Size1792x1024)
-                                .quality(ImageQuality::HD)
+                                .quality(quality)
                                 .build(),
                             &filepath,
                             3,
                         )
                         .await
-                        .expect("Unable to generate image.");
-                    Page::new(page.narrative.clone(), image)
+                        .map_err(|e| anyhow!("Failed to generate narrative image: {}", e))?;
+
+                    info!(
+                        "Finished generating narrative page and image for index {}.",
+                        index
+                    );
+
+                    Ok(Page::new(page.narrative.clone(), image)) as Result<Page, anyhow::Error>
                 };
                 page_futures.push(page_future);
             }
 
             let stream = futures::stream::iter(page_futures).buffered(3);
-            stream.collect::<Vec<_>>().await
+            stream.try_collect::<Vec<_>>().await
         };
-        let pages = pages.await;
+        let pages = pages.await?;
         Ok(Narrative::new(pages))
     }
 }

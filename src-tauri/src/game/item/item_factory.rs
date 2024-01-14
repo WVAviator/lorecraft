@@ -1,9 +1,11 @@
 use crate::{
-    game::image::image_factory::ImageFactory, prompt_builder::PromptBuilder, utils::random::Random,
+    commands::create_new_game::create_new_game_request::CreateNewGameRequest,
+    config::content_setting::ContentSetting, game::image::image_factory::ImageFactory,
+    prompt_builder::PromptBuilder, utils::random::Random,
 };
 
 use anyhow::anyhow;
-use futures::StreamExt;
+use futures::{StreamExt, TryStreamExt};
 use openai_lib::{
     chat_completion::{ChatCompletionClient, ChatCompletionRequest},
     image::{CreateImageRequest, ImageSize},
@@ -17,6 +19,7 @@ pub struct ItemFactory<'a> {
     openai_client: &'a OpenAIClient,
     game_summary: &'a str,
     image_factory: &'a ImageFactory<'a>,
+    request: &'a CreateNewGameRequest,
 }
 
 impl<'a> ItemFactory<'a> {
@@ -24,11 +27,13 @@ impl<'a> ItemFactory<'a> {
         openai_client: &'a OpenAIClient,
         game_summary: &'a str,
         image_factory: &'a ImageFactory,
+        request: &'a CreateNewGameRequest,
     ) -> Self {
         Self {
             openai_client,
             game_summary,
             image_factory,
+            request,
         }
     }
 
@@ -43,13 +48,20 @@ impl<'a> ItemFactory<'a> {
             .build();
         let user_prompt = items_input.to_string();
 
+        let model = match self.request.text_content_setting {
+            Some(ContentSetting::High) => ChatModel::Gpt_4_1106_Preview,
+            _ => ChatModel::Gpt_35_Turbo_1106,
+        };
+
         let text_response = self
             .openai_client
             .create_chat_completion(
                 ChatCompletionRequest::builder()
                     .add_system_message(system_prompt)
                     .add_user_message(user_prompt)
-                    .model(ChatModel::Gpt_35_Turbo_1106)
+                    .temperature(self.request.get_temperature())
+                    .json()
+                    .model(model)
                     .build(),
             )
             .await
@@ -65,29 +77,39 @@ impl<'a> ItemFactory<'a> {
                 let item_future = async move {
                     let id = Random::generate_id();
                     let filepath = format!("items/{}.png", &id);
+
+                    let (model, size) = match self.request.image_content_setting {
+                        Some(ContentSetting::High) => {
+                            (ImageModel::DallE3, ImageSize::Size1024x1024)
+                        }
+                        _ => (ImageModel::DallE2, ImageSize::Size256x256),
+                    };
+
                     let image = self
                         .image_factory
                         .try_generate_image(
                             CreateImageRequest::builder()
                                 .prompt(&item.image)
-                                .model(ImageModel::DallE2)
-                                .size(ImageSize::Size256x256)
+                                .model(model)
+                                .size(size)
                                 .build(),
                             &filepath,
                             3,
                         )
                         .await
-                        .expect("Failed to generate image.");
-                    Item::new(id, item.name, item.description, image)
+                        .map_err(|e| anyhow!("Failed to generate image: {:?}", e))?;
+
+                    Ok(Item::new(id, item.name, item.description, image))
+                        as Result<Item, anyhow::Error>
                 };
                 item_futures.push(item_future)
             }
 
             let stream = futures::stream::iter(item_futures).buffered(3);
-            stream.collect::<Vec<_>>().await
+            stream.try_collect::<Vec<_>>().await
         };
 
-        let items = items.await;
+        let items = items.await?;
         Ok(items)
     }
 }

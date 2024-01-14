@@ -69,7 +69,7 @@ impl ProcessCharacterInteractState {
                             .add_tool(Tool::function().from_file("./prompts/character_actor/trade_function.json")?)
                             .build())
                     .await
-                    .expect("Failed to create assistant.");
+                    .map_err(|e| anyhow!("Failed to create assistant for character: {}", e))?;
 
                 let character_assistant_id = assistant_response.id;
 

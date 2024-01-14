@@ -11,15 +11,15 @@ use self::create_new_game_request::CreateNewGameRequest;
 use self::create_new_game_response::{CreateNewGameFailureResponse, CreateNewGameSuccessResponse};
 
 mod create_new_game_error;
-mod create_new_game_request;
+pub mod create_new_game_request;
 mod create_new_game_response;
 
 #[tauri::command]
 pub async fn create_new_game(
-    request: CreateNewGameRequest,
+    mut request: CreateNewGameRequest,
     state: State<'_, Mutex<ApplicationState>>,
 ) -> Result<CreateNewGameSuccessResponse, CreateNewGameFailureResponse> {
-    let prompt = {
+    request.prompt = {
         match request.prompt.as_str() {
             "" => String::from("choose any random unique game idea you can think of"),
             _ => StringUtilities::truncate(&request.prompt, 497),
@@ -37,8 +37,11 @@ pub async fn create_new_game(
             ));
         }
 
-        info!("Creating new game from user prompt:\n{}.", &prompt);
-        Game::create_new(prompt, &state).await.map_err(|e| {
+        info!(
+            "Creating new game from user prompt:\n{:?}.",
+            &request.prompt
+        );
+        Game::create_new(request, &state).await.map_err(|e| {
             error!("Failed to generate new game:\n{:?}", e);
             CreateNewGameFailureResponse::new(CreateNewGameError::GameGenerationError(
                 String::from("Failed to generate new game."),
@@ -50,7 +53,13 @@ pub async fn create_new_game(
         "Game with id '{}' created. Serializing and saving game to file.",
         game.id
     );
-    let game_serialized = serde_json::to_string(&game).expect("Failed to serialize game.");
+    let game_serialized = serde_json::to_string(&game).map_err(|e| {
+        error!("Failed to serialize game:\n{:?}", e);
+        CreateNewGameFailureResponse::new(CreateNewGameError::GameGenerationError(String::from(
+            "Failed to serialize game.",
+        )))
+    })?;
+
     {
         let state = state.lock().await;
         if let Some(file_manager) = &state.file_manager {

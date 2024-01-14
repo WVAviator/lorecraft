@@ -5,6 +5,7 @@ import TextInput from '../components/TextInput/TextInput';
 import Slider from '../components/Slider/Slider';
 import { CreateNewGameRequest } from '../types/CreateNewGame';
 import Select from '../components/Select/Select';
+import { useNavigate } from 'react-router-dom';
 
 interface GenerateStep {
   title: string;
@@ -62,6 +63,8 @@ const GenerateOptionsScreen = () => {
   const [value, setValue] = React.useState('');
   const [open, setOpen] = React.useState(false);
 
+  const navigate = useNavigate();
+
   React.useEffect(() => {
     setTimeout(() => {
       setOpen(true);
@@ -71,6 +74,7 @@ const GenerateOptionsScreen = () => {
   React.useEffect(() => {
     if (Object.keys(request).length === 4) {
       console.log('Formed request: ', request);
+      navigate('/generate-game', { state: { request } });
     }
   }, [request]);
 

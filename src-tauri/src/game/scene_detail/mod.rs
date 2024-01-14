@@ -6,7 +6,10 @@ use openai_lib::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::prompt_builder::PromptBuilder;
+use crate::{
+    commands::create_new_game::create_new_game_request::CreateNewGameRequest,
+    config::content_setting::ContentSetting, prompt_builder::PromptBuilder,
+};
 
 use self::scene_detail_input::SceneDetailInput;
 
@@ -29,6 +32,7 @@ impl SceneDetail {
         summary: &str,
         summarized_scene: &SummarizedScene,
         openai_client: &OpenAIClient,
+        request: &CreateNewGameRequest,
     ) -> Result<Self, anyhow::Error> {
         let scene_detail_input = SceneDetailInput::new(summary, summarized_scene);
         let system_prompt = PromptBuilder::new()
@@ -40,12 +44,19 @@ impl SceneDetail {
             .build();
         let user_prompt = serde_json::to_string(&scene_detail_input).unwrap();
 
+        let model = match request.text_content_setting {
+            Some(ContentSetting::High) => ChatModel::Gpt_4_1106_Preview,
+            _ => ChatModel::Gpt_35_Turbo_1106,
+        };
+
         let response_text = openai_client
             .create_chat_completion(
                 ChatCompletionRequest::builder()
                     .add_system_message(system_prompt)
                     .add_user_message(user_prompt)
-                    .model(ChatModel::Gpt_35_Turbo_1106)
+                    .model(model)
+                    .temperature(request.get_temperature())
+                    .json()
                     .build(),
             )
             .await
@@ -53,7 +64,7 @@ impl SceneDetail {
             .get_content();
 
         let scene_detail = serde_json::from_str::<SceneDetail>(&response_text)
-            .expect("Failed to deserialize scene detail.");
+            .map_err(|e| anyhow!("Failed to deserialize scene detail: {}", e))?;
 
         Ok(scene_detail)
     }

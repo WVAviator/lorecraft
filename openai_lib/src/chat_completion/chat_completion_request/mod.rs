@@ -61,7 +61,11 @@ pub struct ChatCompletionRequest {
     #[builder(default, setter(strip_option))]
     #[serde(skip_serializing_if = "Option::is_none")]
     presence_penalty: Option<f32>,
-    #[builder(default, setter(strip_option))]
+    #[builder(default, setter(strip_option), via_mutators, mutators(
+        pub fn json(&mut self) {
+            self.response_format = Some(ResponseFormat::json());
+        }
+    ))]
     #[serde(skip_serializing_if = "Option::is_none")]
     response_format: Option<ResponseFormat>,
     #[builder(default, setter(strip_option))]
@@ -183,6 +187,35 @@ mod test {
                 "content": "bar"
               }
             ]
+        });
+
+        assert_json_include!(actual: actual, expected: expected);
+    }
+
+    #[test]
+    fn json_builder_method_serializes_properly() {
+        let request = ChatCompletionRequest::builder()
+            .add_system_message("foo")
+            .add_user_message("bar")
+            .model(ChatModel::Gpt_4)
+            .json()
+            .build();
+
+        let actual = serde_json::to_value(&request).unwrap();
+
+        let expected = json!({
+            "model": "gpt-4",
+            "messages": [
+              {
+            "role": "system",
+            "content": "foo"
+              },
+              {
+            "role": "user",
+            "content": "bar"
+              }
+            ],
+            "response_format": { "type": "json_object" }
         });
 
         assert_json_include!(actual: actual, expected: expected);

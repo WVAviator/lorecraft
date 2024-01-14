@@ -9,7 +9,10 @@ use openai_lib::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::prompt_builder::PromptBuilder;
+use crate::{
+    commands::create_new_game::create_new_game_request::CreateNewGameRequest,
+    config::content_setting::ContentSetting, prompt_builder::PromptBuilder,
+};
 
 use self::summarized_scene::SummarizedScene;
 
@@ -23,6 +26,7 @@ impl SceneSummary {
         summary: &str,
         win_condition: &str,
         openai_client: &OpenAIClient,
+        request: &CreateNewGameRequest,
     ) -> Result<Self, anyhow::Error> {
         let input = scene_summary_input::SceneSummaryInput::new(
             summary.to_string(),
@@ -39,12 +43,19 @@ impl SceneSummary {
 
         let user_prompt = input.to_string();
 
+        let model = match request.text_content_setting {
+            Some(ContentSetting::Low) => ChatModel::Gpt_35_Turbo_1106,
+            _ => ChatModel::Gpt_4_1106_Preview,
+        };
+
         let response_text = openai_client
             .create_chat_completion(
                 ChatCompletionRequest::builder()
                     .add_system_message(system_prompt)
                     .add_user_message(user_prompt)
-                    .model(ChatModel::Gpt_35_Turbo_1106)
+                    .temperature(request.get_temperature())
+                    .model(model)
+                    .json()
                     .build(),
             )
             .await
