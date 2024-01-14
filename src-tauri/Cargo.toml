@@ -27,6 +27,7 @@ fern = "0.6.2"
 futures = "0.3.30"
 anyhow = "1.0.78"
 openai_lib = { path = "../openai_lib" }
+nosleep = "0.2.1"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem
