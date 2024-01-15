@@ -3,10 +3,10 @@ use openai_lib::OpenAIClient;
 
 use crate::{
     commands::create_new_game::create_new_game_request::CreateNewGameRequest,
-    config::content_setting::ContentSetting, file_manager::FileManager, utils::random::Random,
+    file_manager::FileManager, game::summary::SummaryFactory, utils::random::Random,
 };
 
-use super::game_metadata::GameMetadata;
+use super::{game_metadata::GameMetadata, Game};
 
 pub struct GameFactory {
     game_id: String,
@@ -24,14 +24,6 @@ impl GameFactory {
         let game_id = Random::generate_id();
 
         let game_metadata = GameMetadata::from_request(&game_id, request);
-
-        // let contents = serde_json::to_string(&game_metadata).unwrap();
-        // file_manager
-        //     .write_to_file(
-        //         format!("{}/tmp/metadata.json", &game_id).as_str(),
-        //         &contents,
-        //     )
-        //     .context("Error occurred attempting to save new game metadata to file.")?;
 
         file_manager
             .write_json(format!("{}/tmp/metadata.json", &game_id), &game_metadata)
@@ -62,5 +54,14 @@ impl GameFactory {
             openai_client: openai_client.clone(),
             file_manager: file_manager.clone(),
         })
+    }
+
+    pub async fn create(&self) -> Result<Game, anyhow::Error> {
+        let summary_factory =
+            SummaryFactory::new(&self.openai_client, &self.file_manager, &self.game_metadata);
+
+        let summary = summary_factory.try_create(3).await?;
+
+        todo!();
     }
 }

@@ -7,11 +7,11 @@ use crate::{
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GameMetadata {
-    game_id: String,
-    prompt: String,
-    text_content_setting: ContentSetting,
-    image_content_setting: ContentSetting,
-    temperature_setting: f32,
+    pub game_id: String,
+    pub prompt: String,
+    pub text_content_setting: ContentSetting,
+    pub image_content_setting: ContentSetting,
+    pub temperature_setting: f32,
 }
 
 impl GameMetadata {
