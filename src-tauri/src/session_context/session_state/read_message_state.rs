@@ -22,6 +22,7 @@ impl ReadMessageState {
         match session_request {
             SessionRequest::ContinueProcessing => {
                 info!("Fetching latest message from thread");
+
                 let list_messages_response = openai_client
                     .list_messages(
                         ListMessagesRequest::builder()
@@ -32,7 +33,7 @@ impl ReadMessageState {
                     )
                     .await
                     .map_err(|e| anyhow!("Failed to list messages: {:?}", e))?;
-                // let response = list_messages_response.data[0].content[0].text.value.clone();
+
                 let response = list_messages_response
                     .data
                     .get(0)

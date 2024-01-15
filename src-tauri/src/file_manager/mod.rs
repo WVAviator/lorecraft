@@ -87,6 +87,26 @@ impl FileManager {
         .await?
     }
 
+    pub fn write_json<T>(
+        &self,
+        file_name: impl Into<String>,
+        content: &T,
+    ) -> Result<(), anyhow::Error>
+    where
+        T: Serialize,
+    {
+        let file_path: PathBuf = self.data_dir.join(file_name.into());
+
+        let file = OpenOptions::new()
+            .create(true)
+            .write(true)
+            .truncate(true)
+            .open(&file_path)
+            .context("Unable to open the specified JSON file.")?;
+
+        serde_json::to_writer(&file, content).context("Unable to serialize and write JSON to file.")
+    }
+
     pub fn read_json<T>(&self, file_name: impl Into<String>) -> Result<T, anyhow::Error>
     where
         T: DeserializeOwned,
@@ -98,7 +118,7 @@ impl FileManager {
             .create(true)
             .write(true)
             .open(&file_path)
-            .context("Unable to open request JSON file.")?;
+            .context("Unable to open the specified JSON file.")?;
 
         serde_json::from_reader::<&File, T>(&file)
             .context("Unable to deserialize the requested JSON file.")

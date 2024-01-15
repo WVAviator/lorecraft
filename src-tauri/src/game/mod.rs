@@ -29,6 +29,8 @@ use crate::{
 use self::{image::Image, item::Item};
 
 pub mod character;
+pub mod game_factory;
+pub mod game_metadata;
 pub mod image;
 pub mod item;
 pub mod narrative;
