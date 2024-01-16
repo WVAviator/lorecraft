@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use crate::game::image::Image;
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct NarrativeOutput {
     pub pages: Vec<OutputPage>,
@@ -9,6 +11,7 @@ pub struct NarrativeOutput {
 pub struct OutputPage {
     pub narrative: String,
     pub image: String,
+    pub image_object: Option<Image>,
 }
 
 #[cfg(test)]
