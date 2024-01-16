@@ -72,10 +72,7 @@ impl<'a> ChatCompletionFactory<'a> {
     where
         T: DeserializeOwned + Serialize,
     {
-        let file_path = format!(
-            "{}/tmp/{}",
-            self.game_metadata.game_id, factory_args.file_name
-        );
+        let file_path = format!("{}/{}", self.game_metadata.game_id, factory_args.file_name);
 
         info!("Checking for existing summary JSON file at {}", &file_path);
 

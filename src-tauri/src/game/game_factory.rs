@@ -6,7 +6,7 @@ use crate::{
     file_manager::FileManager,
     game::{
         chat_completion_factory::ChatCompletionFactory, image::image_factory::ImageFactory,
-        summary::Summary,
+        narrative::Narrative, summary::Summary,
     },
     utils::random::Random,
 };
@@ -84,6 +84,12 @@ impl GameFactory {
         );
 
         summary
+            .generate_images(&image_factory, &self.game_metadata, &self.file_manager)
+            .await?;
+
+        let mut narrative = Narrative::create(&summary, &chat_completion_factory).await?;
+
+        narrative
             .generate_images(&image_factory, &self.game_metadata, &self.file_manager)
             .await?;
 

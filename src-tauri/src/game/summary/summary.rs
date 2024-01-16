@@ -50,7 +50,7 @@ impl Summary {
                     .name("Summary")
                     .system_message(system_message)
                     .user_message(user_message)
-                    .file_name("summary.json")
+                    .file_name("tmp/summary.json")
                     .build(),
             )
             .await
@@ -82,10 +82,13 @@ impl Summary {
         self.cover_art = cover_art.clone();
 
         file_manager
-            .json_transaction::<Self, _>("summary.json", |mut summary| {
-                summary.cover_art = cover_art;
-                summary
-            })
+            .json_transaction::<Self, _>(
+                format!("{}/tmp/summary.json", game_metadata.game_id),
+                |mut summary| {
+                    summary.cover_art = cover_art;
+                    summary
+                },
+            )
             .await?;
 
         Ok(())
