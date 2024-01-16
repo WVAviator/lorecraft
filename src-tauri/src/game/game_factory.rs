@@ -3,7 +3,12 @@ use openai_lib::OpenAIClient;
 
 use crate::{
     commands::create_new_game::create_new_game_request::CreateNewGameRequest,
-    file_manager::FileManager, game::summary::SummaryFactory, utils::random::Random,
+    file_manager::FileManager,
+    game::{
+        image::image_factory::ImageFactory, narrative::narrative_factory::NarrativeFactory,
+        summary::SummaryFactory,
+    },
+    utils::random::Random,
 };
 
 use super::{game_metadata::GameMetadata, Game};
@@ -57,10 +62,25 @@ impl GameFactory {
     }
 
     pub async fn create(&self) -> Result<Game, anyhow::Error> {
+        let mut image_factory =
+            ImageFactory::new(&self.openai_client, &self.file_manager, &self.game_metadata);
         let summary_factory =
             SummaryFactory::new(&self.openai_client, &self.file_manager, &self.game_metadata);
+        let narrative_factory = NarrativeFactory::new(
+            &self.openai_client,
+            &self.file_manager,
+            &image_factory,
+            &self.game_metadata,
+        );
 
         let summary = summary_factory.try_create(3).await?;
+
+        image_factory.add_style(format!(
+            "In the style of {}\nWith themes of {}",
+            &summary.art_style, &summary.art_theme
+        ));
+
+        let narrative = narrative_factory.try_create(&summary, 3).await?;
 
         todo!();
     }

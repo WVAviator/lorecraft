@@ -43,10 +43,14 @@ impl<'a> NarrativeFactory<'a> {
         }
     }
 
-    pub async fn try_create(&self, summary: &Summary) -> Result<Narrative, anyhow::Error> {
+    pub async fn try_create(
+        &self,
+        summary: &Summary,
+        max_attempts: u8,
+    ) -> Result<Narrative, anyhow::Error> {
         info!("Creating game narrative.");
         let mut errors = Vec::new();
-        for _ in 0..3 {
+        for _ in 0..max_attempts {
             match self.create(summary).await {
                 Ok(narrative) => return Ok(narrative),
                 Err(e) => {
@@ -82,7 +86,7 @@ impl<'a> NarrativeFactory<'a> {
         }
 
         let narrative_output = self.create_narrative_output(summary).await?;
-        let narrative = self.generate_page_images(narrative_output).await?;
+        let narrative = self.generate_pages(narrative_output).await?;
 
         self.file_manager
             .write_json::<Narrative>(&narrative_path, &narrative)
@@ -169,14 +173,14 @@ impl<'a> NarrativeFactory<'a> {
         Ok(narrative_output)
     }
 
-    async fn generate_page_images(
+    async fn generate_pages(
         &self,
         narrative_output: NarrativeOutput,
     ) -> Result<Narrative, anyhow::Error> {
         let mut page_futures = Vec::new();
 
         for (index, page) in narrative_output.pages.iter().enumerate() {
-            let page_future = self.create_image(index, page);
+            let page_future = self.create_page(index, page);
             page_futures.push(page_future);
         }
 
@@ -186,7 +190,7 @@ impl<'a> NarrativeFactory<'a> {
         Ok(Narrative::new(pages))
     }
 
-    async fn create_image(&self, index: usize, page: &OutputPage) -> Result<Page, anyhow::Error> {
+    async fn create_page(&self, index: usize, page: &OutputPage) -> Result<Page, anyhow::Error> {
         let narrative_output_path =
             format!("{}/tmp/narrative_output.json", &self.game_metadata.game_id);
 

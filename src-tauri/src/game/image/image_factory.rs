@@ -1,3 +1,5 @@
+use std::cell::RefCell;
+
 use anyhow::{anyhow, bail};
 use base64::{engine::general_purpose, Engine as _};
 use log::{error, info, trace};
@@ -6,30 +8,33 @@ use openai_lib::{
     OpenAIClient,
 };
 
-use crate::file_manager::FileManager;
+use crate::{file_manager::FileManager, game::game_metadata::GameMetadata};
 
 use super::Image;
 
 pub struct ImageFactory<'a> {
     openai_client: &'a OpenAIClient,
     file_manager: &'a FileManager,
-    game_id: &'a str,
-    style: String,
+    game_metadata: &'a GameMetadata,
+    style: RefCell<Option<String>>,
 }
 
 impl<'a> ImageFactory<'a> {
     pub fn new(
         openai_client: &'a OpenAIClient,
         file_manager: &'a FileManager,
-        game_id: &'a str,
-        style: String,
+        game_metadata: &'a GameMetadata,
     ) -> Self {
         Self {
             openai_client,
             file_manager,
-            game_id,
-            style,
+            game_metadata,
+            style: RefCell::new(None),
         }
+    }
+
+    pub fn add_style(&self, style: impl Into<String>) {
+        *self.style.borrow_mut() = Some(style.into());
     }
 
     pub async fn try_generate_image(
@@ -62,7 +67,14 @@ impl<'a> ImageFactory<'a> {
         mut create_image_request: CreateImageRequest,
         filepath: &str,
     ) -> Result<Image, anyhow::Error> {
-        create_image_request.modify_prompt(|prompt| format!("{}\n{}", prompt, &self.style));
+        let style = self
+            .style
+            .borrow()
+            .as_ref()
+            .unwrap_or(&String::from("In the style of digital art"))
+            .clone();
+
+        create_image_request.modify_prompt(|prompt| format!("{}\n{}", prompt, style));
         create_image_request.modify_response_format(ResponseFormat::B64Json);
         let prompt = create_image_request.get_prompt();
 
@@ -86,7 +98,7 @@ impl<'a> ImageFactory<'a> {
             .decode(base64_encoded)
             .map_err(|e| anyhow!("Failed to decode base64 image: {:?}", e))?;
 
-        let filepath = format!("{}/{}", self.game_id, filepath);
+        let filepath = format!("{}/{}", self.game_metadata.game_id, filepath);
 
         let src = self
             .file_manager
