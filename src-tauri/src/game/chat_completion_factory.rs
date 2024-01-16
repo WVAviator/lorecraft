@@ -11,6 +11,9 @@ use crate::{config::content_setting::ContentSetting, file_manager::FileManager};
 
 use super::game_metadata::GameMetadata;
 
+/// A factory that can produce Chat Completions based on the game settings and configuration.
+/// It can be used to pass any prompt to OpenAI and get an object of any shape back from the
+/// assistant.
 pub struct ChatCompletionFactory<'a> {
     openai_client: &'a OpenAIClient,
     file_manager: &'a FileManager,
@@ -30,6 +33,10 @@ impl<'a> ChatCompletionFactory<'a> {
         }
     }
 
+    /// Process a chat completion request with the provided ChatCompletionFactoryArgs and attempts
+    /// to parse an object of type T from the response.
+    ///
+    /// Takes a ChatCompletionFactoryArgs argument, which can be constructed from a builder.
     pub async fn try_create<T>(
         &self,
         factory_args: ChatCompletionFactoryArgs,
@@ -134,6 +141,17 @@ impl<'a> ChatCompletionFactory<'a> {
     }
 }
 
+/// Used as an argument to the ChatCompletionFactory try_create method.
+/// ```
+/// let args = ChatCompletionFactoryArgs::builder()
+///     .name("HelloWorld")
+///     .system_message("You are a helpful assistant.")
+///     .user_message("Generate the following JSON...")
+///     .max_attempts(3),
+///     .file_name("hello-world.json")
+///     .build();
+/// ```
+///
 pub struct ChatCompletionFactoryArgs {
     name: String,
     system_message: String,
@@ -167,26 +185,36 @@ impl ChatCompletionFactoryArgsBuilder {
         }
     }
 
+    /// The name of this generated item. This will be used strictly for logging and debugging
+    /// purposes.
     pub fn name(mut self, name: impl Into<String>) -> Self {
         self.name = Some(name.into());
         self
     }
 
+    /// The initial system message that the model should receive.
     pub fn system_message(mut self, system_message: impl Into<String>) -> Self {
         self.system_message = Some(system_message.into());
         self
     }
 
+    /// The initial user message that should follow the system message.
     pub fn user_message(mut self, user_message: impl Into<String>) -> Self {
         self.user_message = Some(user_message.into());
         self
     }
 
+    /// The maximum times that the API should be called to attempt to generate the desired object.
+    /// Any errors in sending the request or in reading and deserializing the response will count
+    /// as an attempt towards this total. Default is 3.
     pub fn max_attempts(mut self, max_attempts: u8) -> Self {
         self.max_attempts = max_attempts;
         self
     }
 
+    /// The file name to store the result of deserializing the response. If this filename already
+    /// exists, that value will be used instead - saving an API call and allows resuming the
+    /// generation process.
     pub fn file_name(mut self, file_name: impl Into<String>) -> Self {
         self.file_name = Some(file_name.into());
         self
