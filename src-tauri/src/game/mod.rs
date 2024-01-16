@@ -29,6 +29,7 @@ use crate::{
 use self::{image::Image, item::Item};
 
 pub mod character;
+pub mod chat_completion_factory;
 pub mod game_factory;
 pub mod game_metadata;
 pub mod image;

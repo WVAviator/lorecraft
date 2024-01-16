@@ -5,8 +5,11 @@ use crate::{
     commands::create_new_game::create_new_game_request::CreateNewGameRequest,
     file_manager::FileManager,
     game::{
-        image::image_factory::ImageFactory, narrative::narrative_factory::NarrativeFactory,
-        scene_summary::scene_summary_factory::SceneSummaryFactory, summary::SummaryFactory,
+        chat_completion_factory::{ChatCompletionFactory, ChatCompletionFactoryArgs},
+        image::image_factory::ImageFactory,
+        narrative::narrative_factory::NarrativeFactory,
+        scene_summary::scene_summary_factory::SceneSummaryFactory,
+        summary::SummaryFactory,
     },
     utils::random::Random,
 };
@@ -66,6 +69,11 @@ impl GameFactory {
             ImageFactory::new(&self.openai_client, &self.file_manager, &self.game_metadata);
         let summary_factory =
             SummaryFactory::new(&self.openai_client, &self.file_manager, &self.game_metadata);
+        let chat_completion_factory = ChatCompletionFactory::new(
+            &self.openai_client,
+            &self.file_manager,
+            &self.game_metadata,
+        );
         let narrative_factory = NarrativeFactory::new(
             &self.openai_client,
             &self.file_manager,
