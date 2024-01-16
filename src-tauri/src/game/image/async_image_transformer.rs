@@ -7,8 +7,8 @@ use super::Image;
 pub trait AsyncImageTransformer {
     async fn visit_images<C, F>(&mut self, transformer: C) -> Result<(), anyhow::Error>
     where
-        C: Fn(Image) -> F + Send + 'static,
-        F: Future<Output = Result<Image, anyhow::Error>> + Send + 'static;
+        C: Fn(Image) -> F + Send,
+        F: Future<Output = Result<Image, anyhow::Error>> + Send;
 }
 
 #[cfg(test)]
@@ -25,8 +25,8 @@ mod test {
     impl AsyncImageTransformer for TestA {
         async fn visit_images<C, F>(&mut self, transformer: C) -> Result<(), anyhow::Error>
         where
-            C: Fn(Image) -> F + Send + 'static,
-            F: Future<Output = Result<Image, anyhow::Error>> + Send + 'static,
+            C: Fn(Image) -> F + Send,
+            F: Future<Output = Result<Image, anyhow::Error>> + Send,
         {
             self.image = transformer(self.image.clone()).await?;
             Ok(())
@@ -40,8 +40,8 @@ mod test {
     impl AsyncImageTransformer for TestB {
         async fn visit_images<C, F>(&mut self, transformer: C) -> Result<(), anyhow::Error>
         where
-            C: Fn(Image) -> F + Send + 'static,
-            F: Future<Output = Result<Image, anyhow::Error>> + Send + 'static,
+            C: Fn(Image) -> F + Send,
+            F: Future<Output = Result<Image, anyhow::Error>> + Send,
         {
             let mut futures = Vec::new();
             for image in &mut self.images {

@@ -1,17 +1,30 @@
+use openai_lib::{
+    image::{ImageQuality, ImageSize},
+    model::image_model::ImageModel,
+};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    game::chat_completion_factory::{ChatCompletionFactory, ChatCompletionFactoryArgs},
+    config::content_setting::ContentSetting,
+    file_manager::FileManager,
+    game::{
+        chat_completion_factory::{ChatCompletionFactory, ChatCompletionFactoryArgs},
+        game_metadata::GameMetadata,
+        image::{
+            image_factory::{ImageFactory, ImageFactoryArgs},
+            Image,
+        },
+    },
     prompt_builder::PromptBuilder,
 };
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Summary {
     pub name: String,
     pub description: String,
     pub art_style: String,
     pub art_theme: String,
-    pub cover_art: String,
+    pub cover_art: Image,
     pub summary: String,
     pub win_condition: String,
 }
@@ -41,5 +54,40 @@ impl Summary {
                     .build(),
             )
             .await
+    }
+
+    pub async fn generate_images(
+        &mut self,
+        image_factory: &ImageFactory<'_>,
+        game_metadata: &GameMetadata,
+        file_manager: &FileManager,
+    ) -> Result<(), anyhow::Error> {
+        let (model, quality) = match game_metadata.image_content_setting {
+            ContentSetting::High => (ImageModel::DallE3, ImageQuality::HD),
+            _ => (ImageModel::DallE3, ImageQuality::Standard),
+        };
+
+        let cover_art = image_factory
+            .try_create(
+                &self.cover_art,
+                ImageFactoryArgs::builder()
+                    .model(model)
+                    .quality(quality)
+                    .size(ImageSize::Size1792x1024)
+                    .filepath("summary/cover_art.png")
+                    .build(),
+            )
+            .await?;
+
+        self.cover_art = cover_art.clone();
+
+        file_manager
+            .json_transaction::<Self, _>("summary.json", |mut summary| {
+                summary.cover_art = cover_art;
+                summary
+            })
+            .await?;
+
+        Ok(())
     }
 }

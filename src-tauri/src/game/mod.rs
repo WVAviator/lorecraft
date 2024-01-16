@@ -34,6 +34,7 @@ pub mod game_factory;
 pub mod game_metadata;
 pub mod image;
 pub mod item;
+pub mod json_component;
 pub mod narrative;
 pub mod scene;
 pub mod scene_detail;

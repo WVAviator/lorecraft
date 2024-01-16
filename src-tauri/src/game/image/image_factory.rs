@@ -1,15 +1,13 @@
-use std::cell::RefCell;
-
-use anyhow::{anyhow, bail};
+use anyhow::anyhow;
 use base64::{engine::general_purpose, Engine as _};
-use log::{error, info, trace};
+use log::info;
 use openai_lib::{
-    image::{CreateImageClient, CreateImageRequest, ImageObject, ResponseFormat},
+    image::{CreateImageClient, CreateImageRequest, ImageObject, ImageQuality, ImageSize},
+    model::image_model::ImageModel,
     OpenAIClient,
 };
-use serde_json::Value;
 
-use crate::{file_manager::FileManager, game::game_metadata::GameMetadata};
+use crate::{file_manager::FileManager, game::game_metadata::GameMetadata, utils::random::Random};
 
 use super::Image;
 
@@ -17,7 +15,7 @@ pub struct ImageFactory<'a> {
     openai_client: &'a OpenAIClient,
     file_manager: &'a FileManager,
     game_metadata: &'a GameMetadata,
-    style: RefCell<Option<String>>,
+    style: String,
 }
 
 impl<'a> ImageFactory<'a> {
@@ -25,94 +23,81 @@ impl<'a> ImageFactory<'a> {
         openai_client: &'a OpenAIClient,
         file_manager: &'a FileManager,
         game_metadata: &'a GameMetadata,
+        style: String,
     ) -> Self {
         Self {
             openai_client,
             file_manager,
             game_metadata,
-            style: RefCell::new(None),
+            style,
         }
     }
 
-    pub fn add_style(&self, style: impl Into<String>) {
-        *self.style.borrow_mut() = Some(style.into());
-    }
-
-    // pub async fn try_create(&self, factory_args: ImageFactoryArgs) -> Result<Image, anyhow::Error> {
-    //     info!("Creating image '{}'.", factory_args.name);
-
-    //     let mut errors = Vec::new();
-
-    //     for _ in 0..factory_args.max_attempts {
-    //         match self.create(&factory_args).await {
-    //             Ok(image) => return Ok(image),
-    //             Err(e) => {
-    //                 info!(
-    //                     "Failed to create image '{}', trying again. Error: {:?}",
-    //                     factory_args.name, &e
-    //                 );
-    //                 errors.push(e);
-    //             }
-    //         }
-    //     }
-
-    //     Err(anyhow!(
-    //         "Failed to create image '{}'. Max attempts exceeded. Attempts returned the following errors: {:?}.",
-    //         factory_args.name,
-    //         errors
-    //     ))
-    // }
-
-    // async fn create(&self, factory_args: &ImageFactoryArgs) -> Result<Image, anyhow::Error> {}
-
-    pub async fn try_generate_image(
+    pub async fn try_create(
         &self,
-        create_image_request: CreateImageRequest,
-        filepath: &str,
-        max_attempts: u32,
+        image: &Image,
+        factory_args: ImageFactoryArgs,
     ) -> Result<Image, anyhow::Error> {
-        let mut attempts = 0;
-        while attempts < max_attempts {
-            match self
-                .generate_image(create_image_request.clone(), filepath)
-                .await
-            {
-                Ok(image) => return Ok(image),
+        let mut errors = Vec::new();
+
+        for _ in 0..factory_args.max_attempts {
+            match self.create(&image, &factory_args).await {
+                Ok(result) => return Ok(result),
                 Err(e) => {
-                    error!("Image API request failed with reason: {:?}", e);
-                    trace!("Request:\n{:?}", &create_image_request);
-                    info!("Retrying...")
+                    info!(
+                        "Failed to create {}, trying again. Error: {:?}",
+                        factory_args.filepath, &e
+                    );
+                    errors.push(e);
                 }
             }
-            attempts += 1;
         }
 
-        bail!("Max attempts exceeded.");
+        Err(anyhow!(
+            "Failed to create {}. Max attempts exceeded. Attempts returned the following errors: {:?}.",
+            factory_args.filepath,
+            errors
+        ))
+    }
+
+    async fn create(
+        &self,
+        image: &Image,
+        factory_args: &ImageFactoryArgs,
+    ) -> Result<Image, anyhow::Error> {
+        match image {
+            Image::Created { .. } => Ok(image.clone()),
+            Image::Prompt(prompt) => self.generate_image(prompt, &factory_args).await,
+        }
     }
 
     async fn generate_image(
         &self,
-        mut create_image_request: CreateImageRequest,
-        filepath: &str,
+        prompt: &String,
+        factory_args: &ImageFactoryArgs,
     ) -> Result<Image, anyhow::Error> {
-        let style = self
-            .style
-            .borrow()
-            .as_ref()
-            .unwrap_or(&String::from("In the style of digital art"))
-            .clone();
-
-        create_image_request.modify_prompt(|prompt| format!("{}\n{}", prompt, style));
-        create_image_request.modify_response_format(ResponseFormat::B64Json);
-        let prompt = create_image_request.get_prompt();
+        let modified_prompt = format!("{}\n{}", prompt, self.style);
 
         let data: Vec<ImageObject> = self
             .openai_client
-            .create_image(create_image_request)
-            .await?
+            .create_image(
+                CreateImageRequest::builder()
+                    .prompt(&modified_prompt)
+                    .model(factory_args.model.clone())
+                    .quality(factory_args.quality.clone())
+                    .size(factory_args.size.clone())
+                    .b64_json()
+                    .build(),
+            )
+            .await
+            .map_err(|e| anyhow!("Failed to create image: {}", e))?
             .into();
 
-        let alt = data[0].revised_prompt.as_ref().unwrap_or(&prompt).clone();
+        let alt = data[0]
+            .revised_prompt
+            .as_ref()
+            .unwrap_or(&prompt.to_string())
+            .clone();
 
         let base64_encoded = data[0]
             .b64_json
@@ -126,7 +111,7 @@ impl<'a> ImageFactory<'a> {
             .decode(base64_encoded)
             .map_err(|e| anyhow!("Failed to decode base64 image: {:?}", e))?;
 
-        let filepath = format!("{}/{}", self.game_metadata.game_id, filepath);
+        let filepath = format!("{}/{}", self.game_metadata.game_id, factory_args.filepath);
 
         let src = self
             .file_manager
@@ -135,12 +120,70 @@ impl<'a> ImageFactory<'a> {
 
         Ok(Image::Created { src, alt })
     }
+}
 
-    // pub async fn populate(&self, file_name: impl Into<String>) -> Result<(), anyhow::Error> {
-    //     let file_path = format!("{}/tmp/{}", self.game_metadata.game_id, file_name.into());
-    //     let value = self
-    //         .file_manager
-    //         .read_json::<Value>(&file_path)
-    //         .context("Unable to read JSON from file to populate images.")?;
-    // }
+#[derive(Debug, Clone)]
+pub struct ImageFactoryArgs {
+    pub model: ImageModel,
+    pub quality: ImageQuality,
+    pub size: ImageSize,
+    pub filepath: String,
+    pub max_attempts: usize,
+}
+
+impl ImageFactoryArgs {
+    pub fn builder() -> ImageFactoryArgsBuilder {
+        ImageFactoryArgsBuilder::new()
+    }
+}
+
+pub struct ImageFactoryArgsBuilder {
+    model: Option<ImageModel>,
+    quality: Option<ImageQuality>,
+    size: Option<ImageSize>,
+    filepath: Option<String>,
+    max_attempts: Option<usize>,
+}
+
+impl ImageFactoryArgsBuilder {
+    pub fn new() -> Self {
+        Self {
+            model: None,
+            quality: None,
+            filepath: None,
+            size: None,
+            max_attempts: None,
+        }
+    }
+    pub fn model(mut self, model: ImageModel) -> Self {
+        self.model = Some(model);
+        self
+    }
+    pub fn quality(mut self, quality: ImageQuality) -> Self {
+        self.quality = Some(quality);
+        self
+    }
+    pub fn filepath(mut self, filepath: impl Into<String>) -> Self {
+        self.filepath = Some(filepath.into());
+        self
+    }
+    pub fn size(mut self, size: ImageSize) -> Self {
+        self.size = Some(size);
+        self
+    }
+    pub fn max_attempts(mut self, max_attempts: usize) -> Self {
+        self.max_attempts = Some(max_attempts);
+        self
+    }
+    pub fn build(self) -> ImageFactoryArgs {
+        ImageFactoryArgs {
+            model: self.model.unwrap_or(ImageModel::DallE3),
+            quality: self.quality.unwrap_or(ImageQuality::Standard),
+            size: self.size.unwrap_or(ImageSize::Size1024x1024),
+            max_attempts: self.max_attempts.unwrap_or(3),
+            filepath: self
+                .filepath
+                .unwrap_or(format!("misc/{}", Random::generate_id())),
+        }
+    }
 }
