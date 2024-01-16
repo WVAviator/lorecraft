@@ -37,6 +37,33 @@ impl<'a> ImageFactory<'a> {
         *self.style.borrow_mut() = Some(style.into());
     }
 
+    // pub async fn try_create(&self, factory_args: ImageFactoryArgs) -> Result<Image, anyhow::Error> {
+    //     info!("Creating image '{}'.", factory_args.name);
+
+    //     let mut errors = Vec::new();
+
+    //     for _ in 0..factory_args.max_attempts {
+    //         match self.create(&factory_args).await {
+    //             Ok(image) => return Ok(image),
+    //             Err(e) => {
+    //                 info!(
+    //                     "Failed to create image '{}', trying again. Error: {:?}",
+    //                     factory_args.name, &e
+    //                 );
+    //                 errors.push(e);
+    //             }
+    //         }
+    //     }
+
+    //     Err(anyhow!(
+    //         "Failed to create image '{}'. Max attempts exceeded. Attempts returned the following errors: {:?}.",
+    //         factory_args.name,
+    //         errors
+    //     ))
+    // }
+
+    // async fn create(&self, factory_args: &ImageFactoryArgs) -> Result<Image, anyhow::Error> {}
+
     pub async fn try_generate_image(
         &self,
         create_image_request: CreateImageRequest,
@@ -105,6 +132,6 @@ impl<'a> ImageFactory<'a> {
             .write_bytes_to_file(&filepath, image_data)
             .map_err(|e| anyhow!("Failed to write image to file: {:?}", e))?;
 
-        Ok(Image { src, alt })
+        Ok(Image::Created { src, alt })
     }
 }
