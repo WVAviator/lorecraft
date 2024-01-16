@@ -6,7 +6,7 @@ use crate::{
     file_manager::FileManager,
     game::{
         image::image_factory::ImageFactory, narrative::narrative_factory::NarrativeFactory,
-        summary::SummaryFactory,
+        scene_summary::scene_summary_factory::SceneSummaryFactory, summary::SummaryFactory,
     },
     utils::random::Random,
 };
@@ -72,6 +72,12 @@ impl GameFactory {
             &image_factory,
             &self.game_metadata,
         );
+        let scene_summary_factory = SceneSummaryFactory::new(
+            &self.openai_client,
+            &self.file_manager,
+            &self.game_metadata,
+            &image_factory,
+        );
 
         let summary = summary_factory.try_create(3).await?;
 
@@ -80,7 +86,13 @@ impl GameFactory {
             &summary.art_style, &summary.art_theme
         ));
 
-        let narrative = narrative_factory.try_create(&summary, 3).await?;
+        let narrative = narrative_factory.try_create(&summary, 3);
+        let scene_summary = scene_summary_factory.try_create(&summary, 3);
+
+        let (narrative, scene_summary) = tokio::join!(narrative, scene_summary);
+
+        let narrative = narrative?;
+        let scene_summary = scene_summary?;
 
         todo!();
     }

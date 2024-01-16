@@ -1,3 +1,5 @@
+pub mod scene;
+
 use crate::{
     commands::create_new_game::create_new_game_request::CreateNewGameRequest,
     config::content_setting::ContentSetting, utils::random::Random,

@@ -1,3 +1,4 @@
+pub mod scene_summary_factory;
 pub mod scene_summary_input;
 pub mod summarized_scene;
 
