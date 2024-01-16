@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 
+pub mod async_image_transformer;
 pub mod image_factory;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]

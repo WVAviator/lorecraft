@@ -7,6 +7,7 @@ use openai_lib::{
     image::{CreateImageClient, CreateImageRequest, ImageObject, ResponseFormat},
     OpenAIClient,
 };
+use serde_json::Value;
 
 use crate::{file_manager::FileManager, game::game_metadata::GameMetadata};
 
@@ -134,4 +135,12 @@ impl<'a> ImageFactory<'a> {
 
         Ok(Image::Created { src, alt })
     }
+
+    // pub async fn populate(&self, file_name: impl Into<String>) -> Result<(), anyhow::Error> {
+    //     let file_path = format!("{}/tmp/{}", self.game_metadata.game_id, file_name.into());
+    //     let value = self
+    //         .file_manager
+    //         .read_json::<Value>(&file_path)
+    //         .context("Unable to read JSON from file to populate images.")?;
+    // }
 }
