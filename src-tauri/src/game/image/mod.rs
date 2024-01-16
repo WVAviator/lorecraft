@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
-pub mod async_image_transformer;
 pub mod image_factory;
+pub mod image_multiprocessor;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(untagged)]

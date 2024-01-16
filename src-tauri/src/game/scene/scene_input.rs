@@ -1,14 +1,14 @@
 use serde::{Deserialize, Serialize};
 
-use crate::game::scene_summary::summarized_scene::SummarizedScene;
+use crate::game::scene_summary::SummarizedScene;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct SceneDetailInput {
+pub struct SceneInput {
     pub game_summary: String,
     pub scene_summary: SummarizedScene,
 }
 
-impl SceneDetailInput {
+impl SceneInput {
     pub fn new(game_summary: &str, scene_summary: &SummarizedScene) -> Self {
         Self {
             game_summary: game_summary.to_string(),
@@ -29,7 +29,7 @@ mod test {
             .add_prompt("./prompts/scene_detail/example1_input.json")
             .build();
 
-        serde_json::from_str::<SceneDetailInput>(&example1).unwrap();
+        serde_json::from_str::<SceneInput>(&example1).unwrap();
     }
 
     #[test]
@@ -38,6 +38,6 @@ mod test {
             .add_prompt("./prompts/scene_detail/example2_input.json")
             .build();
 
-        serde_json::from_str::<SceneDetailInput>(&example2).unwrap();
+        serde_json::from_str::<SceneInput>(&example2).unwrap();
     }
 }
