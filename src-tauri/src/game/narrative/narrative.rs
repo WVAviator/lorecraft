@@ -47,6 +47,8 @@ impl Narrative {
 
         let user_prompt = summary.summary.clone();
 
+        info!("Prepared system and user messages for narrative.");
+
         let narrative = factory
             .try_create::<Narrative>(
                 ChatCompletionFactoryArgs::builder()
@@ -69,17 +71,23 @@ impl Narrative {
     ) -> Result<(), anyhow::Error> {
         let mut futures = Vec::new();
 
+        info!("Generating images for narrative pages.");
+
         for (index, page) in self.pages.iter().enumerate() {
             let page = page.clone();
             let future = async move {
+                info!("Generating image for narrative page: {}", index);
+
                 if let Image::Created { .. } = page.image {
-                    info!("Image already created and saved.");
+                    info!("Image already created and saved - skipping.");
                     return Ok(page);
                 }
+
                 let (model, quality) = match game_metadata.image_content_setting {
                     ContentSetting::High => (ImageModel::DallE3, ImageQuality::HD),
                     _ => (ImageModel::DallE3, ImageQuality::Standard),
                 };
+
                 let filepath = format!("narrative/page_{}.png", index);
 
                 let image = factory
@@ -93,6 +101,8 @@ impl Narrative {
                             .build(),
                     )
                     .await?;
+
+                info!("Image generated for narrative page {}. Saving new iamge data to narrative JSON file.", index);
 
                 file_manager
                     .json_transaction::<Narrative, _>(
@@ -113,6 +123,8 @@ impl Narrative {
 
         let stream = futures::stream::iter(futures).buffered(3);
         let pages = stream.try_collect::<Vec<_>>().await?;
+
+        info!("All narrative page images generated and saved.");
 
         self.pages = pages;
 

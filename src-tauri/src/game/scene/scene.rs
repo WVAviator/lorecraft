@@ -1,4 +1,5 @@
 use futures::{StreamExt, TryStreamExt};
+use log::info;
 use openai_lib::{image::ImageQuality, model::image_model::ImageModel};
 use serde::{Deserialize, Serialize};
 
@@ -39,6 +40,8 @@ impl Scene {
     ) -> Result<Vec<Scene>, anyhow::Error> {
         let mut futures = Vec::new();
 
+        info!("Creating scenes...");
+
         for summarized_scene in &scene_summary.scenes {
             let future = Scene::create(summary, summarized_scene, factory);
             futures.push(future);
@@ -65,13 +68,21 @@ impl Scene {
 
         let user_message = serde_json::to_string(&scene_detail_input).unwrap();
 
+        info!(
+            "Prepared system and user message for generating scene '{}'.",
+            &summarized_scene.name
+        );
+
+        let name = format!("{} Scene Detail", &summarized_scene.name);
+        let file_name = format!("tmp/scenes/{}.json", &summarized_scene.name);
+
         factory
             .try_create(
                 ChatCompletionFactoryArgs::builder()
-                    .name("Scene Detail")
+                    .name(name)
                     .system_message(system_message)
                     .user_message(user_message)
-                    .file_name("tmp/scene_detail.json")
+                    .file_name(file_name)
                     .build(),
             )
             .await
@@ -102,11 +113,16 @@ impl Scene {
             )
             .await?;
 
+        info!(
+            "Created image for scene {}. Saving to JSON file.",
+            &self.name
+        );
+
         self.image = image.clone();
 
         file_manager
             .json_transaction::<Scene, _>(
-                format!("{}/tmp/narrative.json", game_metadata.game_id),
+                format!("{}/tmp/scenes/{}.json", game_metadata.game_id, self.name),
                 move |mut scene_detail| {
                     scene_detail.image = image;
                     scene_detail

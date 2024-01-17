@@ -1,3 +1,4 @@
+use log::info;
 use openai_lib::{
     image::{ImageQuality, ImageSize},
     model::image_model::ImageModel,
@@ -44,6 +45,8 @@ impl Summary {
 
         let user_message = String::from(user_message);
 
+        info!("Prepared system and user messages for summary.");
+
         factory
             .try_create(
                 ChatCompletionFactoryArgs::builder()
@@ -67,6 +70,8 @@ impl Summary {
             _ => (ImageModel::DallE3, ImageQuality::Standard),
         };
 
+        info!("Generating cover art for game.");
+
         let cover_art = image_factory
             .try_create(
                 &self.cover_art,
@@ -80,6 +85,8 @@ impl Summary {
             .await?;
 
         self.cover_art = cover_art.clone();
+
+        info!("Populating existing JSON data for summary with new cover art image.");
 
         file_manager
             .json_transaction::<Self, _>(

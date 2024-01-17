@@ -1,8 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::
-    game::character::Character
-;
+use crate::game::Character;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CharacterProfile {

@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Context};
-use log::{info, trace};
+use log::{info, trace, warn};
 use openai_lib::{
     chat_completion::{ChatCompletionClient, ChatCompletionRequest},
     model::ChatModel,
@@ -44,7 +44,7 @@ impl<'a> ChatCompletionFactory<'a> {
     where
         T: DeserializeOwned + Serialize,
     {
-        info!("Creating {}.", factory_args.name);
+        info!("Creating chat completion for {}.", factory_args.name);
 
         let mut errors = Vec::new();
 
@@ -52,7 +52,7 @@ impl<'a> ChatCompletionFactory<'a> {
             match self.create(&factory_args).await {
                 Ok(result) => return Ok(result),
                 Err(e) => {
-                    info!(
+                    warn!(
                         "Failed to create {}, trying again. Error: {:?}",
                         factory_args.name, &e
                     );
@@ -74,17 +74,27 @@ impl<'a> ChatCompletionFactory<'a> {
     {
         let file_path = format!("{}/{}", self.game_metadata.game_id, factory_args.file_name);
 
-        info!("Checking for existing summary JSON file at {}", &file_path);
+        info!(
+            "Checking for existing {} JSON file at {}",
+            &factory_args.name, &file_path
+        );
 
         match self.file_manager.file_exists(&file_path) {
             Ok(true) => {
+                info!(
+                    "Found existing {} JSON file. Loading...",
+                    &factory_args.name
+                );
                 return self
                     .file_manager
                     .read_json::<T>(&file_path)
                     .context("Unable to read existing summary JSON file.");
             }
             _ => {
-                info!("No existing summary found, generating new summary.");
+                info!(
+                    "No existing {} found, generating new...",
+                    &factory_args.name
+                );
             }
         }
 
@@ -133,6 +143,8 @@ impl<'a> ChatCompletionFactory<'a> {
 
         let result = serde_json::from_str::<T>(response_text.as_str())
             .map_err(|e| anyhow!("Failed to deserialize {}: {}", factory_args.name, e))?;
+
+        info!("Generated and parsed new {}", factory_args.name);
 
         Ok(result)
     }

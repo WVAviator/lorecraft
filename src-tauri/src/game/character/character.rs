@@ -61,7 +61,7 @@ impl Character {
         info!("Creating character detail for {}", &character_name);
 
         // TODO: It's possible that two characters with the same name could be generated.
-        let filepath = format!("tmp/characters/{}", &character_name);
+        let filepath = format!("tmp/characters/{}.json", &character_name);
 
         let character = factory
             .try_create(
@@ -84,6 +84,9 @@ impl Character {
     ) -> Result<Vec<Character>, anyhow::Error> {
         let scene_description = summary.summary.clone();
         let mut character_futures = Vec::new();
+
+        info!("Generating character details for each scene.");
+
         for scene in scenes {
             for character_summary in &scene.characters {
                 let character_future = Character::create(
@@ -128,11 +131,16 @@ impl Character {
             )
             .await?;
 
+        info!("Generated image for {}. Saving to JSON file.", &self.name);
+
         self.image = image.clone();
 
         file_manager
             .json_transaction::<Character, _>(
-                format!("{}/tmp/narrative.json", game_metadata.game_id),
+                format!(
+                    "{}/tmp/characters/{}.json",
+                    game_metadata.game_id, &self.name
+                ),
                 move |mut character| {
                     character.image = image;
                     character
@@ -151,11 +159,15 @@ impl ImageMultiprocessor for Vec<Character> {
         game_metadata: &GameMetadata,
         file_manager: &FileManager,
     ) -> Result<(), anyhow::Error> {
+        info!("Generating images for each character.");
+
         let mut futures = Vec::new();
+
         for character in self {
             let future = character.generate_image(factory, game_metadata, file_manager);
             futures.push(future);
         }
+
         let stream = futures::stream::iter(futures).buffered(3);
         stream.try_collect::<Vec<_>>().await?;
 

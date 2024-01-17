@@ -1,3 +1,4 @@
+use log::info;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -17,7 +18,7 @@ pub struct SceneSummary {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SummarizedScene {
-    name: String,
+    pub name: String,
     description: String,
     actions: String,
 }
@@ -41,6 +42,8 @@ impl SceneSummary {
             .build();
 
         let user_message = input.to_string();
+
+        info!("Prepared system and user message for scene summary.");
 
         factory
             .try_create(

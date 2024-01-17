@@ -40,6 +40,8 @@ impl<'a> ImageFactory<'a> {
     ) -> Result<Image, anyhow::Error> {
         let mut errors = Vec::new();
 
+        info!("Attempting to create {}.", factory_args.filepath);
+
         for _ in 0..factory_args.max_attempts {
             match self.create(&image, &factory_args).await {
                 Ok(result) => return Ok(result),
@@ -66,7 +68,10 @@ impl<'a> ImageFactory<'a> {
         factory_args: &ImageFactoryArgs,
     ) -> Result<Image, anyhow::Error> {
         match image {
-            Image::Created { .. } => Ok(image.clone()),
+            Image::Created { .. } => {
+                info!("Image already created, skipping.");
+                Ok(image.clone())
+            }
             Image::Prompt(prompt) => self.generate_image(prompt, &factory_args).await,
         }
     }
@@ -77,6 +82,8 @@ impl<'a> ImageFactory<'a> {
         factory_args: &ImageFactoryArgs,
     ) -> Result<Image, anyhow::Error> {
         let modified_prompt = format!("{}\n{}", prompt, self.style);
+
+        info!("Sending modified prompt for generation.");
 
         let data: Vec<ImageObject> = self
             .openai_client
@@ -92,6 +99,11 @@ impl<'a> ImageFactory<'a> {
             .await
             .map_err(|e| anyhow!("Failed to create image: {}", e))?
             .into();
+
+        info!(
+            "Received raw image data for '{}' from OpenAI.",
+            factory_args.filepath
+        );
 
         let alt = data[0]
             .revised_prompt
@@ -111,12 +123,19 @@ impl<'a> ImageFactory<'a> {
             .decode(base64_encoded)
             .map_err(|e| anyhow!("Failed to decode base64 image: {:?}", e))?;
 
+        info!("Decoded image data for '{}'.", factory_args.filepath);
+
         let filepath = format!("{}/{}", self.game_metadata.game_id, factory_args.filepath);
 
         let src = self
             .file_manager
             .write_bytes_to_file(&filepath, image_data)
             .map_err(|e| anyhow!("Failed to write image to file: {:?}", e))?;
+
+        info!(
+            "Image '{}' created and saved to disk.",
+            factory_args.filepath
+        );
 
         Ok(Image::Created { src, alt })
     }

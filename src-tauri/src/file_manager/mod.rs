@@ -5,8 +5,7 @@ use std::{fs::OpenOptions, path::PathBuf};
 
 use anyhow::Context;
 use fs2::FileExt;
-use futures::Future;
-use log::info;
+use log::{debug, info};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use tauri::PathResolver;
@@ -97,6 +96,12 @@ impl FileManager {
     {
         let file_path: PathBuf = self.data_dir.join(file_name.into());
 
+        if let Some(dir_path) = file_path.parent() {
+            std::fs::create_dir_all(dir_path)?;
+        }
+
+        debug!("Writing JSON to file: {:?}", file_path);
+
         let file = OpenOptions::new()
             .create(true)
             .write(true)
@@ -112,6 +117,8 @@ impl FileManager {
         T: DeserializeOwned,
     {
         let file_path: PathBuf = self.data_dir.join(file_name.into());
+
+        debug!("Reading JSON from file: {:?}", file_path);
 
         let file = OpenOptions::new()
             .read(true)
@@ -166,7 +173,7 @@ impl FileManager {
             std::fs::create_dir_all(dir_path)?;
         }
 
-        info!("Writing to file: {:?}", file_path);
+        debug!("Writing to file: {:?}", file_path);
         let file_path_string = file_path.to_str().unwrap().to_string();
 
         let mut file = open_options.open(file_path)?;
