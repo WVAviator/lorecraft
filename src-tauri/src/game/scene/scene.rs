@@ -102,6 +102,8 @@ impl Scene {
             )
             .await?;
 
+        self.image = image.clone();
+
         file_manager
             .json_transaction::<Scene, _>(
                 format!("{}/tmp/narrative.json", game_metadata.game_id),

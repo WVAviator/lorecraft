@@ -5,8 +5,9 @@ use crate::{
     commands::create_new_game::create_new_game_request::CreateNewGameRequest,
     file_manager::FileManager,
     game::{
-        chat_completion_factory::ChatCompletionFactory, image::image_factory::ImageFactory,
-        narrative::Narrative, scene::Scene, scene_summary::SceneSummary, summary::Summary,
+        character::Character, chat_completion_factory::ChatCompletionFactory,
+        image::image_factory::ImageFactory, narrative::Narrative, scene::Scene,
+        scene_summary::SceneSummary, summary::Summary,
     },
     utils::random::Random,
 };
@@ -104,8 +105,18 @@ impl GameFactory {
             scenes
                 .generate_images(&image_factory, &self.game_metadata, &self.file_manager)
                 .await?;
+
             Ok(scenes) as Result<Vec<Scene>, anyhow::Error>
         };
+
+        let (narrative, scenes) = futures::join!(narrative, scenes);
+        let (narrative, scenes) = (narrative?, scenes?);
+
+        let mut characters =
+            Character::create_from_scenes(&summary, &scenes, &chat_completion_factory).await?;
+        characters
+            .generate_images(&image_factory, &self.game_metadata, &self.file_manager)
+            .await?;
 
         todo!();
     }
