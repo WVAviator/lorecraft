@@ -35,6 +35,7 @@ impl FileManager {
         Ok(FileManager { data_dir })
     }
 
+    #[allow(dead_code)]
     pub fn new_custom(directory_path: impl AsRef<Path>) -> Result<FileManager, anyhow::Error> {
         let data_dir = directory_path.as_ref().to_path_buf();
 

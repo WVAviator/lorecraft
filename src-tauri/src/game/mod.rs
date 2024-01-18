@@ -18,4 +18,3 @@ pub use image::Image;
 pub use item::Item;
 pub use narrative::Narrative;
 pub use scene::Scene;
-pub use scene_summary::SceneSummary;

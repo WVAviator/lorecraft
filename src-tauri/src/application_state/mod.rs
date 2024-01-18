@@ -31,6 +31,7 @@ impl ApplicationState {
         self.openai_client = Some(openai_client);
     }
 
+    #[allow(dead_code)]
     pub fn verify_setup(&self) -> Result<(), anyhow::Error> {
         ensure!(self.file_manager.is_some(), "File system not set up.");
         ensure!(self.openai_client.is_some(), "OpenAI client not set up.");
@@ -38,6 +39,7 @@ impl ApplicationState {
         Ok(())
     }
 
+    #[allow(dead_code)]
     pub async fn send_update(&self, update: String) {
         let updates_tx = self.updates_tx.lock().await;
         if let Err(_) = updates_tx.send(update).await {

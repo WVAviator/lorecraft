@@ -54,6 +54,9 @@ impl Summary {
                     .system_message(system_message)
                     .user_message(user_message)
                     .file_name("tmp/summary.json")
+                    // This is the first OpenAI request - failure probably means
+                    // something is amiss
+                    .max_attempts(1)
                     .build(),
             )
             .await
@@ -80,6 +83,9 @@ impl Summary {
                     .quality(quality)
                     .size(ImageSize::Size1792x1024)
                     .filepath("summary/cover_art.png")
+                    // This is the first OpenAI image request - failure probably means
+                    // something is amiss
+                    .max_attempts(1)
                     .build(),
             )
             .await?;
