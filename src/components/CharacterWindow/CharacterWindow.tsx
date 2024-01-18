@@ -28,7 +28,7 @@ const CharacterWindow: React.FC<CharacterWindowProps> = ({
   }
 
   const character = game.characters.find(
-    (ch) => ch.id === characterInteraction.character_id
+    (ch) => ch.name === characterInteraction.character_name
   );
 
   if (!character) return null;

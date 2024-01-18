@@ -40,7 +40,7 @@ impl ProcessCharacterInteractState {
                 let profile = CharacterProfile::from_character(&character)?;
                 let profile = serde_json::to_string(&profile)?;
 
-                let character_save_data = game_state.character_save_data.entry(character.id.clone())
+                let character_save_data = game_state.character_save_data.entry(character.name.clone())
                     .or_insert(CharacterSaveData::new(character.inventory.clone()));
 
                 let additional_context = json!({
@@ -91,7 +91,7 @@ impl ProcessCharacterInteractState {
                 );
 
                 let character_interaction = CharacterInteraction::builder()
-                    .character_id(&character.id)
+                    .character_name(&character.name)
                     .assistant_id(&character_assistant_id)
                     .thread_id(&thread_id)
                     .initiating_run_id(&run_id)

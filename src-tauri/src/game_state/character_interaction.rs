@@ -7,7 +7,7 @@ use super::{
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CharacterInteraction {
-    pub character_id: String,
+    pub character_name: String,
     pub assistant_id: String,
     pub thread_id: String,
     pub initiating_run_id: String,

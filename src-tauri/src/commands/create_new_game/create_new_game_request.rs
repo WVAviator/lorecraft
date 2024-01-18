@@ -8,6 +8,7 @@ pub struct CreateNewGameRequest {
     pub text_content_setting: Option<ContentSetting>,
     pub image_content_setting: Option<ContentSetting>,
     pub temperature_setting: Option<String>,
+    pub resume_previous: Option<String>,
 }
 
 impl CreateNewGameRequest {

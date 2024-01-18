@@ -36,18 +36,18 @@ impl AwaitingPlayerGiftResponseState {
 
                         let item = trade.to_player.ok_or(anyhow!("Missing to player item."))?;
 
-                        let character_id = game_state
+                        let character_name = game_state
                             .character_interaction
                             .as_ref()
                             .ok_or(anyhow!("Missing character interaction."))?
-                            .character_id
+                            .character_name
                             .clone();
 
-                        game_state.remove_character_item(&character_id, &item);
+                        game_state.remove_character_item(&character_name, &item);
                         game_state.add_player_item(&item);
 
                         let updated_character_inventory =
-                            game_state.get_character_inventory(&character_id);
+                            game_state.get_character_inventory(&character_name);
                         let updated_player_inventory = game_state.get_player_inventory();
 
                         json!({ "player_response": "accept", "updated_player_inventory": updated_player_inventory, "updated_character_inventory": updated_character_inventory}).to_string()

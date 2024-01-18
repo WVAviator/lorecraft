@@ -26,16 +26,16 @@ impl CharacterReadMessageState {
                     .ok_or(anyhow!("No character interaction to read messages from."))?
                     .thread_id
                     .clone();
-                let character_id = game_state
+                let character_name = game_state
                     .character_interaction
                     .as_ref()
                     .ok_or(anyhow!("No character interaction to read messages from."))?
-                    .character_id
+                    .character_name
                     .clone();
                 let character_name = &game
                     .characters
                     .iter()
-                    .find(|c| c.id.eq(&character_id))
+                    .find(|c| c.name.eq(&character_name))
                     .ok_or(anyhow!("Could not find character."))?
                     .name;
 

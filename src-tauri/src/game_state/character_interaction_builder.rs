@@ -3,7 +3,7 @@ use anyhow::anyhow;
 use super::character_interaction::CharacterInteraction;
 
 pub struct CharacterInteractionBuilder {
-    pub character_id: Option<String>,
+    pub character_name: Option<String>,
     pub assistant_id: Option<String>,
     pub thread_id: Option<String>,
     pub initiating_run_id: Option<String>,
@@ -13,7 +13,7 @@ pub struct CharacterInteractionBuilder {
 impl CharacterInteractionBuilder {
     pub fn new() -> Self {
         CharacterInteractionBuilder {
-            character_id: None,
+            character_name: None,
             assistant_id: None,
             thread_id: None,
             initiating_run_id: None,
@@ -21,8 +21,8 @@ impl CharacterInteractionBuilder {
         }
     }
 
-    pub fn character_id(mut self, character_id: &str) -> Self {
-        self.character_id = Some(character_id.to_string());
+    pub fn character_name(mut self, character_name: &str) -> Self {
+        self.character_name = Some(character_name.to_string());
         self
     }
 
@@ -48,7 +48,7 @@ impl CharacterInteractionBuilder {
 
     pub fn build(self) -> Result<CharacterInteraction, anyhow::Error> {
         Ok(CharacterInteraction {
-            character_id: self.character_id.ok_or(anyhow!(
+            character_name: self.character_name.ok_or(anyhow!(
                 "Cannot start character interaction without character id."
             ))?,
             assistant_id: self.assistant_id.ok_or(anyhow!(
