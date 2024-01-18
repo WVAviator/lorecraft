@@ -5,7 +5,7 @@ use std::{fs::OpenOptions, path::PathBuf};
 
 use anyhow::Context;
 use fs2::FileExt;
-use log::{debug, info};
+use log::{debug, error, info};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use tauri::PathResolver;
@@ -72,7 +72,7 @@ impl FileManager {
         &self,
         file_name: impl Into<String>,
         transaction: F,
-    ) -> std::io::Result<()>
+    ) -> Result<(), anyhow::Error>
     where
         F: FnOnce(T) -> T + Send + 'static,
         T: DeserializeOwned + Serialize + Send + 'static,
@@ -134,28 +134,45 @@ impl FileManager {
     fn json_transaction_blocking<T, F>(
         file_path: impl AsRef<Path>,
         transaction: F,
-    ) -> std::io::Result<()>
+    ) -> Result<(), anyhow::Error>
     where
         F: FnOnce(T) -> T,
         T: DeserializeOwned + Serialize,
     {
+        debug!(
+            "Initiating blocking json transaction for file '{}'",
+            file_path.as_ref().display()
+        );
+
         let mut file = OpenOptions::new()
             .read(true)
-            .create(true)
             .write(true)
-            .open(&file_path)?;
+            .open(&file_path)
+            .context("Failed to open the requested file for JSON modification.")?;
 
-        file.lock_exclusive()?;
+        debug!(
+            "Obtaining exclusive lock on file '{}'",
+            file_path.as_ref().display()
+        );
 
-        let data = serde_json::from_reader::<&File, T>(&file)?;
+        file.lock_exclusive()
+            .context("Failed to obtain lock on the requested file for JSON modification.")?;
 
-        let modified_data = transaction(data);
+        if let Err(e) = modify_json_file(&mut file, transaction) {
+            error!("Error encountered during JSON modification: {}", &e);
 
-        file.seek(SeekFrom::Start(0))?;
-        file.set_len(0)?;
-        serde_json::to_writer(&file, &modified_data)?;
+            file.unlock()
+                .context("Failed to unlock the modified JSON file.")?;
 
-        file.unlock()?;
+            debug!("Unlocked file '{}'", file_path.as_ref().display());
+
+            return Err(e);
+        }
+
+        file.unlock()
+            .context("Failed to unlock the modified JSON file.")?;
+
+        debug!("Unlocked file '{}'", file_path.as_ref().display());
 
         Ok(())
     }
@@ -185,6 +202,8 @@ impl FileManager {
     pub fn file_exists(&self, file_name: &str) -> Result<bool, anyhow::Error> {
         let file_path: PathBuf = self.data_dir.join(file_name);
 
+        debug!("Checking if file exists: {:?}", file_path);
+
         file_path
             .try_exists()
             .context("File existence could not be verfied.")
@@ -193,10 +212,43 @@ impl FileManager {
     pub fn read_from_file(&self, file_name: &str) -> Result<String, anyhow::Error> {
         let file_path: PathBuf = self.data_dir.join(file_name);
 
+        debug!("Reading from file: {:?}", file_path);
+
         let contents = std::fs::read_to_string(file_path).context("Unable to read from file.")?;
 
         Ok(contents)
     }
+}
+
+fn modify_json_file<T, F>(file: &mut File, transaction: F) -> Result<(), anyhow::Error>
+where
+    F: FnOnce(T) -> T,
+    T: DeserializeOwned + Serialize,
+{
+    debug!("Reading JSON from file.");
+    let data = serde_json::from_reader::<&File, T>(&*file)
+        .context("Failed to read JSON from the requested file for modification.")?;
+
+    info!("Obtained lock on JSON file and modyfing data.");
+    let modified_data = transaction(data);
+
+    debug!("Writing new JSON to file.");
+    let new_content = serde_json::to_string(&modified_data)
+        .context("Unable to parse new object data into JSON structure - aborting modifications.")?;
+
+    debug!("Truncating file and writing new JSON data.");
+    file.seek(SeekFrom::Start(0)).context(
+        "Failed to seek back to the beginning of the file for overwriting existing JSON.",
+    )?;
+    file.set_len(0)
+        .context("Failed to truncate existing JSON file contents.")?;
+
+    file.write_all(new_content.as_bytes())
+        .context("Failed to write new JSON data to file.")?;
+
+    debug!("Successfully modified JSON file.");
+
+    Ok(())
 }
 
 #[cfg(test)]
