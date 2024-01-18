@@ -22,3 +22,8 @@ interface CharacterTrade {
   to_player: string | null;
   from_player: string | null;
 }
+
+interface GameGenerationUpdate {
+  game_id: string;
+  message: string;
+}

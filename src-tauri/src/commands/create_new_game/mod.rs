@@ -39,9 +39,13 @@ pub async fn create_new_game(
             CreateNewGameError::SetupError(String::from("Unable to access OpenAI client.")),
         ))?;
 
+        let updates_tx = &application_state.updates_tx;
+
         let game_factory = match request.resume_previous {
-            Some(game_id) => GameFactory::resume(game_id, &openai_client, &file_manager),
-            None => GameFactory::new(request, &openai_client, &file_manager),
+            Some(game_id) => {
+                GameFactory::resume(game_id, &openai_client, &file_manager, &updates_tx)
+            }
+            None => GameFactory::new(request, &openai_client, &file_manager, &updates_tx),
         };
 
         let game_factory = game_factory.map_err(|e| {

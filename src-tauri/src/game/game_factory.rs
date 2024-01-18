@@ -1,6 +1,9 @@
+use std::sync::Arc;
+
 use anyhow::Context;
-use log::info;
+use log::{error, info};
 use openai_lib::OpenAIClient;
+use tokio::sync::{mpsc::Sender, Mutex};
 
 use crate::{
     commands::create_new_game::create_new_game_request::CreateNewGameRequest,
@@ -13,7 +16,10 @@ use crate::{
     utils::random::Random,
 };
 
-use super::{game_metadata::GameMetadata, image::image_multiprocessor::ImageMultiprocessor, Game};
+use super::{
+    game_generation_update::GameGenerationUpdate, game_metadata::GameMetadata,
+    image::image_multiprocessor::ImageMultiprocessor, Game,
+};
 
 pub struct GameFactory {
     game_id: String,
@@ -21,6 +27,7 @@ pub struct GameFactory {
     openai_client: OpenAIClient,
     file_manager: FileManager,
     start_time: std::time::Instant,
+    updates_tx: Arc<Mutex<Sender<GameGenerationUpdate>>>,
 }
 
 impl GameFactory {
@@ -28,6 +35,7 @@ impl GameFactory {
         request: CreateNewGameRequest,
         openai_client: &OpenAIClient,
         file_manager: &FileManager,
+        updates_tx: &Arc<Mutex<Sender<GameGenerationUpdate>>>,
     ) -> Result<Self, anyhow::Error> {
         let game_id = Random::generate_id();
         info!("Creating new game with id: {}", &game_id);
@@ -46,6 +54,7 @@ impl GameFactory {
             openai_client: openai_client.clone(),
             file_manager: file_manager.clone(),
             start_time: std::time::Instant::now(),
+            updates_tx: updates_tx.clone(),
         })
     }
 
@@ -53,6 +62,7 @@ impl GameFactory {
         game_id: impl Into<String>,
         openai_client: &OpenAIClient,
         file_manager: &FileManager,
+        updates_tx: &Arc<Mutex<Sender<GameGenerationUpdate>>>,
     ) -> Result<Self, anyhow::Error> {
         let game_id = game_id.into();
         info!("Resuming building game with id: {}", &game_id);
@@ -68,11 +78,13 @@ impl GameFactory {
             openai_client: openai_client.clone(),
             file_manager: file_manager.clone(),
             start_time: std::time::Instant::now(),
+            updates_tx: updates_tx.clone(),
         })
     }
 
     pub async fn create(&self) -> Result<Game, anyhow::Error> {
         info!("Starting game creation process for game {}.", &self.game_id);
+        self.send_update("Starting game creation process").await;
 
         let chat_completion_factory = ChatCompletionFactory::new(
             &self.openai_client,
@@ -83,7 +95,8 @@ impl GameFactory {
 
         let mut summary =
             Summary::create(&chat_completion_factory, &self.game_metadata.prompt).await?;
-        info!("Generated summary for new game: {}", &summary.name);
+        self.send_update("Generated game name, style, and summary.")
+            .await;
 
         let image_style = format!(
             "In the style of {}\nWith themes of {}",
@@ -105,32 +118,34 @@ impl GameFactory {
         summary
             .generate_images(&image_factory, &self.game_metadata, &self.file_manager)
             .await?;
-        info!("Generated image for summary.");
+        self.send_update("Generated cover art for game.").await;
 
         let narrative = async {
             let mut narrative = Narrative::create(&summary, &chat_completion_factory).await?;
-            info!("Generated text for opening narrative pages.");
+            self.send_update("Generated opening cutscene text.").await;
 
             narrative
                 .generate_images(&image_factory, &self.game_metadata, &self.file_manager)
                 .await?;
-            info!("Finished generating images for opening narrative pages.");
+            self.send_update("Generated opening cutscene images.").await;
 
             Ok(narrative) as Result<Narrative, anyhow::Error>
         };
 
         let scenes = async {
             let scene_summary = SceneSummary::create(&summary, &chat_completion_factory).await?;
-            info!("Generated scene summary info.");
+            self.send_update("Generated summaries for each scene.")
+                .await;
 
             let mut scenes: Vec<Scene> =
                 Scene::create_all(&summary, &scene_summary, &chat_completion_factory).await?;
-            info!("Finished generating text for each scene.");
+            self.send_update("Generated detailed information for each scene.")
+                .await;
 
             scenes
                 .generate_images(&image_factory, &self.game_metadata, &self.file_manager)
                 .await?;
-            info!("Finished generating images for each scene.");
+            self.send_update("Generated all scene images.").await;
 
             Ok(scenes) as Result<Vec<Scene>, anyhow::Error>
         };
@@ -140,12 +155,14 @@ impl GameFactory {
 
         let mut characters =
             Character::create_from_scenes(&summary, &scenes, &chat_completion_factory).await?;
-        info!("Finished generating character profiles.");
+        self.send_update("Generated detailed profiles for each character.")
+            .await;
 
         characters
             .generate_images(&image_factory, &self.game_metadata, &self.file_manager)
             .await?;
-        info!("Finished generating images for each character.");
+        self.send_update("Generated images for each character.")
+            .await;
 
         let mut items = Item::create_from_scenes_and_chars(
             &summary,
@@ -154,12 +171,14 @@ impl GameFactory {
             &chat_completion_factory,
         )
         .await?;
-        info!("Finished generating item details.");
+        self.send_update("Generated details for every key item.")
+            .await;
 
         items
             .generate_images(&image_factory, &self.game_metadata, &self.file_manager)
             .await?;
         info!("Finished generating images for each item.");
+        self.send_update("Generated images for every item.").await;
 
         let id = self.game_metadata.game_id.clone();
         let name = summary.name.clone();
@@ -181,7 +200,8 @@ impl GameFactory {
         let elapsed_time = self.start_time.elapsed().as_secs();
         let elapsed_time = format!("{:02}:{:02}", elapsed_time / 60, elapsed_time % 60);
 
-        info!("Generated '{}' in {}.", &game.name, elapsed_time);
+        self.send_update(format!("Finished generating game in {}.", elapsed_time))
+            .await;
 
         let file_path = format!("{}/game.json", &self.game_metadata.game_id);
 
@@ -192,5 +212,17 @@ impl GameFactory {
         info!("Game saved to file: {}", &file_path);
 
         Ok(game)
+    }
+
+    pub async fn send_update(&self, update: impl Into<String>) {
+        let update = update.into();
+        info!("{}", &update);
+        let updates_tx = self.updates_tx.lock().await;
+        if let Err(_) = updates_tx
+            .send(GameGenerationUpdate::new(&self.game_id, update))
+            .await
+        {
+            error!("Failed to send update to UI.");
+        }
     }
 }

@@ -2,6 +2,7 @@ mod character;
 mod chat_completion_factory;
 mod game;
 mod game_factory;
+pub mod game_generation_update;
 mod game_metadata;
 mod image;
 mod item;

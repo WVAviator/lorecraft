@@ -1,23 +1,26 @@
+use std::sync::Arc;
+
 use anyhow::ensure;
 use log::error;
 use tokio::sync::mpsc;
 use tokio::sync::Mutex;
 
 use crate::file_manager::FileManager;
+use crate::game::game_generation_update::GameGenerationUpdate;
 use openai_lib::OpenAIClient;
 
 pub mod session_state;
 
 pub struct ApplicationState {
-    pub updates_tx: Mutex<mpsc::Sender<String>>,
+    pub updates_tx: Arc<Mutex<mpsc::Sender<GameGenerationUpdate>>>,
     pub file_manager: Option<FileManager>,
     pub openai_client: Option<OpenAIClient>,
 }
 
 impl ApplicationState {
-    pub fn new(updates_tx: Mutex<mpsc::Sender<String>>) -> Self {
+    pub fn new(updates_tx: Mutex<mpsc::Sender<GameGenerationUpdate>>) -> Self {
         Self {
-            updates_tx,
+            updates_tx: Arc::new(updates_tx),
             file_manager: None,
             openai_client: None,
         }
@@ -37,13 +40,5 @@ impl ApplicationState {
         ensure!(self.openai_client.is_some(), "OpenAI client not set up.");
 
         Ok(())
-    }
-
-    #[allow(dead_code)]
-    pub async fn send_update(&self, update: String) {
-        let updates_tx = self.updates_tx.lock().await;
-        if let Err(_) = updates_tx.send(update).await {
-            error!("Failed to send update to UI.");
-        }
     }
 }

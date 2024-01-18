@@ -10,14 +10,18 @@ import {
   CreateNewGameResponse,
 } from '../types/CreateNewGame';
 import { useLocation, useNavigate } from 'react-router-dom';
+import AlertDialog from '../components/AlertDialog/AlertDialog';
+import { isSetupResponse } from '../types/Setup';
 
 interface GameGenerationScreenProps {}
 
 const GameGenerationScreen: React.FC<GameGenerationScreenProps> = () => {
   const { setGame } = useGameContext();
-  const { updates } = useUpdates();
+  const { updates, gameId } = useUpdates();
   const navigate = useNavigate();
   const location = useLocation();
+
+  const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     const createGame = async () => {
@@ -29,30 +33,64 @@ const GameGenerationScreen: React.FC<GameGenerationScreenProps> = () => {
         "Calling 'create_new_game' with request: ",
         location.state.request
       );
-      const response = (await invoke('create_new_game', {
-        request: location.state.request,
-      })) as CreateNewGameResponse;
-      if (response.success === false || !response.game) {
+      try {
+        const response = (await invoke('create_new_game', {
+          request: location.state.request,
+        })) as CreateNewGameResponse;
+
+        setGame(response.game ?? null);
+        navigate('/gamemenu');
+      } catch (e) {
         console.error('Failed to generate game.');
-        navigate('/mainmenu');
-        return;
+        if (isSetupResponse(e)) {
+          setError(e.message ?? 'Unknown error occurred.');
+        }
       }
-      setGame(response.game);
-      navigate('/gamemenu');
     };
     createGame();
   }, []);
 
+  const errorActions = [
+    {
+      title: 'Back to Main Menu',
+      onSelect: () => {
+        navigate('/mainmenu');
+      },
+    },
+  ];
+
+  if (gameId) {
+    errorActions.push({
+      title: 'Try Again',
+      onSelect: () => {
+        navigate('/generate-game', {
+          state: {
+            request: { prompt: '', resume_previous: gameId },
+          },
+        });
+      },
+    });
+  }
+
   return (
-    <CycledBackground images={LOADING_IMAGES} play={!false}>
+    <CycledBackground images={LOADING_IMAGES} play={!error}>
       <div className="flex h-full w-full items-end p-2">
-        <div className="flex h-20 gap-4 bg-black">
+        <div className="absolute bottom-0 left-0 right-0 z-10 flex h-24 items-center gap-4 bg-black p-2">
           <LoadingSpinner />
-          <p style={{ color: 'white' }}>
-            {updates.length > 0 ? updates[updates.length - 1] : ''}
-          </p>
+          <div className="relative flex h-full flex-col-reverse overflow-hidden">
+            <div className="absolute left-0 right-0 top-0 h-6 bg-gradient-to-b from-black to-transparent"></div>
+            {updates.reverse().map((u) => (
+              <p style={{ color: 'white' }}>{u}</p>
+            ))}
+          </div>
         </div>
       </div>
+      <AlertDialog
+        open={!!error}
+        title="Error Occurred"
+        message={error ?? 'Unknown error occurred.'}
+        actions={errorActions}
+      />
     </CycledBackground>
   );
 };
