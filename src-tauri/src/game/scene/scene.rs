@@ -73,16 +73,23 @@ impl Scene {
             &summarized_scene.name
         );
 
-        let name = format!("{} Scene Detail", &summarized_scene.name);
-        let file_name = format!("tmp/scenes/{}.json", &summarized_scene.name);
+        let scene_name = summarized_scene.name.clone();
+        let name = format!("{} Scene Detail", &scene_name);
+        let file_name = format!("tmp/scenes/{}.json", &scene_name);
 
         factory
             .try_create(
                 ChatCompletionFactoryArgs::builder()
-                    .name(name)
+                    .name(&name)
                     .system_message(system_message)
                     .user_message(user_message)
                     .file_name(file_name)
+                    .before_save(Box::new(move |mut scene: Scene| {
+                        // Ensure that the LLM doesn't try to change the name, leading to filename
+                        // mismatch
+                        scene.name = scene_name.clone();
+                        scene
+                    }))
                     .build(),
             )
             .await

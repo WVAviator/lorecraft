@@ -76,6 +76,8 @@ impl Character {
                     .user_message(user_prompt)
                     .file_name(filepath)
                     .before_save(Box::new(move |mut ch: Character| {
+                        // Ensure that the LLM doesn't try to change the name, leading to filename
+                        // mismatch
                         ch.name = character_name.clone();
                         ch
                     }))
