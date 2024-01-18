@@ -229,7 +229,7 @@ where
     let data = serde_json::from_reader::<&File, T>(&*file)
         .context("Failed to read JSON from the requested file for modification.")?;
 
-    info!("Obtained lock on JSON file and modyfing data.");
+    info!("Obtained lock on JSON file and modifying data.");
     let modified_data = transaction(data);
 
     debug!("Writing new JSON to file.");
