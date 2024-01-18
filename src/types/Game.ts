@@ -10,14 +10,12 @@ export interface Game {
 }
 
 export interface Item {
-  id: string;
   name: string;
   description: string;
   image: Image;
 }
 
 export interface Character {
-  id: string;
   name: string;
   physical_description: string;
   personality: string;
@@ -28,7 +26,6 @@ export interface Character {
 }
 
 export interface Scene {
-  id: string;
   name: string;
   narrative: string;
   metadata: string;

@@ -1,5 +1,5 @@
 interface GameState {
-  current_scene_id: string | null;
+  current_scene_name: string | null;
   messages: string[];
   inventory: string[];
   character_interaction: CharacterInteraction | null;
@@ -7,7 +7,7 @@ interface GameState {
 }
 
 interface CharacterInteraction {
-  character_id: string;
+  character_name: string;
   messages: CharacterMessage[];
   trade: CharacterTrade | null;
   closed: boolean;

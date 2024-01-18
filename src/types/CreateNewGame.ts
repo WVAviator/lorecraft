@@ -5,6 +5,7 @@ export interface CreateNewGameRequest {
   text_content_setting?: ContentSetting;
   image_content_setting?: ContentSetting;
   temperature_setting?: string;
+  resume_previous?: string;
 }
 
 export type ContentSetting = 'minimum' | 'moderate' | 'high';

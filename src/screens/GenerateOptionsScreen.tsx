@@ -6,6 +6,8 @@ import Slider from '../components/Slider/Slider';
 import { CreateNewGameRequest } from '../types/CreateNewGame';
 import Select from '../components/Select/Select';
 import { useNavigate } from 'react-router-dom';
+import useIncompleteGame from '../hooks/useIncompleteGame';
+import AlertDialog from '../components/AlertDialog/AlertDialog';
 
 interface GenerateStep {
   title: string;
@@ -64,6 +66,8 @@ const GenerateOptionsScreen = () => {
   const [open, setOpen] = React.useState(false);
 
   const navigate = useNavigate();
+
+  const { incompleteGame, clearIncompleteGame } = useIncompleteGame();
 
   React.useEffect(() => {
     setTimeout(() => {
@@ -132,6 +136,30 @@ const GenerateOptionsScreen = () => {
       >
         {inputTypes[steps[stepIndex].entryType]()}
       </GeneralPrompt>
+      <AlertDialog
+        open={!!incompleteGame}
+        title="Incomplete Game"
+        message="Your last attempt to generate a game was interrupted. Would you like to resume generating?"
+        setOpen={() => {}}
+        actions={[
+          {
+            title: 'Discard',
+            onSelect: () => {
+              clearIncompleteGame();
+            },
+          },
+          {
+            title: 'Resume',
+            onSelect: () => {
+              navigate('/generate-game', {
+                state: {
+                  request: { prompt: '', resume_previous: incompleteGame },
+                },
+              });
+            },
+          },
+        ]}
+      />
     </BackgroundDiv>
   );
 };
