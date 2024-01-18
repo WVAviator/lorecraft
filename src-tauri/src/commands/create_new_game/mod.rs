@@ -1,6 +1,6 @@
 use crate::application_state::ApplicationState;
 use crate::commands::create_new_game::create_new_game_error::CreateNewGameError;
-use crate::game::Game;
+use crate::game::GameFactory;
 use crate::utils::string_utilities::StringUtilities;
 use log::{error, info};
 
@@ -11,59 +11,59 @@ use self::create_new_game_request::CreateNewGameRequest;
 use self::create_new_game_response::{CreateNewGameFailureResponse, CreateNewGameSuccessResponse};
 
 mod create_new_game_error;
-mod create_new_game_request;
+pub mod create_new_game_request;
 mod create_new_game_response;
 
 #[tauri::command]
 pub async fn create_new_game(
-    request: CreateNewGameRequest,
-    state: State<'_, Mutex<ApplicationState>>,
+    mut request: CreateNewGameRequest,
+    application_state: State<'_, Mutex<ApplicationState>>,
 ) -> Result<CreateNewGameSuccessResponse, CreateNewGameFailureResponse> {
-    let prompt = {
+    request.prompt = {
         match request.prompt.as_str() {
             "" => String::from("choose any random unique game idea you can think of"),
             _ => StringUtilities::truncate(&request.prompt, 497),
         }
     };
 
-    let game = {
-        let state = state.lock().await;
+    let game_factory = {
+        let application_state = application_state.lock().await;
 
-        info!("Verifying app setup.");
-        if let Err(e) = state.verify_setup() {
-            error!("Failed to verify app state setup:\n{:?}", e);
-            return Err(CreateNewGameFailureResponse::new(
-                CreateNewGameError::SetupError(String::from("Setup not complete.")),
-            ));
-        }
+        let file_manager = &application_state.file_manager.as_ref();
+        let file_manager = file_manager.ok_or(CreateNewGameFailureResponse::new(
+            CreateNewGameError::SetupError(String::from("Unable to access file manager.")),
+        ))?;
 
-        info!("Creating new game from user prompt:\n{}.", &prompt);
-        Game::create_new(prompt, &state).await.map_err(|e| {
-            error!("Failed to generate new game:\n{:?}", e);
-            CreateNewGameFailureResponse::new(CreateNewGameError::GameGenerationError(
-                String::from("Failed to generate new game."),
-            ))
-        })?
+        let openai_client = &application_state.openai_client.as_ref();
+        let openai_client = openai_client.ok_or(CreateNewGameFailureResponse::new(
+            CreateNewGameError::SetupError(String::from("Unable to access OpenAI client.")),
+        ))?;
+
+        let updates_tx = &application_state.updates_tx;
+
+        let game_factory = match request.resume_previous {
+            Some(game_id) => {
+                GameFactory::resume(game_id, &openai_client, &file_manager, &updates_tx)
+            }
+            None => GameFactory::new(request, &openai_client, &file_manager, &updates_tx),
+        };
+
+        let game_factory = game_factory.map_err(|e| {
+            error!("Unable to establish game factory:\n{:?}", e);
+            CreateNewGameFailureResponse::new(CreateNewGameError::SetupError(String::from(
+                "Unable to create factory for game construction.",
+            )))
+        })?;
+
+        game_factory
     };
 
-    info!(
-        "Game with id '{}' created. Serializing and saving game to file.",
-        game.id
-    );
-    let game_serialized = serde_json::to_string(&game).expect("Failed to serialize game.");
-    {
-        let state = state.lock().await;
-        if let Some(file_manager) = &state.file_manager {
-            file_manager
-                .write_to_file(format!("{}/game.json", game.id).as_str(), &game_serialized)
-                .map_err(|e| {
-                    error!("Failed to save game to local file system:\n{:?}", e);
-                    CreateNewGameFailureResponse::new(CreateNewGameError::FileSystemError(
-                        String::from("Failed to save game to local file system."),
-                    ))
-                })?;
-        }
-    }
+    let game = game_factory.create().await.map_err(|e| {
+        error!("Unable to create game:\n{:?}", e);
+        CreateNewGameFailureResponse::new(CreateNewGameError::SetupError(String::from(
+            "Unable to create game.",
+        )))
+    })?;
 
     info!("Game '{}' saved and ready to play.", game.id);
     return Ok(CreateNewGameSuccessResponse::new(game));

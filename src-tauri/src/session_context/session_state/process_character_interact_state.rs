@@ -1,8 +1,9 @@
 use anyhow::{bail, anyhow};
 use log::{info, error, trace};
+use openai_lib::{OpenAIClient, assistant::{AssistantClient, CreateAssistantRequest}, model::ChatModel, tool::Tool, thread::{ThreadClient, CreateThreadRequest}};
 use serde_json::json;
 
-use crate::{session_context::session_request::SessionRequest, game_state::{GameState, character_interaction::CharacterInteraction, character_save_data::CharacterSaveData, character_profile::CharacterProfile}, game::Game, openai_client::{OpenAIClient, assistant_create::assistant_create_request::AssistantCreateRequest, chat_completion::chat_completion_model::ChatCompletionModel, assistant_tool::{AssistantTool, function::Function}}, prompt_builder::PromptBuilder};
+use crate::{session_context::session_request::SessionRequest, game_state::{GameState, character_interaction::CharacterInteraction, character_save_data::CharacterSaveData, character_profile::CharacterProfile}, game::Game, prompt_builder::PromptBuilder};
 
 use super::SessionState;
 
@@ -39,7 +40,7 @@ impl ProcessCharacterInteractState {
                 let profile = CharacterProfile::from_character(&character)?;
                 let profile = serde_json::to_string(&profile)?;
 
-                let character_save_data = game_state.character_save_data.entry(character.id.clone())
+                let character_save_data = game_state.character_save_data.entry(character.name.clone())
                     .or_insert(CharacterSaveData::new(character.inventory.clone()));
 
                 let additional_context = json!({
@@ -57,26 +58,18 @@ impl ProcessCharacterInteractState {
                 info!("Loaded instructions for character assistant.");
                 trace!("{}", &instructions);
 
-                let tools = vec![
-                    AssistantTool::new_function(Function::from_file(
-                        "./prompts/character_actor/give_function.json",
-                    )?),
-                    AssistantTool::new_function(Function::from_file(
-                        "./prompts/character_actor/trade_function.json",
-                    )?),
-                ];
-
                 info!("Creating character assistant.");
 
                 let assistant_response = openai_client
-                    .create_assistant(AssistantCreateRequest::new(
-                        instructions,
-                        game.id.to_string(),
-                        ChatCompletionModel::Gpt3_5Turbo1106,
-                        tools,
-                    ))
+                    .create_assistant(
+                    CreateAssistantRequest::builder()
+                        .instructions(instructions)
+                        .model(ChatModel::Gpt_35_Turbo_1106)
+                        .add_tool(Tool::function().from_file("./prompts/character_actor/give_function.json")?)
+                            .add_tool(Tool::function().from_file("./prompts/character_actor/trade_function.json")?)
+                            .build())
                     .await
-                    .expect("Failed to create assistant.");
+                    .map_err(|e| anyhow!("Failed to create assistant for character: {}", e))?;
 
                 let character_assistant_id = assistant_response.id;
 
@@ -85,7 +78,7 @@ impl ProcessCharacterInteractState {
                     &character_assistant_id
                 );
 
-                let thread_response = openai_client.create_thread().await.map_err(|e| {
+                let thread_response = openai_client.create_thread(CreateThreadRequest::builder().build()).await.map_err(|e| {
                     error!("Failed to create thread for character assistant:\n{:?}", e);
                     anyhow!("Failed to start thread.")
                 })?;
@@ -98,7 +91,7 @@ impl ProcessCharacterInteractState {
                 );
 
                 let character_interaction = CharacterInteraction::builder()
-                    .character_id(&character.id)
+                    .character_name(&character.name)
                     .assistant_id(&character_assistant_id)
                     .thread_id(&thread_id)
                     .initiating_run_id(&run_id)

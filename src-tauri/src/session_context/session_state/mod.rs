@@ -1,10 +1,7 @@
 use anyhow::Context;
+use openai_lib::{tool::ToolCall, OpenAIClient};
 
-use crate::{
-    game::Game,
-    game_state::GameState,
-    openai_client::{retrieve_run::retrieve_run_response::ToolCall, OpenAIClient},
-};
+use crate::{game::Game, game_state::GameState};
 
 use self::{
     awaiting_player_gift_response_state::AwaitingPlayerGiftResponseState,
@@ -147,7 +144,7 @@ impl SessionState {
                     .context("Failed to process state change from PollingRunState")
             }
             SessionState::RequiresActionState { run_id, tool_call } => {
-                RequiresActionState::process(request, openai_client, game_state, run_id, tool_call)
+                RequiresActionState::process(request, run_id, tool_call)
                     .await
                     .context("Failed to process state change from RequiresActionState.")
             }
@@ -237,7 +234,7 @@ impl SessionState {
                     .context("Failed to process state change from CharacterPollingRunState.")
             }
             SessionState::CharacterRequiresActionState { run_id, tool_call } => {
-                CharacterRequiresActionState::process(request, game_state, run_id, tool_call)
+                CharacterRequiresActionState::process(request, run_id, tool_call)
                     .await
                     .context("Failed to process state change from CharacterRequiresActionState.")
             }
@@ -247,7 +244,6 @@ impl SessionState {
                 arguments,
             } => ProcessCharacterTradeState::process(
                 request,
-                openai_client,
                 game_state,
                 run_id,
                 tool_call_id,
@@ -261,7 +257,6 @@ impl SessionState {
                 arguments,
             } => ProcessCharacterGiftState::process(
                 request,
-                openai_client,
                 game_state,
                 run_id,
                 tool_call_id,

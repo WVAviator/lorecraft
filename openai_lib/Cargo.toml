@@ -1,0 +1,23 @@
+[package]
+name = "openai_lib"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "openai_lib"
+path = "src/lib.rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.79"
+assert-json-diff = "2.0.2"
+log = "0.4.20"
+reqwest = { version = "0.11.23", features = ["json"] }
+serde = {version = "1.0.195", features = ["derive"]}
+serde_json = "1.0.111"
+thiserror = "1.0.56"
+tokio = { version = "1.35.1", features = ["rt", "macros"]}
+trait-variant = "0.1.1"
+typed-builder = "0.18.0"
+url = "2.5.0"

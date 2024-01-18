@@ -1,7 +1,8 @@
 use anyhow::{bail, anyhow};
 use log::{info, error};
+use openai_lib::{OpenAIClient, run::{RunClient, RunStatus}};
 
-use crate::{session_context::session_request::SessionRequest, openai_client::OpenAIClient, game_state::GameState};
+use crate::{session_context::session_request::SessionRequest, game_state::GameState};
 
 use super::SessionState;
 
@@ -26,8 +27,8 @@ impl CharacterPollingRunState {
                         )
                         .await
                     {
-                        match retrieve_run_response.status.as_str() {
-                            "requires_action" => {
+                        match retrieve_run_response.status {
+                            RunStatus::RequiresAction => {
                                 info!("Run requested function response.");
 
                                 let tool_calls = retrieve_run_response
@@ -48,19 +49,12 @@ impl CharacterPollingRunState {
 
                                 return Ok(SessionState::CharacterRequiresActionState { run_id, tool_call })
                             }
-                            "cancelling" | "cancelled" | "failed" | "expired" => {
+                            RunStatus::Cancelling | RunStatus::Cancelled | RunStatus::Failed | RunStatus::Expired => {
                                 error!("The run has expired or has failed.");
                                 bail!("Assistant run failed.")
                             }
-                            "completed" => return Ok(SessionState::CharacterReadMessageState),
-                            "queued" | "in_progress" => {}
-                            _ => {
-                                error!(
-                                    "Run returned a status of {} which is not handled.",
-                                    &retrieve_run_response.status
-                                );
-                                bail!("Unknown status received for run retrieval.")
-                            }
+                            RunStatus::Completed => return Ok(SessionState::CharacterReadMessageState),
+                            RunStatus::Queued | RunStatus::InProgress => {},
                         }
                     }
 

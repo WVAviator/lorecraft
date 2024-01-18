@@ -4,13 +4,18 @@ import React from 'react';
 
 const useUpdates = () => {
   const [updates, setUpdates] = React.useState<string[]>([]);
+  const [gameId, setGameId] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     let unlisten: UnlistenFn;
     const getUpdates = async () => {
-      unlisten = await appWindow.listen('updates', (e) => {
-        setUpdates((updates) => [...updates, e.payload as string]);
-      });
+      unlisten = await appWindow.listen<GameGenerationUpdate>(
+        'updates',
+        (e) => {
+          setUpdates((updates) => [...updates, e.payload.message]);
+          setGameId(e.payload.game_id);
+        }
+      );
     };
     getUpdates();
 
@@ -19,7 +24,7 @@ const useUpdates = () => {
     };
   }, []);
 
-  return { updates };
+  return { updates, gameId };
 };
 
 export default useUpdates;

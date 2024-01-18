@@ -10,6 +10,7 @@ use crate::{
 
 use application_state::ApplicationState;
 use log::{error, info};
+use nosleep::{NoSleep, NoSleepType};
 use tokio::sync::{mpsc, Mutex};
 
 use tauri::Manager;
@@ -22,12 +23,14 @@ mod file_manager;
 mod game;
 mod game_session;
 mod game_state;
-mod openai_client;
 mod prompt_builder;
 mod session_context;
 mod utils;
 
 fn main() -> Result<(), anyhow::Error> {
+    let mut nosleep = NoSleep::new().unwrap();
+    let _handle = nosleep.start(NoSleepType::PreventUserIdleDisplaySleep)?;
+
     let (updates_tx, mut updates_rx) = mpsc::channel(1);
     let updates_tx = Mutex::new(updates_tx);
 

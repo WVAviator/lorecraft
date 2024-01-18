@@ -1,10 +1,7 @@
 use anyhow::{anyhow, bail};
 use log::info;
 
-use crate::{
-    game_state::GameState, openai_client::OpenAIClient,
-    session_context::session_request::SessionRequest,
-};
+use crate::{game_state::GameState, session_context::session_request::SessionRequest};
 
 use super::SessionState;
 
@@ -13,7 +10,6 @@ pub struct ProcessCharacterGiftState {}
 impl ProcessCharacterGiftState {
     pub async fn process(
         request: SessionRequest,
-        openai_client: &OpenAIClient,
         game_state: &mut GameState,
         run_id: String,
         tool_call_id: String,

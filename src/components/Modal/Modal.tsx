@@ -5,6 +5,7 @@ interface ModalProps {
   setOpen?: (open: boolean) => void;
   children: React.ReactNode;
   clickOut?: boolean;
+  className?: string;
 }
 
 const Modal: React.FC<ModalProps> = ({
@@ -12,12 +13,13 @@ const Modal: React.FC<ModalProps> = ({
   children,
   setOpen = () => {},
   clickOut = true,
+  className = '',
 }) => {
   return (
     <div
       className={`absolute bottom-0 left-0 right-0 top-0 bg-gray-300 bg-opacity-25 backdrop-blur-sm ${
         open ? 'block' : 'hidden'
-      }`}
+      } ${className}`}
       onClick={() => {
         if (clickOut && setOpen) {
           console.log('Clickout');

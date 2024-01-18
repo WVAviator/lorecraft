@@ -1,7 +1,8 @@
 use anyhow::{bail, anyhow};
 use log::info;
+use openai_lib::{run::{SubmitToolOutputsRequest, RunClient}, OpenAIClient};
 
-use crate::{session_context::session_request::SessionRequest, openai_client::{OpenAIClient, submit_tool_outputs::submit_tool_outputs_request::SubmitToolOutputsRequest}, game_state::GameState};
+use crate::{session_context::session_request::SessionRequest,  game_state::GameState};
 
 use super::SessionState;
 
@@ -16,8 +17,9 @@ impl SubmitToolOutputsState {
 
                 let thread_id = &game_state.thread_id;
 
-                let mut submit_tool_outputs_request = SubmitToolOutputsRequest::new();
-                submit_tool_outputs_request.add_output(&tool_call_id, &output);
+                let submit_tool_outputs_request = SubmitToolOutputsRequest::builder()
+                    .add_tool_output(&tool_call_id, &output)
+                    .build();
                     
                 openai_client
                     .submit_tool_outputs(

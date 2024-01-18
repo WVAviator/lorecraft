@@ -41,7 +41,7 @@ const GameScreen = () => {
         <div></div>
         <SceneImage
           scene={game.scenes.find(
-            (scene) => scene.id === gameState.current_scene_id
+            (scene) => scene.name === gameState.current_scene_name
           )}
         />
         <div className="flex h-full flex-col gap-2 p-2">

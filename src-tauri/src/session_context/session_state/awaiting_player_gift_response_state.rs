@@ -1,14 +1,12 @@
 use anyhow::{anyhow, bail};
 use log::{info, trace};
+use openai_lib::{
+    run::{RunClient, SubmitToolOutputsRequest},
+    OpenAIClient,
+};
 use serde_json::json;
 
-use crate::{
-    game_state::GameState,
-    openai_client::{
-        submit_tool_outputs::submit_tool_outputs_request::SubmitToolOutputsRequest, OpenAIClient,
-    },
-    session_context::session_request::SessionRequest,
-};
+use crate::{game_state::GameState, session_context::session_request::SessionRequest};
 
 use super::SessionState;
 
@@ -38,18 +36,18 @@ impl AwaitingPlayerGiftResponseState {
 
                         let item = trade.to_player.ok_or(anyhow!("Missing to player item."))?;
 
-                        let character_id = game_state
+                        let character_name = game_state
                             .character_interaction
                             .as_ref()
                             .ok_or(anyhow!("Missing character interaction."))?
-                            .character_id
+                            .character_name
                             .clone();
 
-                        game_state.remove_character_item(&character_id, &item);
+                        game_state.remove_character_item(&character_name, &item);
                         game_state.add_player_item(&item);
 
                         let updated_character_inventory =
-                            game_state.get_character_inventory(&character_id);
+                            game_state.get_character_inventory(&character_name);
                         let updated_player_inventory = game_state.get_player_inventory();
 
                         json!({ "player_response": "accept", "updated_player_inventory": updated_player_inventory, "updated_character_inventory": updated_character_inventory}).to_string()
@@ -69,8 +67,9 @@ impl AwaitingPlayerGiftResponseState {
 
                 info!("Submitting trade function tool outputs response.");
 
-                let mut submit_tool_outputs_request = SubmitToolOutputsRequest::new();
-                submit_tool_outputs_request.add_output(&tool_call_id, &output);
+                let submit_tool_outputs_request = SubmitToolOutputsRequest::builder()
+                    .add_tool_output(&tool_call_id, &output)
+                    .build();
 
                 let thread_id = &game_state
                     .character_interaction

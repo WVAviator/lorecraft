@@ -34,6 +34,7 @@
         ],
         "readDir": true,
         "readFile": true,
+        "removeDir": true,
         "exists": true,
         "copyFile": true
       }

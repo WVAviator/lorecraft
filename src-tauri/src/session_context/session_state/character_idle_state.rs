@@ -1,11 +1,11 @@
 use anyhow::{anyhow, bail};
 use log::{info, trace};
-
-use crate::{
-    game_state::GameState,
-    openai_client::{create_message::create_message_request::CreateMessageRequest, OpenAIClient},
-    session_context::session_request::SessionRequest,
+use openai_lib::{
+    message::{CreateMessageRequest, MessageClient},
+    OpenAIClient,
 };
+
+use crate::{game_state::GameState, session_context::session_request::SessionRequest};
 
 use super::SessionState;
 
@@ -27,7 +27,10 @@ impl CharacterIdleState {
                     .thread_id
                     .clone();
                 let create_message_response = openai_client
-                    .create_message(CreateMessageRequest::new(&prompt), &thread_id)
+                    .create_message(
+                        CreateMessageRequest::builder().content(&prompt).build(),
+                        &thread_id,
+                    )
                     .await
                     .map_err(|e| {
                         anyhow!(
@@ -43,7 +46,7 @@ impl CharacterIdleState {
                     .character_interaction
                     .as_mut()
                     .ok_or(anyhow!("No character interaction to read messages from."))?
-                    .add_message(&create_message_response.content[0].text.value);
+                    .add_message(&create_message_response.get_text_content());
 
                 info!("Transitioning to pending run state.");
                 Ok(SessionState::CharacterRunRequestState)

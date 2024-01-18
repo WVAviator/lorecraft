@@ -16,7 +16,7 @@ use self::{character_interaction::CharacterInteraction, character_save_data::Cha
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GameState {
     pub game_id: String,
-    pub current_scene_id: Option<String>,
+    pub current_scene_name: Option<String>,
     pub messages: Vec<String>,
     pub inventory: Vec<String>,
     pub character_interaction: Option<CharacterInteraction>,
@@ -34,18 +34,18 @@ impl GameState {
         let character_save_data = game
             .characters
             .iter()
-            .map(|c| (c.id.clone(), CharacterSaveData::new(c.inventory.clone())))
+            .map(|c| (c.name.clone(), CharacterSaveData::new(c.inventory.clone())))
             .collect::<HashMap<String, CharacterSaveData>>();
 
         let scene_inventories = game
             .scenes
             .iter()
-            .map(|s| (s.id.clone(), s.items.clone()))
+            .map(|s| (s.name.clone(), s.items.clone()))
             .collect::<HashMap<String, Vec<String>>>();
 
         GameState {
             game_id,
-            current_scene_id: None,
+            current_scene_name: None,
             messages: vec![],
             inventory: vec![],
             character_interaction: None,
@@ -65,8 +65,8 @@ impl GameState {
         self.messages.push(message.to_string());
     }
 
-    pub fn new_scene(&mut self, new_scene_id: &str) {
-        self.current_scene_id = Some(new_scene_id.to_string());
+    pub fn new_scene(&mut self, new_scene_name: &str) {
+        self.current_scene_name = Some(new_scene_name.to_string());
     }
 
     pub fn add_item(&mut self, item_name: &str) {
@@ -97,16 +97,16 @@ impl GameState {
         self.inventory.clone()
     }
 
-    pub fn get_character_inventory(&mut self, character_id: &str) -> Vec<String> {
+    pub fn get_character_inventory(&mut self, character_name: &str) -> Vec<String> {
         self.character_save_data
-            .entry(character_id.to_string())
+            .entry(character_name.to_string())
             .or_insert(CharacterSaveData::new(vec![]))
             .character_inventory
             .clone()
     }
 
-    pub fn remove_character_item(&mut self, character_id: &str, item: &str) {
-        match self.character_save_data.entry(character_id.to_string()) {
+    pub fn remove_character_item(&mut self, character_name: &str, item: &str) {
+        match self.character_save_data.entry(character_name.to_string()) {
             std::collections::hash_map::Entry::Occupied(mut entry) => {
                 let csd = entry.get_mut();
                 csd.character_inventory.retain(|i| i.ne(item));
@@ -123,8 +123,8 @@ impl GameState {
         self.inventory.retain(|i| i.ne(item));
     }
 
-    pub fn add_character_item(&mut self, character_id: &str, from_player_item: &str) {
-        match self.character_save_data.entry(character_id.to_string()) {
+    pub fn add_character_item(&mut self, character_name: &str, from_player_item: &str) {
+        match self.character_save_data.entry(character_name.to_string()) {
             std::collections::hash_map::Entry::Occupied(mut entry) => {
                 let csd = entry.get_mut();
                 csd.character_inventory.push(from_player_item.to_string());
@@ -133,8 +133,8 @@ impl GameState {
         }
     }
 
-    pub fn save_previous_conversation(&mut self, character_id: &str, summary: &str) {
-        match self.character_save_data.entry(character_id.to_string()) {
+    pub fn save_previous_conversation(&mut self, character_name: &str, summary: &str) {
+        match self.character_save_data.entry(character_name.to_string()) {
             std::collections::hash_map::Entry::Occupied(mut entry) => {
                 let csd = entry.get_mut();
                 csd.previous_conversations.push(summary.to_string());

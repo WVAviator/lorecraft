@@ -1,40 +1,32 @@
 use anyhow::{bail, Context};
 use log::info;
+use openai_lib::tool::ToolCall;
 use serde_json::Value;
 
-use crate::{
-    game_state::GameState,
-    openai_client::{
-        retrieve_run::retrieve_run_response::ToolCall,
-        submit_tool_outputs::submit_tool_outputs_request::{SubmitToolOutputsRequest, ToolOutput},
-        OpenAIClient,
-    },
-    session_context::{session_request::SessionRequest, session_state::SessionState},
-};
+use crate::session_context::{session_request::SessionRequest, session_state::SessionState};
 
 pub struct RequiresActionState {}
 
 impl RequiresActionState {
     pub async fn process(
         session_request: SessionRequest,
-        openai_client: &OpenAIClient,
-        game_state: &mut GameState,
         run_id: String,
         tool_call: ToolCall,
     ) -> Result<SessionState, anyhow::Error> {
         match session_request {
             SessionRequest::ContinueProcessing => {
                 let tool_call_id = tool_call.id.clone();
-                let function_name = tool_call.function.name.as_str();
-                let arguments = serde_json::from_str::<Value>(&tool_call.function.arguments)
+                let function_name = tool_call.get_name();
+                let arguments = tool_call
+                    .extract_arguments::<Value>()
                     .context("Unable to parse arguments from function call.")?;
 
                 info!(
                     "Parsed arguments to function {}: {}",
-                    &function_name, &tool_call.function.arguments
+                    &function_name, &arguments
                 );
 
-                match function_name {
+                match function_name.as_str() {
                     "new_scene" => {
                         return Ok(SessionState::ProcessNewSceneState {
                             run_id,
@@ -72,7 +64,7 @@ impl RequiresActionState {
                     }
                     _ => bail!(
                         "Received invalid function call request from narrator: {}.",
-                        tool_call.function.name
+                        &function_name
                     ),
                 }
             }

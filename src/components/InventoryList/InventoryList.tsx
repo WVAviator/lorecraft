@@ -10,7 +10,7 @@ const InventoryList: React.FC<InventoryListProps> = ({ inventory }) => {
   const items = useInventory(inventory);
 
   return (
-    <div className="debug flex h-full flex-col items-center gap-6">
+    <div className="flex h-full flex-col items-center gap-6">
       <h2 className="font-overlock-sc text-lg">Inventory</h2>
 
       <ul className="no-scrollbar flex h-full flex-1 flex-col items-center gap-4 overflow-y-scroll">
