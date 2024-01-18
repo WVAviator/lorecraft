@@ -53,10 +53,15 @@ impl Character {
 
         let user_prompt = character_input.to_string();
 
-        let character_name = &character_summary
+        let character_name: String = character_summary
             .split(":")
             .next()
-            .unwrap_or(&character_summary);
+            .unwrap_or(character_summary.as_str())
+            .split("(")
+            .next()
+            .unwrap_or(character_summary.as_str())
+            .trim()
+            .to_string();
 
         info!("Creating character detail for {}", &character_name);
 
@@ -66,10 +71,14 @@ impl Character {
         let character = factory
             .try_create(
                 ChatCompletionFactoryArgs::builder()
-                    .name(&character_summary)
+                    .name(&character_name)
                     .system_message(system_prompt)
                     .user_message(user_prompt)
                     .file_name(filepath)
+                    .before_save(Box::new(move |mut ch: Character| {
+                        ch.name = character_name.clone();
+                        ch
+                    }))
                     .build(),
             )
             .await?;
@@ -82,16 +91,19 @@ impl Character {
         scenes: &Vec<Scene>,
         factory: &ChatCompletionFactory<'_>,
     ) -> Result<Vec<Character>, anyhow::Error> {
-        let scene_description = summary.summary.clone();
         let mut character_futures = Vec::new();
 
         info!("Generating character details for each scene.");
 
         for scene in scenes {
             for character_summary in &scene.characters {
+                info!(
+                    "Generating character profile from character entry: {}",
+                    &character_summary
+                );
                 let character_future = Character::create(
                     &summary,
-                    scene_description.clone(),
+                    scene.narrative.clone(),
                     character_summary.clone(),
                     factory,
                 );
@@ -112,7 +124,7 @@ impl Character {
         file_manager: &FileManager,
     ) -> Result<(), anyhow::Error> {
         // TODO: It's possible that two characters with the same name could be generated.
-        let filepath = format!("{}/characters/{}.png", game_metadata.game_id, self.name);
+        let filepath = format!("characters/{}.png", self.name);
 
         let (model, quality) = match game_metadata.image_content_setting {
             ContentSetting::High => (ImageModel::DallE3, ImageQuality::HD),
@@ -164,6 +176,7 @@ impl ImageMultiprocessor for Vec<Character> {
         let mut futures = Vec::new();
 
         for character in self {
+            info!("Generating image for {}", &character.name);
             let future = character.generate_image(factory, game_metadata, file_manager);
             futures.push(future);
         }

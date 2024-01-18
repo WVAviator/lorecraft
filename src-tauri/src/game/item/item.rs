@@ -5,6 +5,7 @@ use openai_lib::{
     model::image_model::ImageModel,
 };
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 use crate::{
     config::content_setting::ContentSetting,
@@ -33,6 +34,11 @@ pub struct Item {
     pub image: Image,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+struct ItemsResult {
+    items: Vec<Item>,
+}
+
 impl Item {
     pub async fn create(
         summary: &Summary,
@@ -51,8 +57,8 @@ impl Item {
 
         info!("Prepared system and user messages for generating item details.");
 
-        let items = factory
-            .try_create(
+        let result = factory
+            .try_create::<ItemsResult>(
                 ChatCompletionFactoryArgs::builder()
                     .name("Items")
                     .system_message(system_prompt)
@@ -61,6 +67,8 @@ impl Item {
                     .build(),
             )
             .await?;
+
+        let items = result.items;
 
         Ok(items)
     }
@@ -105,7 +113,7 @@ impl Item {
         game_metadata: &GameMetadata,
         file_manager: &FileManager,
     ) -> Result<(), anyhow::Error> {
-        let filepath = format!("{}/items/{}.png", game_metadata.game_id, self.name);
+        let filepath = format!("items/{}.png", self.name);
 
         let (model, size) = match game_metadata.image_content_setting {
             ContentSetting::High => (ImageModel::DallE3, ImageSize::Size1024x1024),
@@ -136,13 +144,14 @@ impl Item {
         let name = self.name.clone();
 
         file_manager
-            .json_transaction::<Vec<Item>, _>(
+            .json_transaction::<ItemsResult, _>(
                 format!("{}/tmp/items.json", game_metadata.game_id),
-                move |mut items| {
-                    if let Some(item) = items.iter_mut().find(|item| item.name == name) {
+                move |mut items_result| {
+                    if let Some(item) = items_result.items.iter_mut().find(|item| item.name == name)
+                    {
                         item.image = image;
                     }
-                    items
+                    items_result
                 },
             )
             .await?;

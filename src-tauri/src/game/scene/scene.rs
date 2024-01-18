@@ -94,7 +94,7 @@ impl Scene {
         game_metadata: &GameMetadata,
         file_manager: &FileManager,
     ) -> Result<(), anyhow::Error> {
-        let filepath = format!("{}/scenes/{}.png", game_metadata.game_id, self.name);
+        let filepath = format!("scenes/{}.png", self.name);
 
         let (model, quality) = match game_metadata.image_content_setting {
             ContentSetting::High => (ImageModel::DallE3, ImageQuality::HD),

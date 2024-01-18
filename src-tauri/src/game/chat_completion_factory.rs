@@ -39,7 +39,7 @@ impl<'a> ChatCompletionFactory<'a> {
     /// Takes a ChatCompletionFactoryArgs argument, which can be constructed from a builder.
     pub async fn try_create<T>(
         &self,
-        factory_args: ChatCompletionFactoryArgs,
+        factory_args: ChatCompletionFactoryArgs<T>,
     ) -> Result<T, anyhow::Error>
     where
         T: DeserializeOwned + Serialize,
@@ -68,7 +68,10 @@ impl<'a> ChatCompletionFactory<'a> {
         ))
     }
 
-    async fn create<T>(&self, factory_args: &ChatCompletionFactoryArgs) -> Result<T, anyhow::Error>
+    async fn create<T>(
+        &self,
+        factory_args: &ChatCompletionFactoryArgs<T>,
+    ) -> Result<T, anyhow::Error>
     where
         T: DeserializeOwned + Serialize,
     {
@@ -100,6 +103,8 @@ impl<'a> ChatCompletionFactory<'a> {
 
         let result = self.generate::<T>(factory_args).await?;
 
+        let result = (factory_args.before_save)(result);
+
         self.file_manager
             .write_json::<T>(&file_path, &result)
             .context("Unable to write to JSON file.")?;
@@ -114,7 +119,7 @@ impl<'a> ChatCompletionFactory<'a> {
 
     async fn generate<T>(
         &self,
-        factory_args: &ChatCompletionFactoryArgs,
+        factory_args: &ChatCompletionFactoryArgs<T>,
     ) -> Result<T, anyhow::Error>
     where
         T: DeserializeOwned,
@@ -161,29 +166,31 @@ impl<'a> ChatCompletionFactory<'a> {
 ///     .build();
 /// ```
 ///
-pub struct ChatCompletionFactoryArgs {
+pub struct ChatCompletionFactoryArgs<T> {
     name: String,
     system_message: String,
     user_message: String,
     max_attempts: u8,
     file_name: String,
+    before_save: Box<dyn Fn(T) -> T + Send + Sync + 'static>,
 }
 
-impl ChatCompletionFactoryArgs {
-    pub fn builder() -> ChatCompletionFactoryArgsBuilder {
+impl<T> ChatCompletionFactoryArgs<T> {
+    pub fn builder() -> ChatCompletionFactoryArgsBuilder<T> {
         ChatCompletionFactoryArgsBuilder::new()
     }
 }
 
-pub struct ChatCompletionFactoryArgsBuilder {
+pub struct ChatCompletionFactoryArgsBuilder<T> {
     name: Option<String>,
     system_message: Option<String>,
     user_message: Option<String>,
     max_attempts: u8,
     file_name: Option<String>,
+    before_save: Option<Box<dyn Fn(T) -> T + Send + Sync + 'static>>,
 }
 
-impl ChatCompletionFactoryArgsBuilder {
+impl<T> ChatCompletionFactoryArgsBuilder<T> {
     pub fn new() -> Self {
         Self {
             name: None,
@@ -191,6 +198,7 @@ impl ChatCompletionFactoryArgsBuilder {
             user_message: None,
             max_attempts: 3,
             file_name: None,
+            before_save: None,
         }
     }
 
@@ -229,11 +237,19 @@ impl ChatCompletionFactoryArgsBuilder {
         self
     }
 
-    pub fn build(mut self) -> ChatCompletionFactoryArgs {
+    /// A function that will be called before the result is saved to file. This can be used to
+    /// modify the JSON data before it is saved.
+    pub fn before_save(mut self, before_save: Box<dyn Fn(T) -> T + Send + Sync + 'static>) -> Self {
+        self.before_save = Some(before_save);
+        self
+    }
+
+    pub fn build(mut self) -> ChatCompletionFactoryArgs<T> {
         self.name.get_or_insert(String::from("Missing"));
         self.system_message.get_or_insert(String::new());
         self.user_message.get_or_insert(String::new());
         self.file_name.get_or_insert(String::from("missing.json"));
+        self.before_save.get_or_insert(Box::new(|result| result));
 
         ChatCompletionFactoryArgs {
             name: self.name.unwrap(),
@@ -241,6 +257,7 @@ impl ChatCompletionFactoryArgsBuilder {
             user_message: self.user_message.unwrap(),
             max_attempts: self.max_attempts,
             file_name: self.file_name.unwrap(),
+            before_save: self.before_save.unwrap(),
         }
     }
 }
