@@ -18,4 +18,8 @@ pub enum Error {
     RateLimitFailure(#[source] anyhow::Error),
     #[error("An error occurred attempting to read a file: {0:?}")]
     FileReadFailure(#[source] anyhow::Error),
+    #[error(
+        "The provided input violates OpenAI's content policy for the following reasons: {0:?}"
+    )]
+    ContentPolicyViolation(Vec<String>),
 }

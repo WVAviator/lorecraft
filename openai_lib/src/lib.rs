@@ -7,6 +7,7 @@ pub mod error;
 pub mod image;
 pub mod message;
 pub mod model;
+pub mod moderation;
 pub mod rate_limit;
 pub mod run;
 pub mod thread;

@@ -8,6 +8,7 @@ use crate::image::create_image_request::CreateImageRequest;
 use crate::image::create_image_response::CreateImageResponse;
 use crate::message::list_messages_response::ListMessagesResponse;
 use crate::message::{CreateMessageRequest, ListMessagesRequest, MessageClient, MessageObject};
+use crate::moderation::{CreateModerationRequest, ModerationClient, ModerationObject};
 use crate::rate_limit::RateLimiter;
 use crate::run::{CreateRunRequest, RunClient, RunObject, SubmitToolOutputsRequest};
 use crate::thread::{CreateThreadRequest, DeleteThreadResponse, ThreadClient, ThreadObject};
@@ -298,5 +299,40 @@ impl RunClient for OpenAIClient {
             .map_err(|e| Error::RequestFailure(e.into()))?;
 
         self.handle_response::<RunObject>(response).await
+    }
+}
+
+impl ModerationClient for OpenAIClient {
+    async fn create_moderation(
+        &self,
+        create_moderation_request: CreateModerationRequest,
+    ) -> Result<ModerationObject, Error> {
+        let body = create_moderation_request.to_json_body()?;
+
+        let response = self
+            .client
+            .post("https://api.openai.com/v1/moderations")
+            .body(body)
+            .send()
+            .await
+            .map_err(|e| Error::RequestFailure(e.into()))?;
+
+        self.handle_response::<ModerationObject>(response).await
+    }
+
+    async fn moderate(&self, input: &str) -> Result<(), Error> {
+        let moderation_object = self
+            .create_moderation(
+                CreateModerationRequest::builder()
+                    .input(input.to_string())
+                    .build(),
+            )
+            .await?;
+        match moderation_object.is_flagged() {
+            true => Err(Error::ContentPolicyViolation(
+                moderation_object.failure_reasons(),
+            )),
+            false => Ok(()),
+        }
     }
 }
