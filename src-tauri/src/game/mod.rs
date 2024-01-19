@@ -9,6 +9,7 @@ mod item;
 mod narrative;
 mod scene;
 mod scene_summary;
+pub mod selection_factory;
 mod summary;
 
 pub use game::Game;

@@ -1,16 +1,11 @@
-use anyhow::anyhow;
-use log::info;
-use openai_lib::{
-    chat_completion::{ChatCompletionClient, ChatCompletionRequest},
-    model::ChatModel,
-    OpenAIClient,
-};
 use serde::{Deserialize, Serialize};
 
 use crate::{
     audio::music_metadata::MusicMetadata,
-    file_manager::FileManager,
-    game::{game_metadata::GameMetadata, summary::Summary},
+    game::{
+        selection_factory::{Selectable, SelectionFactory, SelectionFactoryArgs},
+        summary::Summary,
+    },
     prompt_builder::PromptBuilder,
 };
 
@@ -22,33 +17,24 @@ pub struct TitleMusic {
     music_metadata: MusicMetadata,
 }
 
-impl TitleMusic {
-    pub async fn try_create(
-        summary: &Summary,
-        openai_client: &OpenAIClient,
-        game_metadata: &GameMetadata,
-        file_manager: &FileManager,
-    ) -> Result<Self, anyhow::Error> {
-        let filename = format!("{}/tmp/title_music.json", &game_metadata.game_id);
-        match file_manager.file_exists(&filename) {
-            Ok(true) => {
-                let title_music = file_manager.read_json::<TitleMusic>(filename)?;
-                return Ok(title_music);
-            }
-            _ => {
-                info!("No previous title music found, selecting new music.");
-            }
-        }
-
-        let title_music = TitleMusic::create(summary, openai_client).await?;
-
-        file_manager.write_json(filename, &title_music)?;
-
-        Ok(title_music)
+impl Selectable for TitleMusic {
+    fn select_from_response(response: &String) -> Result<Self, anyhow::Error>
+    where
+        Self: Sized,
+    {
+        let music_metadata =
+            MusicMetadata::find_by_index("../public/music/title/meta.json", response.parse()?)?;
+        Ok(TitleMusic {
+            src: music_metadata.get_src("/music/title/"),
+            music_metadata,
+        })
     }
+}
+
+impl TitleMusic {
     pub async fn create(
         summary: &Summary,
-        openai_client: &OpenAIClient,
+        factory: &SelectionFactory<'_>,
     ) -> Result<Self, anyhow::Error> {
         let system_message = PromptBuilder::new()
             .add_prompt("./prompts/title_music/main.txt")
@@ -56,50 +42,17 @@ impl TitleMusic {
         let user_message = TitleMusicInput::new(summary)?;
         let user_message = user_message.to_string()?;
 
-        for _ in 0..3 {
-            match get_metadata(openai_client, &system_message, &user_message).await {
-                Ok(music_metadata) => {
-                    return Ok(TitleMusic {
-                        src: music_metadata.get_src("/music/title/"),
-                        music_metadata,
-                    })
-                }
-                Err(err) => {
-                    println!("Error getting metadata: {:?}", err);
-                    continue;
-                }
-            }
-        }
+        let title_music = factory
+            .try_create(
+                SelectionFactoryArgs::builder()
+                    .system_message(system_message)
+                    .user_message(user_message)
+                    .name("Title Music")
+                    .file_name("tmp/title_music.json")
+                    .build(),
+            )
+            .await?;
 
-        Err(anyhow!("Failed to get metadata"))
+        Ok(title_music)
     }
-}
-
-async fn get_metadata(
-    openai_client: &OpenAIClient,
-    system_message: &String,
-    user_message: &String,
-) -> Result<MusicMetadata, anyhow::Error> {
-    let response = get_response(openai_client, system_message, user_message).await?;
-    let metadata =
-        MusicMetadata::find_by_index("../public/music/title/meta.json", response.parse()?)?;
-    Ok(metadata)
-}
-
-async fn get_response(
-    openai_client: &OpenAIClient,
-    system_message: &String,
-    user_message: &String,
-) -> Result<String, anyhow::Error> {
-    let response = openai_client
-        .create_chat_completion(
-            ChatCompletionRequest::builder()
-                .add_system_message(system_message)
-                .add_user_message(user_message)
-                .model(ChatModel::Gpt_4_1106_Preview)
-                .build(),
-        )
-        .await?;
-    let content = response.get_content();
-    Ok(content)
 }

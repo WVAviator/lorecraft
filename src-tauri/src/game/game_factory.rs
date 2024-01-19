@@ -11,7 +11,8 @@ use crate::{
     game::{
         character::Character, chat_completion_factory::ChatCompletionFactory,
         image::image_factory::ImageFactory, item::Item, narrative::Narrative, scene::Scene,
-        scene_summary::SceneSummary, summary::Summary, title_music::TitleMusic,
+        scene_summary::SceneSummary, selection_factory::SelectionFactory, summary::Summary,
+        title_music::TitleMusic,
     },
     utils::random::Random,
 };
@@ -93,6 +94,10 @@ impl GameFactory {
         );
         info!("Initialized chat completion factory.");
 
+        let selection_factory =
+            SelectionFactory::new(&self.openai_client, &self.file_manager, &self.game_metadata);
+        info!("Initialized selection factory.");
+
         let mut summary =
             Summary::create(&chat_completion_factory, &self.game_metadata.prompt).await?;
         self.send_update("Generated game name, style, and summary.")
@@ -120,13 +125,7 @@ impl GameFactory {
             .await?;
         self.send_update("Generated cover art for game.").await;
 
-        let title_music = TitleMusic::try_create(
-            &summary,
-            &self.openai_client,
-            &self.game_metadata,
-            &self.file_manager,
-        )
-        .await?;
+        let title_music = TitleMusic::create(&summary, &selection_factory).await?;
         self.send_update("Selected main menu music.").await;
 
         let narrative = async {
