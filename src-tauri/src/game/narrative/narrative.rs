@@ -1,6 +1,7 @@
 use futures::{StreamExt, TryStreamExt};
 use log::info;
 use openai_lib::{
+    audio::TTSVoice,
     image::{ImageQuality, ImageSize},
     model::image_model::ImageModel,
 };
@@ -10,6 +11,7 @@ use crate::{
     config::content_setting::ContentSetting,
     file_manager::FileManager,
     game::{
+        audio::{Audio, AudioFactory, AudioFactoryArgs},
         chat_completion_factory::{ChatCompletionFactory, ChatCompletionFactoryArgs},
         game_metadata::GameMetadata,
         image::{
@@ -30,12 +32,14 @@ pub struct Narrative {
 pub struct Page {
     pub narrative: String,
     pub image: Image,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub audio: Option<Audio>,
 }
 
 impl Narrative {
     pub async fn create(
         summary: &Summary,
-        factory: &ChatCompletionFactory<'_>,
+        chat_factory: &ChatCompletionFactory<'_>,
     ) -> Result<Self, anyhow::Error> {
         let system_prompt = PromptBuilder::new()
             .add_prompt("./prompts/narrative/main.txt")
@@ -49,7 +53,7 @@ impl Narrative {
 
         info!("Prepared system and user messages for narrative.");
 
-        let narrative = factory
+        let narrative = chat_factory
             .try_create::<Narrative>(
                 ChatCompletionFactoryArgs::builder()
                     .name("Narrative")
@@ -61,6 +65,30 @@ impl Narrative {
             .await?;
 
         Ok(narrative)
+    }
+
+    pub async fn generate_audio(
+        &mut self,
+        audio_factory: &AudioFactory<'_>,
+    ) -> Result<(), anyhow::Error> {
+        for (index, page) in self.pages.iter_mut().enumerate() {
+            let audio_file = format!("narrative/page-{}.mp3", index);
+            let file_name = format!("tmp/narrative/page-{}.json", index);
+            let audio = audio_factory
+                .try_create(
+                    AudioFactoryArgs::builder()
+                        .name(format!("Narrative page {} audio", index))
+                        .file_name(file_name)
+                        .audio_file(audio_file)
+                        .voice(TTSVoice::Nova)
+                        .text(page.narrative.clone())
+                        .build(),
+                )
+                .await?;
+            (*page).audio = Some(audio);
+        }
+
+        Ok(())
     }
 
     pub async fn generate_images(

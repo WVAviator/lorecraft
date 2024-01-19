@@ -1,3 +1,4 @@
+pub mod audio;
 mod character;
 mod chat_completion_factory;
 mod game;

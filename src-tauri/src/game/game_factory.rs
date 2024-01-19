@@ -9,7 +9,7 @@ use crate::{
     commands::create_new_game::create_new_game_request::CreateNewGameRequest,
     file_manager::FileManager,
     game::{
-        character::Character, chat_completion_factory::ChatCompletionFactory,
+        audio::AudioFactory, character::Character, chat_completion_factory::ChatCompletionFactory,
         image::image_factory::ImageFactory, item::Item, narrative::Narrative, scene::Scene,
         scene_summary::SceneSummary, selection_factory::SelectionFactory, summary::Summary,
         title_music::TitleMusic,
@@ -98,6 +98,10 @@ impl GameFactory {
             SelectionFactory::new(&self.openai_client, &self.file_manager, &self.game_metadata);
         info!("Initialized selection factory.");
 
+        let audio_factory =
+            AudioFactory::new(&self.openai_client, &self.file_manager, &self.game_metadata);
+        info!("Initialized audio factory.");
+
         let mut summary =
             Summary::create(&chat_completion_factory, &self.game_metadata.prompt).await?;
         self.send_update("Generated game name, style, and summary.")
@@ -136,6 +140,10 @@ impl GameFactory {
                 .generate_images(&image_factory, &self.game_metadata, &self.file_manager)
                 .await?;
             self.send_update("Generated opening cutscene images.").await;
+
+            narrative.generate_audio(&audio_factory).await?;
+            self.send_update("Generated speech audio for opening cutscene.")
+                .await;
 
             Ok(narrative) as Result<Narrative, anyhow::Error>
         };

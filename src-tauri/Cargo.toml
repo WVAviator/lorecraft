@@ -29,6 +29,7 @@ anyhow = "1.0.78"
 openai_lib = { path = "../openai_lib" }
 nosleep = "0.2.1"
 fs2 = "0.4.3"
+bytes = "1.5.0"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem
