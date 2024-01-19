@@ -144,7 +144,9 @@ impl GameFactory {
                 .await?;
             self.send_update("Generated opening cutscene images.").await;
 
-            narrative.generate_audio(&audio_factory).await?;
+            narrative
+                .generate_audio(&audio_factory, &self.game_metadata, &self.file_manager)
+                .await?;
             self.send_update("Generated speech audio for opening cutscene.")
                 .await;
 

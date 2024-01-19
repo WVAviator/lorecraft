@@ -70,23 +70,49 @@ impl Narrative {
     pub async fn generate_audio(
         &mut self,
         audio_factory: &AudioFactory<'_>,
+        game_metadata: &GameMetadata,
+        file_manager: &FileManager,
     ) -> Result<(), anyhow::Error> {
-        for (index, page) in self.pages.iter_mut().enumerate() {
-            let audio_file = format!("narrative/page-{}.mp3", index);
-            let file_name = format!("tmp/narrative/page-{}.json", index);
-            let audio = audio_factory
-                .try_create(
-                    AudioFactoryArgs::builder()
-                        .name(format!("Narrative page {} audio", index))
-                        .file_name(file_name)
-                        .audio_file(audio_file)
-                        .voice(TTSVoice::Nova)
-                        .text(page.narrative.clone())
-                        .build(),
-                )
-                .await?;
-            (*page).audio = Some(audio);
+        let mut futures = Vec::new();
+        for (index, page) in self.pages.iter().enumerate() {
+            let page = page.clone();
+            let future = async move {
+                let audio_file = format!("narrative/page-{}.mp3", index);
+                let file_name = format!("tmp/narrative/page-{}.json", index);
+                let audio = audio_factory
+                    .try_create(
+                        AudioFactoryArgs::builder()
+                            .name(format!("Narrative page {} audio", index))
+                            .file_name(file_name)
+                            .audio_file(audio_file)
+                            .voice(TTSVoice::Nova)
+                            .text(page.narrative.clone())
+                            .build(),
+                    )
+                    .await?;
+
+                file_manager
+                    .json_transaction::<Narrative, _>(
+                        format!("{}/tmp/narrative.json", game_metadata.game_id),
+                        move |mut narrative| {
+                            if let Some(page) = narrative.pages.get_mut(index) {
+                                page.audio = Some(audio.clone());
+                            }
+                            narrative
+                        },
+                    )
+                    .await?;
+
+                Ok(page) as Result<Page, anyhow::Error>
+            };
+
+            futures.push(future);
         }
+
+        let stream = futures::stream::iter(futures).buffered(10);
+        let pages = stream.try_collect::<Vec<_>>().await?;
+
+        self.pages = pages;
 
         Ok(())
     }
