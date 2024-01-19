@@ -13,8 +13,8 @@ impl TitleMusicInput {
     pub fn new(summary: &Summary, cover_art: &Image) -> Result<Self, anyhow::Error> {
         let game_summary = summary.summary.clone();
         let game_art_description = match cover_art {
-            Prompt(prompt) => prompt.clone(),
-            Created { alt, .. } => alt.clone(),
+            Image::Prompt(prompt) => prompt.clone(),
+            Image::Created { alt, .. } => alt.clone(),
         };
 
         // TODO: Get music themes from file
