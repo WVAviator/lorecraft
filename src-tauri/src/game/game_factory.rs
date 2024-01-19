@@ -3,7 +3,10 @@ use std::sync::Arc;
 use anyhow::Context;
 use log::{error, info};
 use openai_lib::OpenAIClient;
-use tokio::sync::{mpsc::Sender, Mutex};
+use tokio::{
+    join,
+    sync::{mpsc::Sender, Mutex},
+};
 
 use crate::{
     commands::create_new_game::create_new_game_request::CreateNewGameRequest,
@@ -169,32 +172,43 @@ impl GameFactory {
         let (narrative, scenes) = futures::join!(narrative, scenes);
         let (narrative, scenes) = (narrative?, scenes?);
 
-        let mut characters =
-            Character::create_from_scenes(&summary, &scenes, &chat_completion_factory).await?;
-        self.send_update("Generated detailed profiles for each character.")
-            .await;
+        let scene_items = async {
+            let mut scene_items =
+                Item::create_from_scenes(&summary, &scenes, &chat_completion_factory).await?;
+            self.send_update("Generated items found in scenes.").await;
 
-        characters
-            .generate_images(&image_factory, &self.game_metadata, &self.file_manager)
-            .await?;
-        self.send_update("Generated images for each character.")
-            .await;
+            scene_items
+                .generate_images(&image_factory, &self.game_metadata, &self.file_manager)
+                .await?;
+            self.send_update("Finished generating scene item images.")
+                .await;
 
-        let mut items = Item::create_from_scenes_and_chars(
-            &summary,
-            &scenes,
-            &characters,
-            &chat_completion_factory,
-        )
-        .await?;
-        self.send_update("Generated details for every key item.")
-            .await;
+            Ok(scene_items) as Result<Vec<Item>, anyhow::Error>
+        };
 
-        items
-            .generate_images(&image_factory, &self.game_metadata, &self.file_manager)
-            .await?;
-        info!("Finished generating images for each item.");
-        self.send_update("Generated images for every item.").await;
+        let character_future = async {
+            let characters = self
+                .generate_character_detail(&summary, &scenes, &chat_completion_factory)
+                .await?;
+            let characters = self
+                .generate_character_images(characters, &image_factory)
+                .await?;
+            let character_items = self
+                .generate_character_items(
+                    &summary,
+                    &characters,
+                    &chat_completion_factory,
+                    &image_factory,
+                )
+                .await?;
+
+            Ok((characters, character_items)) as Result<(Vec<Character>, Vec<Item>), anyhow::Error>
+        };
+
+        let (scene_items, character_future) = join!(scene_items, character_future);
+        let (scene_items, (characters, character_items)) = (scene_items?, character_future?);
+
+        let items = [&scene_items[..], &character_items[..]].concat();
 
         let id = self.game_metadata.game_id.clone();
         let name = summary.name.clone();
@@ -229,6 +243,53 @@ impl GameFactory {
         info!("Game saved to file: {}", &file_path);
 
         Ok(game)
+    }
+
+    async fn generate_character_detail(
+        &self,
+        summary: &Summary,
+        scenes: &Vec<Scene>,
+        chat_completion_factory: &ChatCompletionFactory<'_>,
+    ) -> Result<Vec<Character>, anyhow::Error> {
+        let characters =
+            Character::create_from_scenes(summary, scenes, &chat_completion_factory).await?;
+        self.send_update("Generated detailed profiles for each character.")
+            .await;
+        Ok(characters)
+    }
+
+    async fn generate_character_images(
+        &self,
+        mut characters: Vec<Character>,
+        image_factory: &ImageFactory<'_>,
+    ) -> Result<Vec<Character>, anyhow::Error> {
+        characters
+            .generate_images(&image_factory, &self.game_metadata, &self.file_manager)
+            .await?;
+        self.send_update("Generated images for characters.").await;
+
+        Ok(characters)
+    }
+
+    async fn generate_character_items(
+        &self,
+        summary: &Summary,
+        characters: &Vec<Character>,
+        chat_completion_factory: &ChatCompletionFactory<'_>,
+        image_factory: &ImageFactory<'_>,
+    ) -> Result<Vec<Item>, anyhow::Error> {
+        let mut items =
+            Item::create_from_characters(summary, characters, &chat_completion_factory).await?;
+        self.send_update("Generated items found in character inventories.")
+            .await;
+
+        items
+            .generate_images(image_factory, &self.game_metadata, &self.file_manager)
+            .await?;
+        self.send_update("Generated images for character items.")
+            .await;
+
+        Ok(items)
     }
 
     pub async fn send_update(&self, update: impl Into<String>) {

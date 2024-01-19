@@ -5,7 +5,6 @@ use openai_lib::{
     model::image_model::ImageModel,
 };
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
 use crate::{
     config::content_setting::ContentSetting,
@@ -42,6 +41,7 @@ struct ItemsResult {
 impl Item {
     pub async fn create(
         summary: &Summary,
+        name: impl Into<String>,
         item_list: Vec<String>,
         factory: &ChatCompletionFactory<'_>,
     ) -> Result<Vec<Item>, anyhow::Error> {
@@ -60,7 +60,7 @@ impl Item {
         let result = factory
             .try_create::<ItemsResult>(
                 ChatCompletionFactoryArgs::builder()
-                    .name("Items")
+                    .name(name.into())
                     .system_message(system_prompt)
                     .user_message(user_prompt)
                     .file_name("tmp/items.json")
@@ -73,36 +73,48 @@ impl Item {
         Ok(items)
     }
 
-    pub async fn create_from_scenes_and_chars(
+    pub async fn create_from_scenes(
         summary: &Summary,
         scenes: &Vec<Scene>,
-        characters: &Vec<Character>,
         factory: &ChatCompletionFactory<'_>,
     ) -> Result<Vec<Item>, anyhow::Error> {
-        let scene_item_list = scenes
+        let mut item_list = scenes
             .iter()
             .map(|scene| scene.items.clone())
             .flatten()
             .collect::<Vec<String>>();
-        let character_item_list = characters
-            .iter()
-            .map(|character| character.inventory.clone())
-            .flatten()
-            .collect::<Vec<String>>();
-        let mut item_list = scene_item_list
-            .iter()
-            .chain(character_item_list.iter())
-            .cloned()
-            .collect::<Vec<String>>();
 
-        info!("Created item list from scenes and characters.");
+        info!("Created item list from scenes.");
 
         item_list.dedup(); // No need to generate data for the same items twice
         item_list.sort();
 
         info!("Removed duplicates and sorted list. Generating details...");
 
-        let items = Item::create(summary, item_list, factory).await?;
+        let items = Item::create(summary, "Scene Items", item_list, factory).await?;
+
+        Ok(items)
+    }
+
+    pub async fn create_from_characters(
+        summary: &Summary,
+        characters: &Vec<Character>,
+        factory: &ChatCompletionFactory<'_>,
+    ) -> Result<Vec<Item>, anyhow::Error> {
+        let mut item_list = characters
+            .iter()
+            .map(|character| character.inventory.clone())
+            .flatten()
+            .collect::<Vec<String>>();
+
+        info!("Created item list from scenes.");
+
+        item_list.dedup(); // No need to generate data for the same items twice
+        item_list.sort();
+
+        info!("Removed duplicates and sorted list. Generating details...");
+
+        let items = Item::create(summary, "Character Items", item_list, factory).await?;
 
         Ok(items)
     }
