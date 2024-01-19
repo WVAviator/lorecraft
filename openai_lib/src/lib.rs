@@ -1,4 +1,5 @@
 pub mod assistant;
+pub mod audio;
 pub mod chat_completion;
 pub mod client;
 pub mod client_config;

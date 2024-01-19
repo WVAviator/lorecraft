@@ -22,4 +22,6 @@ pub enum Error {
         "The provided input violates OpenAI's content policy for the following reasons: {0:?}"
     )]
     ContentPolicyViolation(Vec<String>),
+    #[error("An error occurred attempting to extract bytes from response: {0:?}")]
+    ByteResponseFailure(#[source] anyhow::Error),
 }

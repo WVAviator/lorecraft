@@ -1,6 +1,7 @@
 use crate::assistant::{
     AssistantClient, AssistantObject, CreateAssistantRequest, DeleteAssistantResponse,
 };
+use crate::audio::{AudioClient, CreateSpeechRequest};
 use crate::chat_completion::{ChatCompletionClient, ChatCompletionObject, ChatCompletionRequest};
 use crate::client_config::ClientConfig;
 use crate::image::create_image_client::CreateImageClient;
@@ -13,6 +14,7 @@ use crate::rate_limit::RateLimiter;
 use crate::run::{CreateRunRequest, RunClient, RunObject, SubmitToolOutputsRequest};
 use crate::thread::{CreateThreadRequest, DeleteThreadResponse, ThreadClient, ThreadObject};
 use crate::Error;
+use bytes::Bytes;
 use log::error;
 use reqwest::{
     header::{HeaderMap, HeaderValue},
@@ -334,5 +336,26 @@ impl ModerationClient for OpenAIClient {
             )),
             false => Ok(()),
         }
+    }
+}
+
+impl AudioClient for OpenAIClient {
+    async fn create_speech(
+        &self,
+        create_speech_request: CreateSpeechRequest,
+    ) -> Result<Bytes, Error> {
+        let body = create_speech_request.to_json_body()?;
+        let response = self
+            .client
+            .post("https://api.openai.com/v1/audio/speech")
+            .body(body)
+            .send()
+            .await
+            .map_err(|e| Error::RequestFailure(e.into()))?;
+
+        response
+            .bytes()
+            .await
+            .map_err(|e| Error::ByteResponseFailure(e.into()))
     }
 }

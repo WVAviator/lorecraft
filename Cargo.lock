@@ -2004,6 +2004,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "assert-json-diff",
+ "bytes",
  "log",
  "reqwest",
  "serde",
