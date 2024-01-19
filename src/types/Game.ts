@@ -7,6 +7,7 @@ export interface Game {
   scenes: Scene[];
   characters: Character[];
   items: Item[];
+  title_music: Music;
 }
 
 export interface Item {
@@ -37,6 +38,20 @@ export interface Scene {
 export interface Image {
   src: string;
   alt: string;
+}
+
+export interface Music {
+  src: string;
+  metadata: {
+    index: number;
+    filename: string;
+    keywords: string;
+    attribution: {
+      title: string;
+      author: string;
+      from: string;
+    };
+  };
 }
 
 export interface GameSummary {

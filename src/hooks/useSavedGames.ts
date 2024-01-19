@@ -19,6 +19,8 @@ const useSavedGames = () => {
               if (file.name?.endsWith('game.json')) {
                 const fileContent = await readTextFile(file.path);
                 const game = JSON.parse(fileContent) as Game;
+
+                console.log('Game Narrative Page 0: ', game.narrative.pages[0]);
                 setGames((prevGames) => {
                   return prevGames.includes(game)
                     ? prevGames

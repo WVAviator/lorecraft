@@ -32,11 +32,8 @@ impl TitleMusic {
         let filename = format!("{}/tmp/title_music.json", &game_metadata.game_id);
         match file_manager.file_exists(&filename) {
             Ok(true) => {
-                let music_metadata = file_manager.read_json::<MusicMetadata>(filename)?;
-                return Ok(TitleMusic {
-                    src: music_metadata.get_src("/music/title/"),
-                    music_metadata,
-                });
+                let title_music = file_manager.read_json::<TitleMusic>(filename)?;
+                return Ok(title_music);
             }
             _ => {
                 info!("No previous title music found, selecting new music.");
@@ -99,7 +96,7 @@ async fn get_response(
             ChatCompletionRequest::builder()
                 .add_system_message(system_message)
                 .add_user_message(user_message)
-                .model(ChatModel::Gpt_35_Turbo_Instruct)
+                .model(ChatModel::Gpt_4_1106_Preview)
                 .build(),
         )
         .await?;
