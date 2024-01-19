@@ -15,6 +15,7 @@ const GameMenuScreen = () => {
 
   return (
     <BackgroundDiv image={src} alt={alt} fade={false}>
+      <audio src={game?.title_music.src} loop autoPlay />
       <div className="absolute left-12 top-12">
         <GameTitle>{game?.name || ''}</GameTitle>
       </div>
