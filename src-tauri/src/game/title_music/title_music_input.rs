@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -13,9 +14,9 @@ pub struct TitleMusicInput {
 }
 
 impl TitleMusicInput {
-    pub fn new(summary: &Summary, cover_art: &Image) -> Result<Self, anyhow::Error> {
+    pub fn new(summary: &Summary) -> Result<Self, anyhow::Error> {
         let game_summary = summary.summary.clone();
-        let game_art_description = match cover_art {
+        let game_art_description = match &summary.cover_art {
             Image::Prompt(prompt) => prompt.clone(),
             Image::Created { alt, .. } => alt.clone(),
         };
@@ -31,5 +32,10 @@ impl TitleMusicInput {
             game_art_description,
             music_themes,
         })
+    }
+
+    pub fn to_string(self) -> Result<String, anyhow::Error> {
+        serde_json::to_string(&self)
+            .map_err(|e| anyhow!("Unable to parse title music input to string: {:?}", e))
     }
 }

@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::file_manager::FileManager;
 
-use super::{summary::Summary, Character, Image, Item, Narrative, Scene};
+use super::{summary::Summary, title_music::TitleMusic, Character, Image, Item, Narrative, Scene};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Game {
@@ -14,6 +14,7 @@ pub struct Game {
     pub scenes: Vec<Scene>,
     pub characters: Vec<Character>,
     pub items: Vec<Item>,
+    pub title_music: TitleMusic,
 }
 
 impl Game {
