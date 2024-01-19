@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
 
-use crate::game::{summary::Summary, Image};
+use crate::{
+    audio::music_metadata::MusicMetadata,
+    game::{summary::Summary, Image},
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct TitleMusicInput {
@@ -17,8 +20,11 @@ impl TitleMusicInput {
             Image::Created { alt, .. } => alt.clone(),
         };
 
-        // TODO: Get music themes from file
-        let music_themes = vec![];
+        let music_themes = MusicMetadata::load_from_file("../public/music/title/meta.json")?;
+        let music_themes = music_themes
+            .into_iter()
+            .map(|meta| format!("{}: {}", meta.index, meta.keywords))
+            .collect();
 
         Ok(TitleMusicInput {
             game_summary,
