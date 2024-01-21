@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Context};
 use log::{info, warn};
 use openai_lib::{
-    audio::{AudioClient, CreateSpeechRequest, TTSModel, TTSVoice},
+    audio::{AudioClient, CreateSpeechRequest, TTSModel, TTSResponseFormat, TTSVoice},
     OpenAIClient,
 };
 
@@ -99,6 +99,8 @@ impl<'a> AudioFactory<'a> {
                     .input(factory_args.text.clone())
                     .voice(factory_args.voice.clone())
                     .model(TTSModel::TTS1_HD)
+                    .speed(factory_args.speed)
+                    .response_format(TTSResponseFormat::Mp3)
                     .build(),
             )
             .await
@@ -135,6 +137,7 @@ pub struct AudioFactoryArgs {
     audio_file: String,
     voice: TTSVoice,
     max_attempts: u8,
+    speed: f32,
 }
 
 impl AudioFactoryArgs {
@@ -150,6 +153,7 @@ pub struct AudioFactoryArgsBuilder {
     audio_file: Option<String>,
     voice: Option<TTSVoice>,
     max_attempts: Option<u8>,
+    speed: Option<f32>,
 }
 
 impl AudioFactoryArgsBuilder {
@@ -161,6 +165,7 @@ impl AudioFactoryArgsBuilder {
             audio_file: None,
             voice: None,
             max_attempts: None,
+            speed: None,
         }
     }
     pub fn name(mut self, name: impl Into<String>) -> Self {
@@ -188,6 +193,10 @@ impl AudioFactoryArgsBuilder {
         self.audio_file = Some(audio_file.into());
         self
     }
+    pub fn speed(mut self, speed: f32) -> Self {
+        self.speed = Some(speed);
+        self
+    }
     pub fn build(self) -> AudioFactoryArgs {
         AudioFactoryArgs {
             name: self.name.unwrap_or(String::from("Unspecified Audio")),
@@ -196,6 +205,7 @@ impl AudioFactoryArgsBuilder {
             audio_file: self.audio_file.unwrap_or(String::from("unspecified.mp3")),
             voice: self.voice.unwrap_or(TTSVoice::Nova),
             max_attempts: self.max_attempts.unwrap_or(3),
+            speed: self.speed.unwrap_or(1.0),
         }
     }
 }

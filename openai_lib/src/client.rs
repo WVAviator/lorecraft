@@ -27,6 +27,7 @@ use serde_json::Value;
 pub struct OpenAIClient {
     client: reqwest::Client,
     image_rate_limiter: RateLimiter,
+    tts_rate_limiter: RateLimiter,
 }
 
 impl OpenAIClient {
@@ -45,10 +46,12 @@ impl OpenAIClient {
             .map_err(|e| Error::ConfigurationFailure(e.into()))?;
 
         let image_rate_limiter = RateLimiter::new(std::time::Duration::from_secs(60), 5);
+        let tts_rate_limiter = RateLimiter::new(std::time::Duration::from_secs(60), 3);
 
         Ok(Self {
             client,
             image_rate_limiter,
+            tts_rate_limiter,
         })
     }
 
@@ -345,6 +348,12 @@ impl AudioClient for OpenAIClient {
         create_speech_request: CreateSpeechRequest,
     ) -> Result<Bytes, Error> {
         let body = create_speech_request.to_json_body()?;
+
+        self.tts_rate_limiter
+            .permit()
+            .await
+            .map_err(|e| Error::RateLimitFailure(e.into()))?;
+
         let response = self
             .client
             .post("https://api.openai.com/v1/audio/speech")
@@ -353,9 +362,23 @@ impl AudioClient for OpenAIClient {
             .await
             .map_err(|e| Error::RequestFailure(e.into()))?;
 
-        response
-            .bytes()
-            .await
-            .map_err(|e| Error::ByteResponseFailure(e.into()))
+        if response.status().is_success() {
+            let response = response
+                .bytes()
+                .await
+                .map_err(|e| Error::ByteResponseFailure(e.into()))?;
+
+            return Ok(response);
+        } else {
+            let status_code = response.status();
+
+            error!(
+                "Bad response from OpenAI:\n{}\n\n{}",
+                response.status(),
+                response.text().await.unwrap()
+            );
+
+            return Err(Error::ResponseFailure(status_code));
+        }
     }
 }

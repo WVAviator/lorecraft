@@ -22,13 +22,23 @@ const NarrativeScreen = () => {
   const [pageIndex, setPageIndex] = React.useState(0);
   const [fade, setFade] = React.useState(false);
 
+  const audioRef = React.useRef<HTMLAudioElement>(null);
+
   React.useEffect(() => {
-    let timeout = setTimeout(() => {
-      handleClick();
-    }, 8000);
+    if (!audioRef.current) return;
+    audioRef.current.play();
+
+    let timeout: NodeJS.Timeout;
+
+    const handleEnded = () => {
+      timeout = setTimeout(handleClick, 1000);
+    };
+
+    audioRef.current.addEventListener('ended', handleEnded);
 
     return () => {
       clearTimeout(timeout);
+      audioRef.current?.removeEventListener('ended', handleEnded);
     };
   }, [pageIndex]);
 
@@ -45,9 +55,13 @@ const NarrativeScreen = () => {
   };
 
   let currentPage = game?.narrative.pages[pageIndex];
+  console.log(`Narrative page ${pageIndex} loaded: `);
+  console.debug(currentPage);
   if (!currentPage) return null;
   let src = convertFileSrc(currentPage.image.src);
   let alt = currentPage.image.alt;
+  let audioSrc = convertFileSrc(currentPage.audio?.src ?? '');
+  console.log('Converted audio src: ', audioSrc);
   let { narrative } = currentPage;
 
   return (
@@ -58,6 +72,7 @@ const NarrativeScreen = () => {
       fade={fade}
       randomPan
     >
+      <audio ref={audioRef} src={audioSrc} autoPlay />
       <div className="absolute bottom-[10%] left-[10%] right-0">
         <div className="rounded-l-md bg-black bg-opacity-80 px-4 py-6">
           <p>{narrative}</p>

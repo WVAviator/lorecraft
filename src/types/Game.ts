@@ -68,6 +68,7 @@ export interface Narrative {
   pages: {
     narrative: string;
     image: Image;
+    audio?: Music;
   }[];
 }
 

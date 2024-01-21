@@ -75,10 +75,10 @@ impl Narrative {
     ) -> Result<(), anyhow::Error> {
         let mut futures = Vec::new();
         for (index, page) in self.pages.iter().enumerate() {
-            let page = page.clone();
+            let mut page = page.clone();
             let future = async move {
-                let audio_file = format!("narrative/page-{}.mp3", index);
-                let file_name = format!("tmp/narrative/page-{}.json", index);
+                let audio_file = format!("narrative/page_{}.mp3", index);
+                let file_name = format!("tmp/narrative_audio/page_{}.json", index);
                 let audio = audio_factory
                     .try_create(
                         AudioFactoryArgs::builder()
@@ -87,9 +87,12 @@ impl Narrative {
                             .audio_file(audio_file)
                             .voice(TTSVoice::Nova)
                             .text(page.narrative.clone())
+                            .speed(0.8f32)
                             .build(),
                     )
                     .await?;
+
+                page.audio = Some(audio.clone());
 
                 file_manager
                     .json_transaction::<Narrative, _>(

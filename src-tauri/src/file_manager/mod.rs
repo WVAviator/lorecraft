@@ -4,6 +4,7 @@ use std::path::Path;
 use std::{fs::OpenOptions, path::PathBuf};
 
 use anyhow::Context;
+use bytes::Bytes;
 use fs2::FileExt;
 use log::{debug, error, info};
 use serde::de::DeserializeOwned;
@@ -178,11 +179,7 @@ impl FileManager {
         Ok(())
     }
 
-    pub fn write_bytes_to_file(
-        &self,
-        file_name: &str,
-        contents: Vec<u8>,
-    ) -> std::io::Result<String> {
+    pub fn write_bytes_to_file(&self, file_name: &str, contents: Bytes) -> std::io::Result<String> {
         let mut open_options = OpenOptions::new();
         open_options.write(true).create(true).truncate(true);
 

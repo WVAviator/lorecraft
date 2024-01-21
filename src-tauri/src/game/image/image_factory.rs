@@ -1,5 +1,6 @@
 use anyhow::anyhow;
 use base64::{engine::general_purpose, Engine as _};
+use bytes::Bytes;
 use log::info;
 use openai_lib::{
     image::{CreateImageClient, CreateImageRequest, ImageObject, ImageQuality, ImageSize},
@@ -129,7 +130,7 @@ impl<'a> ImageFactory<'a> {
 
         let src = self
             .file_manager
-            .write_bytes_to_file(&filepath, image_data)
+            .write_bytes_to_file(&filepath, Bytes::from(image_data))
             .map_err(|e| anyhow!("Failed to write image to file: {:?}", e))?;
 
         info!(
