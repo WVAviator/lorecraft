@@ -18,14 +18,19 @@ use crate::{
             image_factory::{ImageFactory, ImageFactoryArgs},
             Image,
         },
+        music::Music,
+        selection_factory::{SelectionFactory, SelectionFactoryArgs},
         summary::Summary,
     },
     prompt_builder::PromptBuilder,
 };
 
+use super::narrative_music_input::NarrativeMusicInput;
+
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Narrative {
     pages: Vec<Page>,
+    music: Music,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -184,6 +189,50 @@ impl Narrative {
         info!("All narrative page images generated and saved.");
 
         self.pages = pages;
+
+        Ok(())
+    }
+
+    pub async fn select_music(
+        &mut self,
+        factory: &SelectionFactory<'_>,
+        game_metadata: &GameMetadata,
+        file_manager: &FileManager,
+    ) -> Result<(), anyhow::Error> {
+        let meta_path = String::from("music/narrative/");
+
+        let system_message = PromptBuilder::new()
+            .add_prompt("./prompts/narrative_music/main.txt")
+            .build();
+
+        let user_message = NarrativeMusicInput::new(&self.pages)?;
+        let user_message = serde_json::to_string(&user_message)?;
+
+        info!("Selecting narrative music.");
+
+        let music = factory
+            .try_create::<Music>(
+                SelectionFactoryArgs::builder()
+                    .name("Narrative music")
+                    .system_message(system_message)
+                    .user_message(user_message)
+                    .file_name("narrative/music.json")
+                    .meta_path(meta_path)
+                    .build(),
+            )
+            .await?;
+
+        self.music = music.clone();
+
+        file_manager
+            .json_transaction::<Narrative, _>(
+                format!("{}/tmp/narrative.json", game_metadata.game_id),
+                move |mut narrative| {
+                    narrative.music = music;
+                    narrative
+                },
+            )
+            .await?;
 
         Ok(())
     }

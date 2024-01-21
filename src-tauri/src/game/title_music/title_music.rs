@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    audio::music_metadata::MusicMetadata,
     game::{
+        music::music_metadata::MusicMetadata,
         selection_factory::{Selectable, SelectionFactory, SelectionFactoryArgs},
         summary::Summary,
     },
@@ -18,7 +18,7 @@ pub struct TitleMusic {
 }
 
 impl Selectable for TitleMusic {
-    fn select_from_response(response: &String) -> Result<Self, anyhow::Error>
+    fn select_from_response(response: &String, _meta_path: &str) -> Result<Self, anyhow::Error>
     where
         Self: Sized,
     {

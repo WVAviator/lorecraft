@@ -150,6 +150,12 @@ impl GameFactory {
             self.send_update("Generated speech audio for opening cutscene.")
                 .await;
 
+            narrative
+                .select_music(&selection_factory, &self.game_metadata, &self.file_manager)
+                .await?;
+            self.send_update("Selected music for opening cutscenes.")
+                .await;
+
             Ok(narrative) as Result<Narrative, anyhow::Error>
         };
 

@@ -1,10 +1,7 @@
 use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    audio::music_metadata::MusicMetadata,
-    game::{summary::Summary, Image},
-};
+use crate::game::{music::music_metadata::MusicMetadata, summary::Summary, Image};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct TitleMusicInput {

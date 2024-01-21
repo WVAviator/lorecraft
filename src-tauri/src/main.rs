@@ -17,7 +17,6 @@ use tauri::Manager;
 use utils::logger::Logger;
 
 mod application_state;
-pub mod audio;
 mod commands;
 mod config;
 mod file_manager;

@@ -22,7 +22,7 @@ pub struct SelectionFactory<'a> {
 /// A trait that can be implemented by any type that can be selected from a list of items. Required
 /// for use in the SelectionFactory.
 pub trait Selectable {
-    fn select_from_response(response: &String) -> Result<Self, anyhow::Error>
+    fn select_from_response(response: &String, meta_path: &str) -> Result<Self, anyhow::Error>
     where
         Self: Sized;
 }
@@ -102,7 +102,7 @@ impl<'a> SelectionFactory<'a> {
         }
 
         let result = self.generate(factory_args).await?;
-        let result = T::select_from_response(&result)?;
+        let result = T::select_from_response(&result, &factory_args.meta_path)?;
 
         self.file_manager
             .write_json::<T>(&file_path, &result)
@@ -148,6 +148,7 @@ pub struct SelectionFactoryArgs {
     user_message: String,
     file_name: String,
     max_attempts: u8,
+    meta_path: String,
 }
 
 impl SelectionFactoryArgs {
@@ -162,6 +163,7 @@ pub struct SelectionFactoryArgsBuilder {
     user_message: Option<String>,
     file_name: Option<String>,
     max_attempts: Option<u8>,
+    meta_path: Option<String>,
 }
 
 impl SelectionFactoryArgsBuilder {
@@ -172,6 +174,7 @@ impl SelectionFactoryArgsBuilder {
             user_message: None,
             file_name: None,
             max_attempts: None,
+            meta_path: None,
         }
     }
     pub fn name(mut self, name: impl Into<String>) -> Self {
@@ -195,6 +198,10 @@ impl SelectionFactoryArgsBuilder {
         self.max_attempts = Some(max_attempts);
         self
     }
+    pub fn meta_path(mut self, meta_path: impl Into<String>) -> Self {
+        self.meta_path = Some(meta_path.into());
+        self
+    }
     pub fn build(self) -> SelectionFactoryArgs {
         SelectionFactoryArgs {
             name: self.name.unwrap_or(String::from("Unspecified")),
@@ -208,6 +215,7 @@ impl SelectionFactoryArgsBuilder {
                 .file_name
                 .unwrap_or(String::from("unspecified_file.json")),
             max_attempts: self.max_attempts.unwrap_or(3),
+            meta_path: self.meta_path.unwrap_or(String::from("")),
         }
     }
 }

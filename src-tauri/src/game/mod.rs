@@ -7,6 +7,7 @@ pub mod game_generation_update;
 mod game_metadata;
 mod image;
 mod item;
+pub mod music;
 mod narrative;
 mod scene;
 mod scene_summary;
