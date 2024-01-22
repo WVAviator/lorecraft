@@ -30,6 +30,7 @@ use super::narrative_music_input::NarrativeMusicInput;
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Narrative {
     pages: Vec<Page>,
+    #[serde(default, skip_serializing_if = "Music::is_none")]
     music: Music,
 }
 

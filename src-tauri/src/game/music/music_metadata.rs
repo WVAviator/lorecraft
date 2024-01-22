@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MusicMetadata {
-    attribution: Attribution,
+    pub attribution: Attribution,
     pub keywords: String,
     pub filename: String,
     pub index: usize,
@@ -14,9 +14,9 @@ pub struct MusicMetadata {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Attribution {
-    title: String,
-    author: String,
-    from: String,
+    pub title: String,
+    pub author: String,
+    pub from: String,
 }
 
 impl MusicMetadata {
