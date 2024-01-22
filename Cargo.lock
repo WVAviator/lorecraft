@@ -1645,6 +1645,7 @@ name = "lorecraft"
 version = "0.0.0"
 dependencies = [
  "anyhow",
+ "assert-json-diff",
  "base64 0.21.7",
  "bytes",
  "dirs",

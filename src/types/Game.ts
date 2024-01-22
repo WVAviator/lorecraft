@@ -70,6 +70,7 @@ export interface Narrative {
     image: Image;
     audio?: Music;
   }[];
+  music: Music;
 }
 
 // export interface PlayerAttribute {

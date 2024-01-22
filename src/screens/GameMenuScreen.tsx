@@ -5,6 +5,7 @@ import GameMenuListItem from '../components/GameMenuListItem/GameMenuListItem';
 import GameTitle from '../components/GameTitle/GameTitle';
 import useGameContext from '../hooks/useGameContext';
 import useProcessImage from '../hooks/useProcessImage';
+import Music from '../components/Music/Music';
 
 const GameMenuScreen = () => {
   const { game, setGame } = useGameContext();
@@ -15,7 +16,7 @@ const GameMenuScreen = () => {
 
   return (
     <BackgroundDiv image={src} alt={alt} fade={false}>
-      <audio src={game?.title_music.src} loop autoPlay />
+      <Music src={game?.title_music.src} loop />
       <div className="absolute left-12 top-12">
         <GameTitle>{game?.name || ''}</GameTitle>
       </div>

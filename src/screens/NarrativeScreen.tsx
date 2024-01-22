@@ -4,6 +4,7 @@ import React from 'react';
 import BackgroundDiv from '../components/BackgroundDiv/BackgroundDiv';
 import { convertFileSrc } from '@tauri-apps/api/tauri';
 import useGameState from '../hooks/useGameState';
+import Music from '../components/Music/Music';
 
 const NarrativeScreen = () => {
   const { game } = useGameContext();
@@ -73,6 +74,7 @@ const NarrativeScreen = () => {
       randomPan
     >
       <audio ref={audioRef} src={audioSrc} autoPlay />
+      <Music src={game?.narrative.music.src} />
       <div className="absolute bottom-[10%] left-[10%] right-0">
         <div className="rounded-l-md bg-black bg-opacity-80 px-4 py-6">
           <p>{narrative}</p>
