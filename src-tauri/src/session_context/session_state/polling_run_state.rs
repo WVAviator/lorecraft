@@ -22,42 +22,37 @@ impl PollingRunState {
     ) -> Result<SessionState, anyhow::Error> {
         match session_request {
             SessionRequest::ContinueProcessing => loop {
-                info!("Retrieving run status for {}.", &run_id);
+                info!("Polling run status for {}.", &run_id);
                 match openai_client
                     .retrieve_run(&game_state.thread_id, &run_id)
                     .await
                 {
-                    Ok(retrieve_run_response) => {
-                        info!("Matching run status: {:?}.", &retrieve_run_response.status);
-                        match retrieve_run_response.status {
-                            RunStatus::RequiresAction => {
-                                info!("Assistant requested function invocation.");
-                                let tool_calls: Vec<ToolCall> = retrieve_run_response.required_action.ok_or(anyhow!("Received requires action status without required_action on response object."))?.submit_tool_outputs.tool_calls;
-                                if tool_calls.len() > 1 {
-                                    bail!("Multiple function calls not supported.");
-                                }
-                                let tool_call = tool_calls
-                                    .into_iter()
-                                    .next()
-                                    .ok_or(anyhow!("No tool calls in response array."))?;
-                                return Ok(SessionState::RequiresActionState { run_id, tool_call });
+                    Ok(retrieve_run_response) => match retrieve_run_response.status {
+                        RunStatus::RequiresAction => {
+                            info!("Assistant requested function invocation.");
+                            let tool_calls: Vec<ToolCall> = retrieve_run_response.required_action.ok_or(anyhow!("Received requires action status without required_action on response object."))?.submit_tool_outputs.tool_calls;
+                            if tool_calls.len() > 1 {
+                                bail!("Multiple function calls not supported.");
                             }
-                            RunStatus::Cancelling
-                            | RunStatus::Cancelled
-                            | RunStatus::Failed
-                            | RunStatus::Expired => {
-                                error!("Run {} was cancelled or expired.", &run_id);
-                                return Err(anyhow!("Run {} was cancelled or expired.", &run_id));
-                            }
-                            RunStatus::Completed => {
-                                info!("Completed run response received.");
-                                return Ok(SessionState::ReadMessageState);
-                            }
-                            RunStatus::Queued | RunStatus::InProgress => {
-                                info!("Run status in progress. Polling...");
-                            }
+                            let tool_call = tool_calls
+                                .into_iter()
+                                .next()
+                                .ok_or(anyhow!("No tool calls in response array."))?;
+                            return Ok(SessionState::RequiresActionState { run_id, tool_call });
                         }
-                    }
+                        RunStatus::Cancelling
+                        | RunStatus::Cancelled
+                        | RunStatus::Failed
+                        | RunStatus::Expired => {
+                            error!("Run {} was cancelled or expired.", &run_id);
+                            return Err(anyhow!("Run {} was cancelled or expired.", &run_id));
+                        }
+                        RunStatus::Completed => {
+                            info!("Completed run response received.");
+                            return Ok(SessionState::ReadMessageState);
+                        }
+                        RunStatus::Queued | RunStatus::InProgress => {}
+                    },
                     Err(e) => {
                         warn!("Failed to retrieve run status: {:?}", e);
                     }
