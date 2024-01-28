@@ -1,33 +1,40 @@
+import React from 'react';
 import useProcessImage from '../../hooks/useProcessImage';
-import { Scene } from '../../types/Game';
+import { Scene, Image } from '../../types/Game';
+import BackgroundDiv from '../BackgroundDiv/BackgroundDiv';
 
 interface SceneImageProps {
   scene: Scene | undefined;
+  children: React.ReactNode;
 }
 
-const SceneImage: React.FC<SceneImageProps> = ({ scene }) => {
-  if (!scene) return null;
-  const { src, alt } = useProcessImage(scene.image);
+const SceneImage: React.FC<SceneImageProps> = ({ scene, children }) => {
+  const [fade, setFade] = React.useState(false);
+  const [lastImage, setLastImage] = React.useState<Image | undefined>(
+    scene?.image
+  );
+
+  React.useEffect(() => {
+    setFade(true);
+    setTimeout(() => {
+      setLastImage(scene?.image);
+      setFade(false);
+    }, 500);
+  }, [scene]);
+
+  const { src, alt } = useProcessImage(lastImage);
+
   return (
-    <div className="flex h-[100vh] flex-col bg-blue-950 p-2">
-      <div className="h-12 pb-2">
-        <h2 className="flex-shrink-0 flex-grow-0 font-overlock-sc text-xl">
-          {scene.name}
-        </h2>
+    <BackgroundDiv image={src || undefined} alt={alt} fade={fade}>
+      <div className="absolute bottom-0 left-0 right-0 top-0">
+        <div className="relative h-full w-full">
+          <div className="absolute left-4 top-0 rounded-b-md bg-black bg-opacity-65 px-4 py-2">
+            <h1 className="text-xl">{scene?.name ?? 'Undefined Scene'}</h1>
+          </div>
+          {children}
+        </div>
       </div>
-      <div className="w-full flex-1 overflow-hidden rounded-md shadow-md">
-        <img
-          src={src}
-          alt={alt}
-          className="h-full w-full object-cover [object-position:50%_85%]"
-        />
-      </div>
-      <div className="max-h-[30%] overflow-scroll pt-2">
-        <p className="flex-shrink-0 flex-grow-0 text-[14px]">
-          {scene.narrative}
-        </p>
-      </div>
-    </div>
+    </BackgroundDiv>
   );
 };
 

@@ -14,6 +14,8 @@ import PlayerEntry from '../components/PlayerEntry/PlayerEntry';
 import { useNavigate } from 'react-router-dom';
 import SlideoutPanel from '../components/SlideoutPanel/SlideoutPanel';
 import InventoryList from '../components/InventoryList/InventoryList';
+import useProcessImage from '../hooks/useProcessImage';
+import SceneDescription from '../components/SceneDescription/SceneDescription';
 
 const GameScreen = () => {
   const navigate = useNavigate();
@@ -28,70 +30,44 @@ const GameScreen = () => {
     return null;
   }
 
+  const currentScene = game.scenes.find(
+    (scene) => scene.name === gameState.current_scene_name
+  );
+
   return (
-    <BackgroundDiv fade={false}>
-      <CharacterWindow
-        characterInteraction={
-          gameState.character_interaction?.closed
-            ? null
-            : gameState.character_interaction
-        }
+    <SceneImage scene={currentScene}>
+      <SceneDescription scene={currentScene} />
+      <NarrativeWindow
+        messages={gameState.messages}
+        sendMessage={(message) => sendNarrativeMessage(message)}
       />
-      <div className="grid grid-cols-[2rem_1fr_35%] bg-blue-950">
-        <div></div>
-        <SceneImage
-          scene={game.scenes.find(
-            (scene) => scene.name === gameState.current_scene_name
-          )}
-        />
-        <div className="flex h-full flex-col gap-2 p-2">
-          <InGameMenu
-            menuItems={[
-              {
-                icon: <IoExitSharp />,
-                tooltip: 'Quit Game',
-                onClick: () => {
-                  setTimeout(() => endGame(), 0);
-                  navigate('/gamemenu');
-                },
-              },
-              {
-                icon: <IoMdSave />,
-                tooltip: 'Save Game',
-                onClick: () => {
-                  console.log('Saved game!');
-                },
-              },
-              {
-                icon: <IoSettingsSharp />,
-                tooltip: 'Settings',
-                onClick: () => {
-                  console.log('Settings clicked!');
-                },
-              },
-            ]}
-          />
-          <NarrativeWindow messages={gameState.messages} />
-          <PlayerEntry
-            value={playerInput}
-            onChange={(e) => {
-              if (playerInput.length >= 497) return;
-              setPlayerInput(e.target.value);
-            }}
-            onSubmit={() => {
-              sendNarrativeMessage(playerInput);
-              setPlayerInput('');
-            }}
-            placeholder="What do you want to do?"
-            rows={2}
-            // disabled={loading}
-          />
-        </div>
-      </div>
-      <SlideoutPanel tabContentClosed={<BsBackpack />}>
-        <InventoryList inventory={gameState.inventory} />
-      </SlideoutPanel>
-    </BackgroundDiv>
+      <InGameMenu
+        menuItems={[
+          {
+            icon: <IoExitSharp />,
+            tooltip: 'Quit Game',
+            onClick: () => {
+              setTimeout(() => endGame(), 0);
+              navigate('/gamemenu');
+            },
+          },
+          {
+            icon: <IoMdSave />,
+            tooltip: 'Save Game',
+            onClick: () => {
+              console.log('Saved game!');
+            },
+          },
+          {
+            icon: <IoSettingsSharp />,
+            tooltip: 'Settings',
+            onClick: () => {
+              console.log('Settings clicked!');
+            },
+          },
+        ]}
+      />
+    </SceneImage>
   );
 };
 

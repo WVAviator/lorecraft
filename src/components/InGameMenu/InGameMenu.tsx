@@ -13,7 +13,7 @@ interface InGameMenuProps {
 const InGameMenu: React.FC<InGameMenuProps> = ({ menuItems }) => {
   const [hoverIndex, setHoverIndex] = React.useState<number>(-1);
   return (
-    <div className="flex h-12 w-full flex-row-reverse items-center gap-4">
+    <div className="absolute right-8 top-0 flex h-12 flex-row-reverse items-center gap-4 rounded-b-md bg-black bg-opacity-75 px-2">
       {menuItems.map((menuItem, i) => {
         return (
           <div
@@ -24,7 +24,7 @@ const InGameMenu: React.FC<InGameMenuProps> = ({ menuItems }) => {
           >
             <button onClick={menuItem.onClick}>
               {React.cloneElement(menuItem.icon, {
-                className: 'text-lg hover:text-gray-400',
+                className: 'hover:text-gray-400',
               })}
             </button>
           </div>
