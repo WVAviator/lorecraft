@@ -36,6 +36,13 @@ const GameScreen = () => {
 
   return (
     <SceneImage scene={currentScene}>
+      <CharacterWindow
+        characterInteraction={
+          gameState.character_interaction?.closed
+            ? null
+            : gameState.character_interaction
+        }
+      />
       <SceneDescription scene={currentScene} />
       <NarrativeWindow
         messages={gameState.messages}
@@ -67,6 +74,9 @@ const GameScreen = () => {
           },
         ]}
       />
+      <SlideoutPanel tabContentClosed={<BsBackpack />}>
+        <InventoryList inventory={gameState.inventory} />
+      </SlideoutPanel>
     </SceneImage>
   );
 };

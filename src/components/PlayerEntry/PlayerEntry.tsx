@@ -20,7 +20,25 @@ const PlayerEntry: React.FC<PlayerEntryProps> = ({
   const inputRef = React.useRef<HTMLTextAreaElement>(null);
 
   React.useEffect(() => {
-    inputRef.current?.focus();
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting && inputRef.current) {
+          inputRef.current.focus();
+        } else {
+          inputRef.current?.blur();
+        }
+      });
+    });
+
+    if (inputRef.current) {
+      observer.observe(inputRef.current);
+    }
+
+    return () => {
+      if (inputRef.current) {
+        observer.unobserve(inputRef.current);
+      }
+    };
   }, []);
 
   return (
